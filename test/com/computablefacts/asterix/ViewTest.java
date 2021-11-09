@@ -869,4 +869,22 @@ public class ViewTest {
     Assert.assertEquals(Optional.of("7"), view.last());
     Assert.assertFalse(view.first().isPresent());
   }
+
+  @Test
+  public void testRetain() {
+
+    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    List<Integer> even = view.retain(x -> x % 2 == 0).toList();
+
+    Assert.assertEquals(Lists.newArrayList(2, 4, 6), even);
+  }
+
+  @Test
+  public void testDiscard() {
+
+    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    List<Integer> even = view.discard(x -> x % 2 != 0).toList();
+
+    Assert.assertEquals(Lists.newArrayList(2, 4, 6), even);
+  }
 }

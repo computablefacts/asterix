@@ -626,6 +626,26 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Returns a view consisting of the elements of this view that match the given predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @return a new {@link View}.
+   */
+  public View<T> retain(Predicate<? super T> predicate) {
+    return filter(predicate);
+  }
+
+  /**
+   * Returns a view consisting of the elements of this view that do not match the given predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @return a new {@link View}.
+   */
+  public View<T> discard(Predicate<? super T> predicate) {
+    return filter(predicate.negate());
+  }
+
+  /**
    * Peek each element.
    *
    * @param consumer the action to perform on each element.
