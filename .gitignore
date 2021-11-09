@@ -1,0 +1,29 @@
+# Package Files #
+*.class
+*.jar
+*.war
+*.ear
+bin/
+target/
+log/
+out/
+.classpath
+.project
+.settings
+dependency-reduced-pom.xml
+TEST-*.txt
+Test*.obj
+
+# OSX #
+*.DS_Store
+
+# IntelliJ IDE Project Files #
+*.iml
+*.versionsBackup
+jacoco.exec
+.idea/
+
+# Travis CI #
+.travis/gpg.asc
+
+

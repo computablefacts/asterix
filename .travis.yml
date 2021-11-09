@@ -1,0 +1,30 @@
+os: linux
+dist: trusty
+language: java
+jdk:
+  - openjdk8
+install: "/bin/true"
+script:
+  - mvn clean install -q -B
+env:
+  global:
+    - secure:
+    - secure:
+    - secure:
+    - secure:
+before_deploy:
+  - openssl aes-256-cbc -K $encrypted_4c33f5d5b8d1_key -iv $encrypted_4c33f5d5b8d1_iv
+    -in .travis/gpg.asc.enc -out .travis/gpg.asc -d
+deploy:
+  - skip_cleanup: true
+    provider: script
+    script: chmod +x ./deploy.sh && ./deploy.sh
+    on:
+      branch: master
+  - skip_cleanup: true
+    provider: script
+    script: chmod +x ./deploy.sh && ./deploy.sh
+    on:
+      tags: true
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -t f2a66508-7c36-49cd-9da7-17ea44408b3a
