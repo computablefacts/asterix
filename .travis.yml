@@ -27,4 +27,4 @@ deploy:
     on:
       tags: true
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -t f2a66508-7c36-49cd-9da7-17ea44408b3a
+  - bash <(curl -s https://codecov.io/bash) -t bb50f714-cd28-46ba-a397-cfcb188aa526
