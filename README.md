@@ -27,7 +27,7 @@ using the following dependency:
 <dependency>
   <groupId>com.computablefacts</groupId>
   <artifactId>asterix</artifactId>
-  <version>1.x-SNAPSHOT</version>
+  <version>0.x-SNAPSHOT</version>
 </dependency>
 ```
 
