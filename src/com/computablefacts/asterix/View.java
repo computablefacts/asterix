@@ -44,6 +44,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   public static <T> View<T> of(Iterator<T> iterator) {
+
+    Preconditions.checkNotNull(iterator, "iterator should not be null");
+
     return new View<>(iterator);
   }
 
