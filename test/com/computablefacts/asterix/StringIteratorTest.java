@@ -10,6 +10,84 @@ import com.google.common.collect.Lists;
 
 public class StringIteratorTest {
 
+  /**
+   * Mostly extracted from
+   * https://github.com/apache/commons-lang/blob/master/src/test/java/org/apache/commons/lang3/math/NumberUtilsTest.java
+   */
+  @Test
+  public void testInvalidNumbers() {
+    assertFalse(StringIterator.isNumber(null));
+    assertFalse(StringIterator.isNumber(""));
+    assertFalse(StringIterator.isNumber(" "));
+    assertFalse(StringIterator.isNumber("\r\n\t"));
+    assertFalse(StringIterator.isNumber("--2.3"));
+    assertFalse(StringIterator.isNumber(".12.3"));
+    assertFalse(StringIterator.isNumber("-123E"));
+    assertFalse(StringIterator.isNumber("-123E+-212"));
+    assertFalse(StringIterator.isNumber("-123E2.12"));
+    assertFalse(StringIterator.isNumber("0xGF"));
+    assertFalse(StringIterator.isNumber("0xFAE-1"));
+    assertFalse(StringIterator.isNumber("."));
+    assertFalse(StringIterator.isNumber("-0ABC123"));
+    assertFalse(StringIterator.isNumber("123.4E-D"));
+    assertFalse(StringIterator.isNumber("123.4ED"));
+    assertFalse(StringIterator.isNumber("+000E.12345"));
+    assertFalse(StringIterator.isNumber("-000E.12345"));
+    assertFalse(StringIterator.isNumber("1234E5l"));
+    assertFalse(StringIterator.isNumber("11a"));
+    assertFalse(StringIterator.isNumber("1a"));
+    assertFalse(StringIterator.isNumber("a"));
+    assertFalse(StringIterator.isNumber("11g"));
+    assertFalse(StringIterator.isNumber("11z"));
+    assertFalse(StringIterator.isNumber("11def"));
+    assertFalse(StringIterator.isNumber("11d11"));
+    assertFalse(StringIterator.isNumber("11 11"));
+    assertFalse(StringIterator.isNumber(" 1111"));
+    assertFalse(StringIterator.isNumber("1111 "));
+    assertFalse(StringIterator.isNumber("1.1L"));
+
+    // Added
+    assertFalse(StringIterator.isNumber("+00.12345"));
+    assertFalse(StringIterator.isNumber("+0002.12345"));
+    assertFalse(StringIterator.isNumber("0x"));
+    assertFalse(StringIterator.isNumber("EE"));
+    assertFalse(StringIterator.isNumber("."));
+    assertFalse(StringIterator.isNumber("1E-"));
+    assertFalse(StringIterator.isNumber("123.4E."));
+    assertFalse(StringIterator.isNumber("123.4E15E10"));
+  }
+
+  /**
+   * Mostly extracted from
+   * https://github.com/apache/commons-lang/blob/master/src/test/java/org/apache/commons/lang3/math/NumberUtilsTest.java
+   */
+  @Test
+  public void testValidNumbers() {
+    assertTrue(StringIterator.isNumber("12345"));
+    assertTrue(StringIterator.isNumber("1234.5"));
+    assertTrue(StringIterator.isNumber(".12345"));
+    assertTrue(StringIterator.isNumber("1234E5"));
+    assertTrue(StringIterator.isNumber("1234E+5"));
+    assertTrue(StringIterator.isNumber("1234E-5"));
+    assertTrue(StringIterator.isNumber("123.4E5"));
+    assertTrue(StringIterator.isNumber("-1234"));
+    assertTrue(StringIterator.isNumber("-1234.5"));
+    assertTrue(StringIterator.isNumber("-.12345"));
+    assertTrue(StringIterator.isNumber("-0001.12345"));
+    assertTrue(StringIterator.isNumber("-000.12345"));
+    assertTrue(StringIterator.isNumber("-1234E5"));
+    assertTrue(StringIterator.isNumber("0"));
+    assertTrue(StringIterator.isNumber("-0"));
+    assertTrue(StringIterator.isNumber("01234"));
+    assertTrue(StringIterator.isNumber("-01234"));
+    assertTrue(StringIterator.isNumber("-0xABC123"));
+    assertTrue(StringIterator.isNumber("-0x0"));
+    assertTrue(StringIterator.isNumber("123.4E21D"));
+    assertTrue(StringIterator.isNumber("-221.23F"));
+    assertTrue(StringIterator.isNumber("22338L"));
+    assertTrue(StringIterator.isNumber("2."));
+  }
+
   @Test
   public void testReverseNull() {
     assertEquals("", StringIterator.reverse(null));
