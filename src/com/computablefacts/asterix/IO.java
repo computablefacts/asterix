@@ -42,6 +42,21 @@ final public class IO {
     return false;
   }
 
+  public static boolean writeCompressedText(File file, String text, boolean append) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkArgument(!append || file.exists(), "file does not exist : %s", file);
+    Preconditions.checkNotNull(text, "text should not be null");
+
+    try (BufferedWriter writer = newCompressedFileWriter(file, append)) {
+      writer.write(text);
+      return true;
+    } catch (IOException e) {
+      // FALL THROUGH
+    }
+    return false;
+  }
+
   public static List<String> readLines(File file) {
 
     Preconditions.checkNotNull(file, "file should not be null");

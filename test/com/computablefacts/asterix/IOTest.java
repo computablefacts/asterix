@@ -1,6 +1,5 @@
 package com.computablefacts.asterix;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -98,10 +97,7 @@ public class IOTest {
     String text = "a\nb\nc\nd";
 
     Assert.assertTrue(input.exists());
-
-    try (BufferedWriter writer = IO.newCompressedFileWriter(input, true)) {
-      writer.write(text);
-    }
+    Assert.assertTrue(IO.writeCompressedText(input, text, true));
 
     File output =
         new File(input.getAbsolutePath().substring(0, input.getAbsolutePath().lastIndexOf('.')));

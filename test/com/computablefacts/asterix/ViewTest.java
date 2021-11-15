@@ -1,9 +1,9 @@
 package com.computablefacts.asterix;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.junit.Assert;
@@ -46,13 +46,13 @@ public class ViewTest {
   @Test
   public void testViewOfFile() throws IOException {
 
-    File input = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
+    File file = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
     String text = "a\nb\nc\nd";
 
-    Assert.assertTrue(input.exists());
-    Assert.assertTrue(IO.writeText(input, text, true));
+    Assert.assertTrue(file.exists());
+    Assert.assertTrue(IO.writeText(file, text, true));
 
-    List<String> rows = View.of(input).toList();
+    List<String> rows = View.of(file).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), rows);
   }
@@ -60,16 +60,13 @@ public class ViewTest {
   @Test
   public void testViewOfCompressedFile() throws IOException {
 
-    File input = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
+    File file = java.nio.file.Files.createTempFile("test-", ".gz").toFile();
     String text = "a\nb\nc\nd";
 
-    Assert.assertTrue(input.exists());
+    Assert.assertTrue(file.exists());
+    Assert.assertTrue(IO.writeCompressedText(file, text, true));
 
-    try (BufferedWriter writer = IO.newCompressedFileWriter(input, true)) {
-      writer.write(text);
-    }
-
-    List<String> rows = View.of(input, true).toList();
+    List<String> rows = View.of(file, true).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), rows);
   }
@@ -97,6 +94,28 @@ public class ViewTest {
     View<String> view = View.of(Lists.newArrayList("a", "b", "b", "c", "c", "c"));
 
     Assert.assertEquals(Sets.newHashSet("a", "b", "c"), view.toSet());
+  }
+
+  @Test
+  public void testToFile() throws IOException {
+
+    List<String> list = Lists.newArrayList("a", "b", "b", "c", "c", "c");
+    File file = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
+
+    View.of(list).toFile(Function.identity(), file, true);
+
+    Assert.assertEquals(list, View.of(file).toList());
+  }
+
+  @Test
+  public void testToCompressedFile() throws IOException {
+
+    List<String> list = Lists.newArrayList("a", "b", "b", "c", "c", "c");
+    File file = java.nio.file.Files.createTempFile("test-", ".gz").toFile();
+
+    View.of(list).toFile(Function.identity(), file, true, true);
+
+    Assert.assertEquals(list, View.of(file, true).toList());
   }
 
   @Test

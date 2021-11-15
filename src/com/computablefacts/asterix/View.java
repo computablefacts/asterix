@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -103,6 +104,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   public static View<String> of(File file, boolean isCompressed) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+
     try {
       return new View<>(
           isCompressed ? IO.newCompressedLineIterator(file) : IO.newLineIterator(file));
@@ -223,6 +227,47 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    */
   public Set<T> toSet() {
     return Sets.newHashSet(this);
+  }
+
+  /**
+   * Write view elements to a file.
+   *
+   * @param fn transform each view element to a string.
+   * @param file where the view elements must be written.
+   * @param append false iif a new file must be created. Otherwise, view elements are appended at
+   *        the end of an existing file.
+   */
+  public void toFile(Function<T, String> fn, File file, boolean append) {
+    toFile(fn, file, append, false);
+  }
+
+  /**
+   * Write view elements to a file.
+   *
+   * @param fn transform each view element to a string.
+   * @param file where the view elements must be written.
+   * @param append false iif a new file must be created. Otherwise, view elements are appended at
+   *        the end of an existing file.
+   * @param compress true iif the output must be compressed (gzip), false otherwise.
+   */
+  public void toFile(Function<T, String> fn, File file, boolean append, boolean compress) {
+
+    Preconditions.checkNotNull(fn, "fn should not be null");
+    Preconditions.checkNotNull(file, "file should not be null");
+
+    try (BufferedWriter writer =
+        (compress ? IO.newCompressedFileWriter(file, append) : IO.newFileWriter(file, append))) {
+      map(fn).forEachRemaining(el -> {
+        try {
+          writer.write(el);
+          writer.newLine();
+        } catch (IOException e) {
+          // FALL THROUGH
+        }
+      });
+    } catch (IOException e) {
+      // FALL THROUGH
+    }
   }
 
   /**
