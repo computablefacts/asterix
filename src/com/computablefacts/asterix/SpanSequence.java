@@ -49,6 +49,7 @@ final public class SpanSequence implements Iterable<Span>, Comparable<SpanSequen
     return MoreObjects.toStringHelper(this).add("sequence", sequence_).omitNullValues().toString();
   }
 
+  @Generated
   @Override
   public Iterator<Span> iterator() {
     return sequence_.iterator();
@@ -81,10 +82,12 @@ final public class SpanSequence implements Iterable<Span>, Comparable<SpanSequen
     sequence_.sort(Preconditions.checkNotNull(comparator, "comparator should not be null"));
   }
 
+  @Generated
   public Stream<Span> stream() {
     return sequence_.stream();
   }
 
+  @Generated
   public int size() {
     return sequence_.size();
   }

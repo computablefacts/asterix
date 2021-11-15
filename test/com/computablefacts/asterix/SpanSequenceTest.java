@@ -1,10 +1,9 @@
 package com.computablefacts.asterix;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -123,33 +122,55 @@ public class SpanSequenceTest {
   }
 
   @Test
-  public void testGroups() {
-
-    int dayGroup = 1;
-    int monthGroup = 2;
-    int yearGroup = 3;
+  public void testExtractSpans() {
 
     String text = "GUATEMALA CITY, 4 FEB 90 (ACAN-EFE)";
 
-    Span span = new Span(text, 16, 24);
-    span.setGroup(dayGroup, "4");
-    span.setGroup(monthGroup, "FEB");
-    span.setGroup(yearGroup, "90");
+    Span day = new Span(text, 16, 17);
+    Span month = new Span(text, 18, 21);
+    Span year = new Span(text, 22, 24);
 
-    Assert.assertEquals("4 FEB 90", span.text());
-    Assert.assertEquals("4", span.getGroup(dayGroup));
-    Assert.assertEquals("FEB", span.getGroup(monthGroup));
-    Assert.assertEquals("90", span.getGroup(yearGroup));
+    SpanSequence sequence = new SpanSequence(Lists.newArrayList(day, month, year));
 
-    Map<Integer, String> groups = new HashMap<>();
-    groups.put(dayGroup, "4");
-    groups.put(monthGroup, "FEB");
-    groups.put(yearGroup, "90");
+    Assert.assertEquals(3, sequence.size());
+    Assert.assertEquals(day, sequence.span(0));
+    Assert.assertEquals(month, sequence.span(1));
+    Assert.assertEquals(year, sequence.span(2));
 
-    Assert.assertEquals(groups, span.groups());
+    Assert.assertEquals(new SpanSequence(Lists.newArrayList(day, month)), sequence.sequence(0, 2));
+    Assert.assertEquals(new SpanSequence(Lists.newArrayList(month, year)), sequence.sequence(1, 3));
+    Assert.assertEquals(new SpanSequence(Lists.newArrayList(day, month, year)),
+        sequence.sequence(0, 3));
+    Assert.assertEquals(new SpanSequence(Lists.newArrayList(month)), sequence.sequence(1, 2));
+  }
 
-    span.removeGroups();
+  @Test
+  public void testAddRemoveSpan() {
 
-    Assert.assertEquals(new HashMap<>(), span.groups());
+    String text = "GUATEMALA CITY, 4 FEB 90 (ACAN-EFE)";
+
+    Span day = new Span(text, 16, 17);
+    Span month = new Span(text, 18, 21);
+    Span year = new Span(text, 22, 24);
+
+    SpanSequence sequence = new SpanSequence();
+    sequence.add(new SpanSequence(Lists.newArrayList(day, month)));
+
+    Assert.assertEquals(2, sequence.size());
+    Assert.assertEquals(day, sequence.span(0));
+    Assert.assertEquals(month, sequence.span(1));
+
+    sequence.add(year);
+
+    Assert.assertEquals(3, sequence.size());
+    Assert.assertEquals(day, sequence.span(0));
+    Assert.assertEquals(month, sequence.span(1));
+    Assert.assertEquals(year, sequence.span(2));
+
+    sequence.remove(0);
+
+    Assert.assertEquals(2, sequence.size());
+    Assert.assertEquals(month, sequence.span(0));
+    Assert.assertEquals(year, sequence.span(1));
   }
 }
