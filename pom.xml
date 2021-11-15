@@ -40,6 +40,8 @@
 
     <properties>
         <guava.version>29.0-jre</guava.version>
+        <jsonflattener.version>0.12.0</jsonflattener.version>
+        <jackson-dataformat-csv.version>2.12.0</jackson-dataformat-csv.version>
         <equalsverifier.version>3.4.2</equalsverifier.version>
         <javax-validation.version>2.0.1.Final</javax-validation.version>
         <jcip.version>1.0-1</jcip.version>
@@ -61,6 +63,16 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.wnameless.json</groupId>
+            <artifactId>json-flattener</artifactId>
+            <version>${jsonflattener.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-csv</artifactId>
+            <version>${jackson-dataformat-csv.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.errorprone</groupId>
