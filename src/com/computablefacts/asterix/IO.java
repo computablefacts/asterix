@@ -195,6 +195,7 @@ final public class IO {
       reader_ = Preconditions.checkNotNull(reader, "reader should not be null");
     }
 
+    @Override
     public void close() {
       if (reader_ != null) {
         try {

@@ -1,5 +1,8 @@
 package com.computablefacts.asterix;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -38,6 +41,37 @@ public class ViewTest {
     Assert
         .assertTrue(list.contains(new AbstractMap.SimpleEntry<>(3, Sets.newHashSet("abc", "abc"))));
     Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(4, Sets.newHashSet("abcd"))));
+  }
+
+  @Test
+  public void testViewOfFile() throws IOException {
+
+    File input = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
+    String text = "a\nb\nc\nd";
+
+    Assert.assertTrue(input.exists());
+    Assert.assertTrue(IO.writeText(input, text, true));
+
+    List<String> rows = View.of(input).toList();
+
+    Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), rows);
+  }
+
+  @Test
+  public void testViewOfCompressedFile() throws IOException {
+
+    File input = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
+    String text = "a\nb\nc\nd";
+
+    Assert.assertTrue(input.exists());
+
+    try (BufferedWriter writer = IO.newCompressedFileWriter(input, true)) {
+      writer.write(text);
+    }
+
+    List<String> rows = View.of(input, true).toList();
+
+    Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), rows);
   }
 
   @Test

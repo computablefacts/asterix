@@ -1,5 +1,7 @@
 package com.computablefacts.asterix;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -94,6 +96,20 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
         return endOfData();
       }
     });
+  }
+
+  public static View<String> of(File file) {
+    return of(file, false);
+  }
+
+  public static View<String> of(File file, boolean isCompressed) {
+    try {
+      return new View<>(
+          isCompressed ? IO.newCompressedLineIterator(file) : IO.newLineIterator(file));
+    } catch (IOException e) {
+      // FALL THROUGH
+    }
+    return of();
   }
 
   /**
