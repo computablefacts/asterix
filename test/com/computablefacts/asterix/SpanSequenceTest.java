@@ -1,5 +1,8 @@
 package com.computablefacts.asterix;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -117,5 +120,36 @@ public class SpanSequenceTest {
 
     Assert.assertEquals(-1, sequence2.compareTo(sequence1));
     Assert.assertEquals(1, sequence1.compareTo(sequence2));
+  }
+
+  @Test
+  public void testGroups() {
+
+    int dayGroup = 1;
+    int monthGroup = 2;
+    int yearGroup = 3;
+
+    String text = "GUATEMALA CITY, 4 FEB 90 (ACAN-EFE)";
+
+    Span span = new Span(text, 16, 24);
+    span.setGroup(dayGroup, "4");
+    span.setGroup(monthGroup, "FEB");
+    span.setGroup(yearGroup, "90");
+
+    Assert.assertEquals("4 FEB 90", span.text());
+    Assert.assertEquals("4", span.getGroup(dayGroup));
+    Assert.assertEquals("FEB", span.getGroup(monthGroup));
+    Assert.assertEquals("90", span.getGroup(yearGroup));
+
+    Map<Integer, String> groups = new HashMap<>();
+    groups.put(dayGroup, "4");
+    groups.put(monthGroup, "FEB");
+    groups.put(yearGroup, "90");
+
+    Assert.assertEquals(groups, span.groups());
+
+    span.removeGroups();
+
+    Assert.assertEquals(new HashMap<>(), span.groups());
   }
 }
