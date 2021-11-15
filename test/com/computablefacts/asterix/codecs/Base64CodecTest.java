@@ -3,8 +3,6 @@ package com.computablefacts.asterix.codecs;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Base64;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,12 +15,12 @@ public class Base64CodecTest {
 
   @Test(expected = NullPointerException.class)
   public void testDeserializeNullString() {
-    String b64 = Base64Codec.decodeB64(Base64.getDecoder(), null);
+    String b64 = Base64Codec.decodeB64(Base64Codec.newDecoder(), null);
   }
 
   @Test
   public void testDeserializeEmptyString() {
-    Assert.assertEquals("", Base64Codec.decodeB64(Base64.getDecoder(), ""));
+    Assert.assertEquals("", Base64Codec.decodeB64(Base64Codec.newDecoder(), ""));
   }
 
   @Test(expected = NullPointerException.class)
@@ -32,19 +30,19 @@ public class Base64CodecTest {
 
   @Test
   public void testSerializeNullString() {
-    Assert.assertEquals("", Base64Codec.encodeB64(Base64.getEncoder(), null));
+    Assert.assertEquals("", Base64Codec.encodeB64(Base64Codec.newEncoder(), null));
   }
 
   @Test
   public void testSerializeEmptyString() {
-    Assert.assertEquals("", Base64Codec.encodeB64(Base64.getEncoder(), ""));
+    Assert.assertEquals("", Base64Codec.encodeB64(Base64Codec.newEncoder(), ""));
   }
 
   @Test
   public void testEncodeDecode() {
 
-    String b64 = Base64Codec.encodeB64(Base64.getEncoder(), "test");
-    String string = Base64Codec.decodeB64(Base64.getDecoder(), "dGVzdA==");
+    String b64 = Base64Codec.encodeB64(Base64Codec.newEncoder(), "test");
+    String string = Base64Codec.decodeB64(Base64Codec.newDecoder(), "dGVzdA==");
 
     Assert.assertTrue(Base64Codec.isProbablyBase64(b64));
     Assert.assertEquals("dGVzdA==", b64);

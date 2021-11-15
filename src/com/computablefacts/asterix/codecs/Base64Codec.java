@@ -18,6 +18,14 @@ final public class Base64Codec {
 
   private Base64Codec() {}
 
+  public static Base64.Encoder newEncoder() {
+    return Base64.getEncoder();
+  }
+
+  public static Base64.Decoder newDecoder() {
+    return Base64.getDecoder();
+  }
+
   /**
    * Check if a string is probably encoded in Base64.
    *
