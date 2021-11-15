@@ -91,7 +91,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
             return fn.apply(rs);
           }
         } catch (SQLException e) {
-          // TODO
+          // FALL THROUGH
         }
         return endOfData();
       }
@@ -168,7 +168,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       try {
         ((AutoCloseable) iterator_).close();
       } catch (Exception e) {
-        // TODO
+        // FALL THROUGH
       }
     }
   }
@@ -347,7 +347,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Returns a view where all elements are indexed by there position in the underlying stream of
    * values.
-   * 
+   *
    * @return a new {@link View}.
    */
   public View<Map.Entry<Integer, T>> index() {
@@ -437,7 +437,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Reduce the view to a single value using a given operation.
-   * 
+   *
    * @param carry the neutral element.
    * @param operation the operation to apply.
    * @param <U>
@@ -560,7 +560,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Returns a view with the front elements removed as long as they satisfy a condition.
-   * 
+   *
    * @param predicate the condition to satisfy.
    * @return a {@link View} with the front elements removed.
    */
@@ -636,7 +636,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Returns a view consisting of the elements of this view matching the given predicate.
-   * 
+   *
    * @param predicate the predicate to satisfy.
    * @return a new {@link View}.
    */
@@ -683,7 +683,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Combines two views into a single view. The returned view iterates across the elements of the
    * current view, followed by the elements of the other view.
-   * 
+   *
    * @param view the other {@link View}.
    * @return a new {@link View}.
    */
@@ -928,7 +928,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * Split the view into windows of fixed size {@code length} (the final list may be smaller). At
    * each step, the first {@code length - 1} elements of the window are a suffix of the previous
    * window.
-   * 
+   *
    * @param length the window size.
    * @return a {@link ImmutableList}.
    */
@@ -959,7 +959,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Preload the next {@code capacity} view elements.
-   * 
+   *
    * @param capacity the maximum number of element to preload.
    * @param executorService the executor in charge of preloading the next element.
    * @return a new {@link View}.
@@ -1037,7 +1037,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
           }
           return next;
         } catch (InterruptedException e) {
-          // TODO
           Thread.currentThread().interrupt();
           return endOfData();
         }
