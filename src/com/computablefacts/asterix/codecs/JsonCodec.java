@@ -1,4 +1,4 @@
-package com.computablefacts.asterix;
+package com.computablefacts.asterix.codecs;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
