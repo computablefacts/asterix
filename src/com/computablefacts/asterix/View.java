@@ -313,6 +313,35 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Split the view elements into two sub-lists : one matching the given predicate and another one
+   * not matching the given predicate.
+   *
+   * @param predicate the predicate to match.
+   * @return the two sub-lists. {@code Map.Entry.getKey()} returns the elements matching the given
+   *         predicate. {@code Map.Entry.getValue()} returns the elements not matching the given
+   *         predicate.
+   */
+  public Map.Entry<List<T>, List<T>> divide(Predicate<T> predicate) {
+
+    Preconditions.checkNotNull(predicate, "predicate should not be null");
+
+    Map.Entry<List<T>, List<T>> entry =
+        new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>());
+
+    while (hasNext()) {
+
+      T element = next();
+
+      if (predicate.test(element)) {
+        entry.getKey().add(element);
+      } else {
+        entry.getValue().add(element);
+      }
+    }
+    return entry;
+  }
+
+  /**
    * Returns a {@link Map} where keys are the result of a function applied to each element of the
    * view and values are lists of elements corresponding to each key.
    *

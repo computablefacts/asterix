@@ -958,4 +958,43 @@ public class ViewTest {
 
     Assert.assertEquals("{1, 2, 3, 4, 5, 6, 7}", str);
   }
+
+  @Test
+  public void testDivideEmptyView() {
+
+    View<Integer> view = View.of();
+    Map.Entry<List<Integer>, List<Integer>> evenAndOdd = view.divide(x -> x % 2 != 0);
+
+    List<Integer> even = evenAndOdd.getKey();
+    List<Integer> odd = evenAndOdd.getValue();
+
+    Assert.assertEquals(Lists.newArrayList(), even);
+    Assert.assertEquals(Lists.newArrayList(), odd);
+  }
+
+  @Test
+  public void testDivideEvenAndOdd() {
+
+    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    Map.Entry<List<Integer>, List<Integer>> evenAndOdd = view.divide(x -> x % 2 != 0);
+
+    List<Integer> even = evenAndOdd.getKey();
+    List<Integer> odd = evenAndOdd.getValue();
+
+    Assert.assertEquals(Lists.newArrayList(1, 3, 5, 7), even);
+    Assert.assertEquals(Lists.newArrayList(2, 4, 6), odd);
+  }
+
+  @Test
+  public void testDivideOddAndEven() {
+
+    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    Map.Entry<List<Integer>, List<Integer>> evenAndOdd = view.divide(x -> x % 2 == 0);
+
+    List<Integer> odd = evenAndOdd.getKey();
+    List<Integer> even = evenAndOdd.getValue();
+
+    Assert.assertEquals(Lists.newArrayList(1, 3, 5, 7), even);
+    Assert.assertEquals(Lists.newArrayList(2, 4, 6), odd);
+  }
 }
