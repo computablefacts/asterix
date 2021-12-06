@@ -342,6 +342,33 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Split the view elements into two sub-lists : one with the elements in odd positions and another
+   * one with the elements in even positions.
+   *
+   * @return the two sub-lists. {@code Map.Entry.getKey()} returns the elements in odd positions.
+   *         {@code Map.Entry.getValue()} returns the elements in even positions.
+   */
+  public Map.Entry<List<T>, List<T>> divide() {
+
+    Map.Entry<List<T>, List<T>> entry =
+        new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>());
+
+    View<Map.Entry<Integer, T>> view = index();
+
+    while (view.hasNext()) {
+
+      Map.Entry<Integer, T> element = view.next();
+
+      if (element.getKey() % 2 != 0) {
+        entry.getKey().add(element.getValue());
+      } else {
+        entry.getValue().add(element.getValue());
+      }
+    }
+    return entry;
+  }
+
+  /**
    * Returns a {@link Map} where keys are the result of a function applied to each element of the
    * view and values are lists of elements corresponding to each key.
    *
