@@ -940,4 +940,22 @@ public class ViewTest {
 
     Assert.assertEquals(Lists.newArrayList(2, 4, 6), even);
   }
+
+  @Test
+  public void testToStringWithoutPrefixOrSuffix() {
+
+    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    String str = view.toString(x -> Integer.toString(x, 10), ", ");
+
+    Assert.assertEquals("1, 2, 3, 4, 5, 6, 7", str);
+  }
+
+  @Test
+  public void testToStringWithPrefixAndSuffix() {
+
+    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    String str = view.toString(x -> Integer.toString(x, 10), ", ", "{", "}");
+
+    Assert.assertEquals("{1, 2, 3, 4, 5, 6, 7}", str);
+  }
 }

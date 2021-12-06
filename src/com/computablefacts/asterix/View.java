@@ -230,6 +230,48 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Accumulates the view elements into a new {@link String}.
+   *
+   * @param fn map each view element to a {@link String}.
+   * @param separator join mapped elements together using the specified separator.
+   * @return a {@link String} whose format is {@code <el1><separator><el2><separator><el3>...}.
+   */
+  public String toString(Function<T, String> fn, String separator) {
+    return toString(fn, separator, null, null);
+  }
+
+  /**
+   * Accumulates the view elements into a new {@link String}.
+   *
+   * @param fn map each view element to a {@link String}.
+   * @param separator join mapped elements together using the specified separator.
+   * @param prefix string to add at the beginning of the buffer (optional).
+   * @param suffix string to add at the end of the buffer (optional).
+   * @return a {@link String} whose format is
+   *         {@code <prefix><el1><separator><el2><separator><el3>...<suffix>}.
+   */
+  public String toString(Function<T, String> fn, String separator, String prefix, String suffix) {
+
+    Preconditions.checkNotNull(fn, "fn should not be null");
+    Preconditions.checkNotNull(separator, "separator should not be null");
+
+    StringBuilder builder = new StringBuilder();
+
+    while (hasNext()) {
+      if (builder.length() == 0 && prefix != null) {
+        builder.append(prefix);
+      } else if (builder.length() > 0) {
+        builder.append(separator);
+      }
+      builder.append(fn.apply(next()));
+    }
+    if (suffix != null) {
+      builder.append(suffix);
+    }
+    return builder.toString();
+  }
+
+  /**
    * Write view elements to a file.
    *
    * @param fn transform each view element to a string.
