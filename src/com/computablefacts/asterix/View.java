@@ -39,6 +39,22 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return (View<T>) EMPTY_VIEW;
   }
 
+  @SafeVarargs
+  public static <E> View<E> of(E... elements) {
+
+    Preconditions.checkNotNull(elements, "elements should not be null");
+
+    return of(new AbstractIterator<E>() {
+
+      private int i = 0;
+
+      @Override
+      protected E computeNext() {
+        return elements.length <= i ? endOfData() : elements[i++];
+      }
+    });
+  }
+
   public static <T> View<T> of(Stream<T> stream) {
 
     Preconditions.checkNotNull(stream, "stream should not be null");
@@ -53,18 +69,11 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return new View<>(iterator);
   }
 
-  public static <T> View<T> of(List<T> list) {
+  public static <T> View<T> of(Iterable<T> iterable) {
 
-    Preconditions.checkNotNull(list, "list should not be null");
+    Preconditions.checkNotNull(iterable, "iterable should not be null");
 
-    return new View<>(list.iterator());
-  }
-
-  public static <T> View<T> of(Set<T> set) {
-
-    Preconditions.checkNotNull(set, "set should not be null");
-
-    return new View<>(set.iterator());
+    return new View<>(iterable.iterator());
   }
 
   public static <T> View<T> of(Enumeration<T> enumeration) {

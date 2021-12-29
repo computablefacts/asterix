@@ -18,6 +18,16 @@ import com.google.errorprone.annotations.Var;
 public class ViewTest {
 
   @Test
+  public void testViewOfArrayOfStrings() {
+    Assert.assertEquals(Lists.newArrayList("a", "b", "c"), View.of("a", "b", "c").toList());
+  }
+
+  @Test
+  public void testViewOfArrayOfIntegers() {
+    Assert.assertEquals(Lists.newArrayList(1, 2, 3), View.of(1, 2, 3).toList());
+  }
+
+  @Test
   public void testViewOfSet() {
 
     View<String> view = View.of(Sets.newHashSet("a", "b", "c"));
