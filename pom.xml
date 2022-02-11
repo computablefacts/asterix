@@ -148,12 +148,12 @@
                             <rules>
                                 <restrictImports
                                         implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                                    <reason>Nona must not inherit from Nona</reason>
+                                    <reason>Asterix must not inherit from Nona</reason>
                                     <bannedImport>com.computablefacts.nona.**</bannedImport>
                                 </restrictImports>
                                 <restrictImports
                                         implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                                    <reason>Nona must not inherit from Decima</reason>
+                                    <reason>Asterix must not inherit from Decima</reason>
                                     <bannedImport>com.computablefacts.decima.**</bannedImport>
                                 </restrictImports>
                                 <restrictImports
@@ -168,7 +168,7 @@
                                 </restrictImports>
                                 <restrictImports
                                         implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                                    <reason>Nona must not inherit from Jupiter</reason>
+                                    <reason>Asterix must not inherit from Jupiter</reason>
                                     <bannedImport>com.computablefacts.jupiter.**</bannedImport>
                                 </restrictImports>
                                 <restrictImports
