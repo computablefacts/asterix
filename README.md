@@ -75,6 +75,7 @@ Nona contains a few helpers to perform text mining/NLP related tasks :
 - Data Structures
     - [Span](#span)
     - [SpanSequence](#spansequence)
+    - [ConfusionMatrix](#confusionmatrix)
 - Algorithms
     - [StringIterator](#stringiterator)
     - [SnippetExtractor](#snippetextractor)
@@ -82,6 +83,8 @@ Nona contains a few helpers to perform text mining/NLP related tasks :
 - Text-based user interface
     - [AsciiProgressBar](#asciiprogressbar)
     - [AsciiTable](#asciitable)
+- Algorithms
+  - [DocSetLabeler](#docsetlabeler)
 
 ### Span
 
@@ -119,6 +122,41 @@ SpanSequence sequence = new SpanSequence(Lists.newArrayList(span123, span456, sp
 // Usage
 int size = sequence.size() // 3
 Span span = sequence.span(1) // span456
+```
+
+### ConfusionMatrix
+
+A [ConfusionMatrix](src/com/computablefacts/asterix/ConfusionMatrix.java) is
+a tool to evaluate the accuracy of a classification. The following metrics are
+available :
+
+- Matthews Correlation Coefficient
+- Accuracy
+- Positive Predictive Value (aka. Precision)
+- Negative Predictive Value
+- Sensitivity (aka. Recall)
+- Specificity
+- F1 Score
+- False Positive Rate
+- False Discovery Rate
+- False Negative Rate
+
+Furthermore, two functions have been added to compute the following metrics :
+
+- Micro-Average
+- Macro-Average
+
+```java
+ConfusionMatrix matrix = new ConfusionMatrix("");
+matrix.addTruePositives(620);
+matrix.addTrueNegatives(8820);
+matrix.addFalsePositives(180);
+matrix.addFalseNegatives(380);
+
+double mcc = matrix.matthewsCorrelationCoefficient(); // 0.0001
+double accuracy = matrix.accuracy(); // 0.000001
+double sensitivity = matrix.sensitivity(); // 0.000001
+...
 ```
 
 ### StringIterator
@@ -233,3 +271,12 @@ System.out.println(AsciiTable.format(table, true));
 // Display a table without header
 System.out.println(AsciiTable.format(table, false));
 ```
+
+### DocSetLabeler
+
+A highly customizable implementation of the [DocSetLabeler](src/com/computablefacts/asterix/DocSetLabeler.java)
+[algorithm](https://arxiv.org/abs/1409.7591) :
+
+> An algorithm capable of generating expressive thematic labels for any subset of
+> documents in a corpus can greatly facilitate both characterization and navigation
+> of document collections.
