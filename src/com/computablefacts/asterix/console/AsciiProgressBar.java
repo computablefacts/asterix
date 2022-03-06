@@ -78,6 +78,7 @@ final public class AsciiProgressBar {
 
       if (done == total) {
         System.out.flush();
+        System.out.println();
         progress_.setLength(0);
         percentPrev_ = 0;
       }
@@ -103,6 +104,9 @@ final public class AsciiProgressBar {
     public void complete() {
 
       bar_.update(total_, total_, done_ + "/" + total_ + " (slice " + slice_ + ")");
+
+      System.out.flush();
+      System.out.println();
 
       done_ = 1;
       total_ = 2;
