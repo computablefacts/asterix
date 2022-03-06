@@ -105,9 +105,6 @@ final public class AsciiProgressBar {
 
       bar_.update(total_, total_, done_ + "/" + total_ + " (slice " + slice_ + ")");
 
-      System.out.flush();
-      System.out.println();
-
       done_ = 1;
       total_ = 2;
       slice_ = 1;

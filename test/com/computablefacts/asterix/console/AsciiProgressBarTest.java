@@ -60,7 +60,7 @@ public class AsciiProgressBarTest {
   public void testUpdate100() {
     AsciiProgressBar.ProgressBar progressBar = AsciiProgressBar.create();
     progressBar.update(100, 100);
-    Assert.assertEquals("\r100% ################################################## |",
+    Assert.assertEquals("\r100% ################################################## |\r\n",
         outContent_.toString());
   }
 
@@ -74,23 +74,23 @@ public class AsciiProgressBarTest {
       progressBar.update();
 
       if (i == 0) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 2/2 (slice 1)"));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 2/2 (slice 1)\r\n"));
       } else if (i == 2) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 3/3 (slice 2)"));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 3/3 (slice 2)\r\n"));
       } else if (i == 5) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 4/4 (slice 3)"));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 4/4 (slice 3)\r\n"));
       } else if (i == 10) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 6/6 (slice 4)"));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 6/6 (slice 4)\r\n"));
       }
     }
 
     progressBar.complete();
 
     Assert.assertTrue(outContent_.toString().endsWith(
-        "\r100% ################################################## 2821/3597 (slice 20)"));
+        "\r100% ################################################## 2821/3597 (slice 20)\r\n"));
   }
 }
