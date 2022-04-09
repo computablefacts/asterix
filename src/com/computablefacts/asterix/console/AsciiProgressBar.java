@@ -78,7 +78,7 @@ final public class AsciiProgressBar {
 
       if (done == total) {
         System.out.flush();
-        System.out.println();
+        System.out.print(System.lineSeparator());
         progress_.setLength(0);
         percentPrev_ = 0;
       }
