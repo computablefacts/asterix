@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
@@ -16,6 +20,8 @@ import com.google.errorprone.annotations.Var;
 
 @CheckReturnValue
 final public class IO {
+
+  private static final Logger logger_ = LoggerFactory.getLogger(IO.class);
 
   private IO() {}
 
@@ -37,7 +43,9 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().add("file", file)
+          .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
+          .message(e).formatError());
     }
     return false;
   }
@@ -52,7 +60,9 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().add("file", file)
+          .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
+          .message(e).formatError());
     }
     return false;
   }
@@ -65,7 +75,7 @@ final public class IO {
     try {
       return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().add("file", file).message(e).formatError());
     }
     return Lists.newArrayList();
   }
@@ -83,7 +93,8 @@ final public class IO {
       }
       return true;
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(
+          LogFormatter.create().add("file", file).add("append", append).message(e).formatError());
     }
     return false;
   }
@@ -172,7 +183,8 @@ final public class IO {
         return true;
       }
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(
+          LogFormatter.create().add("input", input).add("output", output).message(e).formatError());
     }
     return false;
   }
@@ -197,7 +209,8 @@ final public class IO {
         return true;
       }
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(
+          LogFormatter.create().add("input", input).add("output", output).message(e).formatError());
     }
     return false;
   }
@@ -216,7 +229,7 @@ final public class IO {
         try {
           reader_.close();
         } catch (IOException e) {
-          // FALL THROUGH
+          logger_.error(LogFormatter.create().message(e).formatError());
         }
         reader_ = null;
       }
@@ -237,7 +250,7 @@ final public class IO {
           }
         }
       } catch (IOException e) {
-        // FALL THROUGH
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
       close();
       return endOfData();
