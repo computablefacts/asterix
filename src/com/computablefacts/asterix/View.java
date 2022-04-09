@@ -16,6 +16,10 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -24,6 +28,7 @@ import com.google.errorprone.annotations.Var;
 @CheckReturnValue
 public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
+  private static final Logger logger_ = LoggerFactory.getLogger(View.class);
   private static final View<?> EMPTY_VIEW = new View<>(Collections.emptyIterator());
   private static final Object END_MARKER = new Object();
   private static final Object NULL_MARKER = new Object();
@@ -101,7 +106,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
             return fn.apply(rs);
           }
         } catch (SQLException e) {
-          // FALL THROUGH
+          logger_.error(LogFormatter.create().message(e).formatError());
         }
         return endOfData();
       }
@@ -120,7 +125,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       return new View<>(
           isCompressed ? IO.newCompressedLineIterator(file) : IO.newLineIterator(file));
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return of();
   }
@@ -181,7 +186,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       try {
         ((AutoCloseable) iterator_).close();
       } catch (Exception e) {
-        // FALL THROUGH
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
     }
   }
@@ -313,11 +318,13 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
           writer.write(el);
           writer.newLine();
         } catch (IOException e) {
-          // FALL THROUGH
+          logger_.error(LogFormatter.create().add("file", file).add("append", append)
+              .add("compress", compress).message(e).formatError());
         }
       });
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().add("file", file).add("append", append)
+          .add("compress", compress).message(e).formatError());
     }
   }
 
@@ -1189,6 +1196,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
           }
           return next;
         } catch (InterruptedException e) {
+          logger_.error(LogFormatter.create().message(e).formatError());
           Thread.currentThread().interrupt();
           return endOfData();
         }
