@@ -95,7 +95,8 @@ public class AsciiProgressBarTest {
 
     progressBar.complete();
 
-    Assert.assertTrue(outContent_.toString().endsWith(
-        "\r100% ################################################## 2821/3597 (slice 20)\r\n"));
+    Assert.assertTrue(outContent_.toString()
+        .endsWith("\r100% ################################################## 2821/3597 (slice 20)"
+            + System.lineSeparator()));
   }
 }
