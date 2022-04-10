@@ -52,6 +52,90 @@ public abstract class DocSetLabeler {
   }
 
   /**
+   * See https://en.wikipedia.org/wiki/Information_gain_ratio#Information_gain_calculation for
+   * details.
+   *
+   * A good high-level overview can be found here
+   * https://towardsdatascience.com/entropy-how-decision-trees-make-decisions-2946b9c18c8
+   *
+   * @param candidate candidate label.
+   * @param pos documents (from the subset) that contain this label.
+   * @param neg documents (from the corpus) that contain this label.
+   * @return information gain.
+   */
+  static double informationGain(String candidate, Map<String, Set<String>> pos,
+      Map<String, Set<String>> neg) {
+
+    Preconditions.checkNotNull(candidate, "candidate should not be null");
+    Preconditions.checkNotNull(pos, "pos should not be null");
+    Preconditions.checkNotNull(neg, "neg should not be null");
+
+    double nbPosDocs = pos.size();
+    double nbNegDocs = neg.size();
+    double nbDocs = pos.size() + neg.size();
+
+    double nbCandidateMatchInPosDocs = pos.values().stream()
+        .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(candidate)) ? 1.0 : 0.0)
+        .sum();
+    double nbCandidateMatchInNegDocs = neg.values().stream()
+        .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(candidate)) ? 1.0 : 0.0)
+        .sum();
+    double nbCandidateMatchInDocs = nbCandidateMatchInPosDocs + nbCandidateMatchInNegDocs;
+
+    double h = entropy(nbDocs, nbCandidateMatchInDocs, nbDocs - nbCandidateMatchInDocs);
+    double hPos =
+        entropy(nbPosDocs, nbCandidateMatchInPosDocs, nbPosDocs - nbCandidateMatchInPosDocs);
+    double hNeg =
+        entropy(nbNegDocs, nbCandidateMatchInNegDocs, nbNegDocs - nbCandidateMatchInNegDocs);
+
+    return h - ((nbPosDocs / nbDocs) * hPos + (nbNegDocs / nbDocs) * hNeg);
+  }
+
+  /**
+   * See https://en.wikipedia.org/wiki/Information_gain_ratio#Intrinsic_value_calculation for
+   * details.
+   *
+   * @param candidate candidate label.
+   * @param pos documents (from the subset) that contain this label.
+   * @param neg documents (from the corpus) that contain this label.
+   * @return intrinsic value.
+   */
+  static double intrinsicValue(String candidate, Map<String, Set<String>> pos,
+      Map<String, Set<String>> neg) {
+
+    Preconditions.checkNotNull(candidate, "candidate should not be null");
+    Preconditions.checkNotNull(pos, "pos should not be null");
+    Preconditions.checkNotNull(neg, "neg should not be null");
+
+    double nbPosDocs = pos.values().stream()
+        .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(candidate)) ? 1.0 : 0.0)
+        .sum();
+    double nbNegDocs = neg.values().stream()
+        .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(candidate)) ? 1.0 : 0.0)
+        .sum();
+    double nbDocs = pos.size() + neg.size();
+
+    return -((nbPosDocs / nbDocs) * log2(nbPosDocs / nbDocs)
+        + (nbNegDocs / nbDocs) * log2(nbNegDocs / nbDocs));
+  }
+
+  /**
+   * See https://en.wikipedia.org/wiki/Information_gain_ratio#Information_gain_ratio_calculation for
+   * details.
+   *
+   * @param candidate candidate label.
+   * @param pos documents (from the subset) that contain this label.
+   * @param neg documents (from the corpus) that contain this label.
+   * @return score.
+   */
+  static double informationGainRatio(String candidate, Map<String, Set<String>> pos,
+      Map<String, Set<String>> neg) {
+    double informationGain = informationGain(candidate, pos, neg);
+    double intrinsicValue = intrinsicValue(candidate, pos, neg);
+    return informationGain / intrinsicValue;
+  }
+
+  /**
    * Extract labels from texts.
    *
    * @param corpus a corpus of texts.
@@ -182,83 +266,5 @@ public abstract class DocSetLabeler {
   private double calcScore(String candidate, Map<String, Set<String>> pos,
       Map<String, Set<String>> neg) {
     return informationGainRatio(candidate, pos, neg);
-  }
-
-  /**
-   * See https://en.wikipedia.org/wiki/Information_gain_ratio#Information_gain_ratio_calculation for
-   * details.
-   *
-   * @param candidate candidate label.
-   * @param pos documents (from the subset) that contain this label.
-   * @param neg documents (from the corpus) that contain this label.
-   * @return score.
-   */
-  private double informationGainRatio(String candidate, Map<String, Set<String>> pos,
-      Map<String, Set<String>> neg) {
-    return informationGain(candidate, pos, neg) / intrinsicValue(candidate, pos, neg);
-  }
-
-  /**
-   * See https://en.wikipedia.org/wiki/Information_gain_ratio#Intrinsic_value_calculation for
-   * details.
-   *
-   * @param candidate candidate label.
-   * @param pos documents (from the subset) that contain this label.
-   * @param neg documents (from the corpus) that contain this label.
-   * @return intrinsic value.
-   */
-  private double intrinsicValue(String candidate, Map<String, Set<String>> pos,
-      Map<String, Set<String>> neg) {
-
-    Preconditions.checkNotNull(candidate, "candidate should not be null");
-    Preconditions.checkNotNull(pos, "pos should not be null");
-    Preconditions.checkNotNull(neg, "neg should not be null");
-
-    double nbPosDocs = pos.size();
-    double nbNegDocs = neg.size();
-    double nbDocs = pos.size() + neg.size();
-
-    return -((nbPosDocs / nbDocs) * log2(nbPosDocs / nbDocs)
-        + (nbNegDocs / nbDocs) * log2(nbNegDocs / nbDocs));
-  }
-
-  /**
-   * See https://en.wikipedia.org/wiki/Information_gain_ratio#Information_gain_calculation for
-   * details.
-   *
-   * A good high-level overview can be found here
-   * https://towardsdatascience.com/entropy-how-decision-trees-make-decisions-2946b9c18c8
-   *
-   * @param candidate candidate label.
-   * @param pos documents (from the subset) that contain this label.
-   * @param neg documents (from the corpus) that contain this label.
-   * @return information gain.
-   */
-  private double informationGain(String candidate, Map<String, Set<String>> pos,
-      Map<String, Set<String>> neg) {
-
-    Preconditions.checkNotNull(candidate, "candidate should not be null");
-    Preconditions.checkNotNull(pos, "pos should not be null");
-    Preconditions.checkNotNull(neg, "neg should not be null");
-
-    double nbPosDocs = pos.size();
-    double nbNegDocs = neg.size();
-    double nbDocs = pos.size() + neg.size();
-
-    double nbCandidateMatchInPosDocs = pos.values().stream()
-        .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(candidate)) ? 1.0 : 0.0)
-        .sum();
-    double nbCandidateMatchInNegDocs = neg.values().stream()
-        .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(candidate)) ? 1.0 : 0.0)
-        .sum();
-    double nbCandidateMatchInDocs = nbCandidateMatchInPosDocs + nbCandidateMatchInNegDocs;
-
-    double h = entropy(nbDocs, nbCandidateMatchInDocs, nbDocs - nbCandidateMatchInDocs);
-    double hPos =
-        entropy(nbPosDocs, nbCandidateMatchInPosDocs, nbPosDocs - nbCandidateMatchInPosDocs);
-    double hNeg =
-        entropy(nbNegDocs, nbCandidateMatchInNegDocs, nbNegDocs - nbCandidateMatchInNegDocs);
-
-    return h - ((nbPosDocs / nbDocs) * hPos + (nbNegDocs / nbDocs) * hNeg);
   }
 }
