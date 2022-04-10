@@ -1,5 +1,7 @@
 package com.computablefacts.asterix;
 
+import java.util.Iterator;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -99,7 +101,7 @@ public class SpanSequenceTest {
   }
 
   @Test
-  public void testCompareTo() {
+  public void testCompareToSequenceWithSameLength() {
 
     SpanSequence sequence1 = new SpanSequence();
     SpanSequence sequence2 = new SpanSequence();
@@ -119,6 +121,23 @@ public class SpanSequenceTest {
 
     Assert.assertEquals(-1, sequence2.compareTo(sequence1));
     Assert.assertEquals(1, sequence1.compareTo(sequence2));
+  }
+
+  @Test
+  public void testCompareToSequenceWithDifferentLength() {
+
+    SpanSequence sequence1 = new SpanSequence();
+    SpanSequence sequence2 = new SpanSequence();
+
+    for (int i = 0; i < 50; i++) {
+      sequence1.add(new Span("span-" + Integer.toString(i, 10)));
+    }
+    for (int i = 0; i < 100; i++) {
+      sequence2.add(new Span("span-" + Integer.toString(i, 10)));
+    }
+
+    Assert.assertEquals(1, sequence2.compareTo(sequence1));
+    Assert.assertEquals(0, sequence1.compareTo(sequence2));
   }
 
   @Test
@@ -172,5 +191,24 @@ public class SpanSequenceTest {
     Assert.assertEquals(2, sequence.size());
     Assert.assertEquals(month, sequence.span(0));
     Assert.assertEquals(year, sequence.span(1));
+  }
+
+  @Test
+  public void testIterator() {
+
+    SpanSequence sequence = new SpanSequence();
+
+    for (int i = 0; i < 50; i++) {
+      sequence.add(new Span("span-" + Integer.toString(i, 10)));
+    }
+
+    Iterator<Span> iterator = sequence.iterator();
+
+    for (int i = 0; i < 50; i++) {
+      Span span = iterator.next();
+      Assert.assertEquals("span-" + Integer.toString(i, 10), span.text());
+    }
+
+    Assert.assertFalse(iterator.hasNext());
   }
 }
