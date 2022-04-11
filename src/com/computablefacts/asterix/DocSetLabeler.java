@@ -115,8 +115,7 @@ public abstract class DocSetLabeler {
         .sum();
     double nbDocs = pos.size() + neg.size();
 
-    return -((nbPosDocs / nbDocs) * log2(nbPosDocs / nbDocs)
-        + (nbNegDocs / nbDocs) * log2(nbNegDocs / nbDocs));
+    return -((nbPosDocs + nbNegDocs) / nbDocs) * log2((nbPosDocs + nbNegDocs) / nbDocs);
   }
 
   /**

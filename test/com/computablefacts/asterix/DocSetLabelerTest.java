@@ -131,8 +131,8 @@ public class DocSetLabelerTest {
     double intrinsicValueYes = DocSetLabeler.intrinsicValue("yes", pos, neg);
     double intrinsicValueNo = DocSetLabeler.intrinsicValue("no", pos, neg);
 
-    Assert.assertEquals(0.91635, intrinsicValueYes, 0.00001);
-    Assert.assertEquals(0.68635, intrinsicValueNo, 0.00001);
+    Assert.assertEquals(0.48367, intrinsicValueYes, 0.00001);
+    Assert.assertEquals(0.51311, intrinsicValueNo, 0.00001);
   }
 
   @Test
@@ -175,8 +175,8 @@ public class DocSetLabelerTest {
     double informationGainRatioYes = DocSetLabeler.informationGainRatio("yes", pos, neg);
     double informationGainRatioNo = DocSetLabeler.informationGainRatio("no", pos, neg);
 
-    Assert.assertEquals(0.41601, informationGainRatioYes, 0.00001);
-    Assert.assertEquals(0.55541, informationGainRatioNo, 0.00001);
+    Assert.assertEquals(0.78816, informationGainRatioYes, 0.00001);
+    Assert.assertEquals(0.74293, informationGainRatioNo, 0.00001);
   }
 
   /**
@@ -241,14 +241,14 @@ public class DocSetLabelerTest {
     double intrinsicValueHumidityHigh = DocSetLabeler.intrinsicValue("high", pos, neg);
     double intrinsicValueHumidityNormal = DocSetLabeler.intrinsicValue("normal", pos, neg);
 
-    Assert.assertEquals(0.99261, intrinsicValueHumidityHigh, 0.00001);
-    Assert.assertEquals(0.79583, intrinsicValueHumidityNormal, 0.00001);
+    Assert.assertEquals(0.5, intrinsicValueHumidityHigh, 0.00001);
+    Assert.assertEquals(0.5, intrinsicValueHumidityNormal, 0.00001);
 
     double intrinsicValueWindyTrue = DocSetLabeler.intrinsicValue("true", pos, neg);
     double intrinsicValueWindyFalse = DocSetLabeler.intrinsicValue("false", pos, neg);
 
-    Assert.assertEquals(0.95245, intrinsicValueWindyTrue, 0.00001);
-    Assert.assertEquals(0.92493, intrinsicValueWindyFalse, 0.00001);
+    Assert.assertEquals(0.52388, intrinsicValueWindyTrue, 0.00001);
+    Assert.assertEquals(0.46134, intrinsicValueWindyFalse, 0.00001);
   }
 
   @Test
@@ -276,13 +276,13 @@ public class DocSetLabelerTest {
     double informationGainRatioHumidityNormal =
         DocSetLabeler.informationGainRatio("normal", pos, neg);
 
-    Assert.assertEquals(0.15296, informationGainRatioHumidityHigh, 0.00001);
-    Assert.assertEquals(0.19078, informationGainRatioHumidityNormal, 0.00001);
+    Assert.assertEquals(0.30367, informationGainRatioHumidityHigh, 0.00001);
+    Assert.assertEquals(0.30367, informationGainRatioHumidityNormal, 0.00001);
 
     double informationGainRatioWindyTrue = DocSetLabeler.informationGainRatio("true", pos, neg);
     double informationGainRatioWindyFalse = DocSetLabeler.informationGainRatio("false", pos, neg);
 
-    Assert.assertEquals(0.05052, informationGainRatioWindyTrue, 0.00001);
-    Assert.assertEquals(0.05203, informationGainRatioWindyFalse, 0.00001);
+    Assert.assertEquals(0.09186, informationGainRatioWindyTrue, 0.00001);
+    Assert.assertEquals(0.10431, informationGainRatioWindyFalse, 0.00001);
   }
 }
