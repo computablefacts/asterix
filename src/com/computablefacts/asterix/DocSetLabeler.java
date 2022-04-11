@@ -125,12 +125,19 @@ public abstract class DocSetLabeler {
    * @param candidate candidate label.
    * @param pos documents (from the subset) that contain this label.
    * @param neg documents (from the corpus) that contain this label.
+   * @param contenders the contenders that could be picked as candidate.
    * @return score.
    */
   static double informationGainRatio(String candidate, Map<String, Set<String>> pos,
-      Map<String, Set<String>> neg) {
+      Map<String, Set<String>> neg, Set<String> contenders) {
+
     double informationGain = informationGain(candidate, pos, neg);
-    double intrinsicValue = intrinsicValue(candidate, pos, neg);
+    @Var
+    double intrinsicValue = 0.0d;
+
+    for (String challenger : contenders) {
+      intrinsicValue += intrinsicValue(challenger, pos, neg);
+    }
     return informationGain / intrinsicValue;
   }
 
@@ -238,8 +245,13 @@ public abstract class DocSetLabeler {
     uinit();
 
     // For each candidate keyword compute the information gain
+    Set<String> contenders =
+        Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+            neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+
     List<Map.Entry<String, Double>> candidates = pos.values().stream().flatMap(Collection::stream)
-        .map(candidate -> new AbstractMap.SimpleEntry<>(candidate, calcScore(candidate, pos, neg)))
+        .map(candidate -> new AbstractMap.SimpleEntry<>(candidate,
+            calcScore(candidate, pos, neg, contenders)))
         .sorted(byScoreDesc).distinct().collect(Collectors.toList());
 
     // Keep the keywords with the highest information gain
@@ -263,7 +275,7 @@ public abstract class DocSetLabeler {
   }
 
   private double calcScore(String candidate, Map<String, Set<String>> pos,
-      Map<String, Set<String>> neg) {
-    return informationGainRatio(candidate, pos, neg);
+      Map<String, Set<String>> neg, Set<String> contenders) {
+    return informationGainRatio(candidate, pos, neg, contenders);
   }
 }

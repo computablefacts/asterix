@@ -172,11 +172,13 @@ public class DocSetLabelerTest {
     neg.put("29", Sets.newHashSet("yes"));
     neg.put("30", Sets.newHashSet("no"));
 
-    double informationGainRatioYes = DocSetLabeler.informationGainRatio("yes", pos, neg);
-    double informationGainRatioNo = DocSetLabeler.informationGainRatio("no", pos, neg);
+    double informationGainRatioYes =
+        DocSetLabeler.informationGainRatio("yes", pos, neg, Sets.newHashSet("yes", "no"));
+    double informationGainRatioNo =
+        DocSetLabeler.informationGainRatio("no", pos, neg, Sets.newHashSet("yes", "no"));
 
-    Assert.assertEquals(0.78816, informationGainRatioYes, 0.00001);
-    Assert.assertEquals(0.74293, informationGainRatioNo, 0.00001);
+    Assert.assertEquals(0.38244, informationGainRatioYes, 0.00001);
+    Assert.assertEquals(0.38244, informationGainRatioNo, 0.00001);
   }
 
   /**
@@ -272,17 +274,20 @@ public class DocSetLabelerTest {
     neg.put("13", Sets.newHashSet("rainy", "mild", "high", "false"));
     neg.put("14", Sets.newHashSet("sunny", "mild", "high", "true"));
 
-    double informationGainRatioHumidityHigh = DocSetLabeler.informationGainRatio("high", pos, neg);
+    double informationGainRatioHumidityHigh =
+        DocSetLabeler.informationGainRatio("high", pos, neg, Sets.newHashSet("high", "normal"));
     double informationGainRatioHumidityNormal =
-        DocSetLabeler.informationGainRatio("normal", pos, neg);
+        DocSetLabeler.informationGainRatio("normal", pos, neg, Sets.newHashSet("high", "normal"));
 
-    Assert.assertEquals(0.30367, informationGainRatioHumidityHigh, 0.00001);
-    Assert.assertEquals(0.30367, informationGainRatioHumidityNormal, 0.00001);
+    Assert.assertEquals(0.15183, informationGainRatioHumidityHigh, 0.00001);
+    Assert.assertEquals(0.15183, informationGainRatioHumidityNormal, 0.00001);
 
-    double informationGainRatioWindyTrue = DocSetLabeler.informationGainRatio("true", pos, neg);
-    double informationGainRatioWindyFalse = DocSetLabeler.informationGainRatio("false", pos, neg);
+    double informationGainRatioWindyTrue =
+        DocSetLabeler.informationGainRatio("true", pos, neg, Sets.newHashSet("true", "false"));
+    double informationGainRatioWindyFalse =
+        DocSetLabeler.informationGainRatio("false", pos, neg, Sets.newHashSet("true", "false"));
 
-    Assert.assertEquals(0.09186, informationGainRatioWindyTrue, 0.00001);
-    Assert.assertEquals(0.10431, informationGainRatioWindyFalse, 0.00001);
+    Assert.assertEquals(0.04884, informationGainRatioWindyTrue, 0.00001);
+    Assert.assertEquals(0.04884, informationGainRatioWindyFalse, 0.00001);
   }
 }
