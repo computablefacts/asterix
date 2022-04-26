@@ -1,6 +1,5 @@
 package com.computablefacts.asterix.queries;
 
-import java.math.BigDecimal;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +57,12 @@ final public class TerminalNode<T extends AbstractQueryEngine> extends AbstractN
         String minTerm = "*".equals(min) ? null : min;
         String maxTerm = "*".equals(max) ? null : max;
 
-        return Optional.of(
-            new AbstractMap.SimpleImmutableEntry<>(minTerm == null ? null : new BigDecimal(minTerm),
-                maxTerm == null ? null : new BigDecimal(maxTerm)));
+        Number minNumber =
+            minTerm == null ? null : (Number) StringCodec.defaultCoercer(minTerm, false);
+        Number maxNumber =
+            maxTerm == null ? null : (Number) StringCodec.defaultCoercer(maxTerm, false);
+
+        return Optional.of(new AbstractMap.SimpleImmutableEntry<>(minNumber, maxNumber));
       }
     }
     return Optional.empty();
