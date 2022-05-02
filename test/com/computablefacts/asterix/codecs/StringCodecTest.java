@@ -9,12 +9,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.computablefacts.asterix.RandomString;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
@@ -254,7 +257,6 @@ public class StringCodecTest {
     assertTrue(StringCodec.isNumber("22338L"));
     assertTrue(StringCodec.isNumber("2."));
   }
-
 
   @Test
   public void testLexicodeEdgeCases() {
@@ -602,5 +604,36 @@ public class StringCodecTest {
 
     Assert.assertNotEquals(bigDecimal, StringCodec.defaultCoercer("79E286", false));
     Assert.assertEquals("79E286", StringCodec.defaultCoercer("79E286", false));
+  }
+
+  @Test
+  public void testDefaultCoercerSpeed() {
+
+    RandomString randomString = new RandomString(50);
+    Stopwatch stopwatchNoCoercer = Stopwatch.createStarted();
+
+    for (int i = 0; i < 2000000; i++) {
+      String str = randomString.nextString();
+    }
+
+    stopwatchNoCoercer.stop();
+    long elapsedTimeNoCoercer = stopwatchNoCoercer.elapsed(TimeUnit.MILLISECONDS);
+
+    System.out.println("[String] elapsed time : " + elapsedTimeNoCoercer);
+
+    Stopwatch stopwatchCoercer = Stopwatch.createStarted();
+
+    for (int i = 0; i < 2000000; i++) {
+      Object obj = StringCodec.defaultCoercer(randomString.nextString(), false);
+    }
+
+    stopwatchCoercer.stop();
+    long elapsedTimeCoercer = stopwatchCoercer.elapsed(TimeUnit.MILLISECONDS);
+
+    System.out.println("[Object] elapsed time : " + elapsedTimeCoercer);
+
+    double speedup = (double) elapsedTimeNoCoercer / (double) elapsedTimeCoercer;
+
+    Assert.assertEquals(1.0d, speedup, 0.1d);
   }
 }
