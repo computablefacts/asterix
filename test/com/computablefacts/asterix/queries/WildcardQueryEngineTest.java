@@ -1,6 +1,7 @@
 package com.computablefacts.asterix.queries;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,6 +9,7 @@ import org.junit.Test;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.WildcardMatcher;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class WildcardQueryEngineTest {
 
@@ -28,9 +30,9 @@ public class WildcardQueryEngineTest {
     WildcardQueryEngine engine = new WildcardQueryEngine();
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("mar*");
 
-    Assert.assertEquals(3, node.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short", "Summer Martinez"),
-        node.execute(engine).toList());
+    Assert.assertEquals(5, node.cardinality(engine));
+    Assert.assertEquals(Lists.newArrayList("Marie Delacroix", "Marie Moreau", "Mary Morita",
+        "Mary Short", "Summer Martinez"), node.execute(engine).toList());
   }
 
   @Test
@@ -128,7 +130,49 @@ public class WildcardQueryEngineTest {
         node2.execute(engine).toList());
   }
 
+  @Test
+  public void testThesaurusQuery() {
+
+    WildcardQueryEngine engine = new WildcardQueryEngine();
+    AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("~marie");
+
+    Assert.assertEquals(4, node.cardinality(engine));
+    Assert.assertEquals(
+        Lists.newArrayList("Marie Delacroix", "Marie Moreau", "Mary Morita", "Mary Short"),
+        node.execute(engine).toList());
+  }
+
+  @Test
+  public void testThesaurusQueryAnd() {
+
+    WildcardQueryEngine engine = new WildcardQueryEngine();
+    AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("~marie AND mor*");
+
+    Assert.assertEquals(2, node.cardinality(engine));
+    Assert.assertEquals(Lists.newArrayList("Marie Moreau", "Mary Morita"),
+        node.execute(engine).toList());
+  }
+
+  @Test
+  public void testThesaurusQueryAndNot() {
+
+    WildcardQueryEngine engine = new WildcardQueryEngine();
+    AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("~marie AND -mor*");
+
+    Assert.assertEquals(4, node.cardinality(engine));
+    Assert.assertEquals(Lists.newArrayList("Marie Delacroix", "Mary Short"),
+        node.execute(engine).toList());
+  }
+
   private static class WildcardQueryEngine extends AbstractQueryEngine {
+
+    @Override
+    protected Set<String> map(String term) {
+      if ("mary".equals(term) || "marie".equals(term)) {
+        return Sets.newHashSet("mary", "marie");
+      }
+      return Sets.newHashSet(term);
+    }
 
     @Override
     public View<String> executeQuery(String field, Number min, Number max) {
@@ -143,8 +187,8 @@ public class WildcardQueryEngineTest {
 
     private List<String> persons() {
       return Lists.newArrayList("Delores Hardy", "Edward Bell", "Gregory Blackwood",
-          "Keith Franklin", "Mary Morita", "Mary Short", "Michele Moore", "Paul Powell",
-          "Robert Frye", "Summer Martinez");
+          "Keith Franklin", "Marie Delacroix", "Marie Moreau", "Mary Morita", "Mary Short",
+          "Michele Moore", "Paul Powell", "Robert Frye", "Summer Martinez");
     }
   }
 }
