@@ -1,9 +1,6 @@
 package com.computablefacts.asterix.queries;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -170,36 +167,22 @@ public class RangeQueryEngineTest {
   private static class RangeQueryEngine extends AbstractQueryEngine {
 
     @Override
-    public long rangeCardinality(String key, String value) {
-      return rangeQuery(key, value).toList().size();
+    public View<String> executeQuery(String field, String term) {
+      return View.of();
     }
 
     @Override
-    public View<String> rangeQuery(String key, String value) {
-
-      Optional<Map.Entry<Number, Number>> range = TerminalNode.range(value);
-
-      if (!range.isPresent()) {
-        return View.of();
-      }
-
-      Number min = range.get().getKey();
-      Number max = range.get().getValue();
-
-      return View.of(executeQuery(key, min, max)).map(i -> Integer.toString(i, 10));
-    }
-
-    public List<Integer> executeQuery(String field, Number min, Number max) {
+    public View<String> executeQuery(String field, Number min, Number max) {
       if ("even".equals(field)) {
-        return even().stream().filter(i -> min == null || min.intValue() <= i)
-            .filter(i -> max == null || max.intValue() >= i).collect(Collectors.toList());
+        return View.of(even()).filter(i -> min == null || min.intValue() <= i)
+            .filter(i -> max == null || max.intValue() >= i).map(i -> Integer.toString(i, 10));
       }
       if ("odd".equals(field)) {
-        return odd().stream().filter(i -> min == null || min.intValue() <= i)
-            .filter(i -> max == null || max.intValue() >= i).collect(Collectors.toList());
+        return View.of(odd()).filter(i -> min == null || min.intValue() <= i)
+            .filter(i -> max == null || max.intValue() >= i).map(i -> Integer.toString(i, 10));
       }
-      return evenAndOdd().stream().filter(i -> min == null || min.intValue() <= i)
-          .filter(i -> max == null || max.intValue() >= i).collect(Collectors.toList());
+      return View.of(evenAndOdd()).filter(i -> min == null || min.intValue() <= i)
+          .filter(i -> max == null || max.intValue() >= i).map(i -> Integer.toString(i, 10));
     }
 
     private List<Integer> odd() {

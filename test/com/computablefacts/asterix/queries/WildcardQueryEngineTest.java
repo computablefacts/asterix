@@ -1,15 +1,12 @@
 package com.computablefacts.asterix.queries;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.WildcardMatcher;
-import com.computablefacts.asterix.codecs.StringCodec;
 import com.google.common.collect.Lists;
 
 public class WildcardQueryEngineTest {
@@ -134,37 +131,14 @@ public class WildcardQueryEngineTest {
   private static class WildcardQueryEngine extends AbstractQueryEngine {
 
     @Override
-    public long inflectionalCardinality(String key, String value) {
-      return inflectionalQuery(key, value).toList().size();
+    public View<String> executeQuery(String field, Number min, Number max) {
+      return View.of();
     }
 
     @Override
-    public View<String> inflectionalQuery(String key, String value) {
-
-      List<String> patterns = StringCodec.defaultTokenizer(value).stream().map(Span::text)
-          .map(t -> WildcardMatcher.compact("*" + t + "*")).collect(Collectors.toList());
-
-      return View.of(executeQuery(key, patterns));
-    }
-
-    @Override
-    public long literalCardinality(String key, String value) {
-      return literalQuery(key, value).toList().size();
-    }
-
-    @Override
-    public View<String> literalQuery(String key, String value) {
-
-      String pattern = WildcardMatcher.compact(StringCodec.defaultTokenizer(value).stream()
-          .map(Span::text).collect(Collectors.joining("*")) + "*");
-
-      return View.of(executeQuery(key, Lists.newArrayList(pattern)));
-    }
-
-    public List<String> executeQuery(String field, List<String> patterns) {
-      return persons().stream()
-          .filter(name -> patterns.stream().anyMatch(p -> WildcardMatcher.match(name, p)))
-          .collect(Collectors.toList());
+    public View<String> executeQuery(String field, String term) {
+      String newTerm = WildcardMatcher.compact("*" + term + "*");
+      return View.of(persons()).filter(name -> WildcardMatcher.match(name, newTerm));
     }
 
     private List<String> persons() {
