@@ -634,6 +634,6 @@ public class StringCodecTest {
 
     double speedup = (double) elapsedTimeNoCoercer / (double) elapsedTimeCoercer;
 
-    Assert.assertEquals(1.0d, speedup, 0.1d);
+    Assert.assertEquals(1.0d, speedup, 0.2d);
   }
 }
