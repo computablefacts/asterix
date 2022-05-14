@@ -78,36 +78,36 @@ public class JsonCodecTest {
 
   @Test
   public void testMapFromNullObject() {
-    Assert.assertEquals(Collections.emptyMap(), JsonCodec.asMap((Map) null));
+    Assert.assertEquals(Collections.emptyMap(), JsonCodec.dtoToObject((Map) null));
   }
 
   @Test
   public void testCollectionOfMapsFromNullCollection() {
-    Assert.assertEquals(Collections.emptyList(), JsonCodec.asCollectionOfMaps((List) null));
+    Assert.assertEquals(Collections.emptyList(), JsonCodec.dtosToObjects((List) null));
   }
 
   @Test
   public void testCollectionOfMapsFromNullArray() {
-    Assert.assertEquals(Collections.emptyList(), JsonCodec.asCollectionOfMaps((Map[]) null));
+    Assert.assertEquals(Collections.emptyList(), JsonCodec.dtosToObjects((Map[]) null));
   }
 
   @Test
   public void testMapFromEmptyObject() {
-    Assert.assertEquals(Collections.emptyMap(), JsonCodec.asMap(new HashMap<>()));
+    Assert.assertEquals(Collections.emptyMap(), JsonCodec.dtoToObject(new HashMap<>()));
   }
 
   @Test
   public void testCollectionOfMapsFromEmptyCollection() {
-    Assert.assertEquals(Collections.emptyList(), JsonCodec.asCollectionOfMaps(new ArrayList<>()));
+    Assert.assertEquals(Collections.emptyList(), JsonCodec.dtosToObjects(new ArrayList<>()));
   }
 
   @Test
   public void testCollectionOfMapsFromEmptyArray() {
-    Assert.assertEquals(Collections.emptyList(), JsonCodec.asCollectionOfMaps());
+    Assert.assertEquals(Collections.emptyList(), JsonCodec.dtosToObjects());
   }
 
   @Test
-  public void testSimpleCollection() {
+  public void testDeserializeJsonAsCollectionOfObjects() {
 
     List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
         new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
@@ -115,8 +115,56 @@ public class JsonCodecTest {
 
     Assert.assertFalse(Strings.isNullOrEmpty(json));
 
-    Collection<Map<String, Object>> collection1 = JsonCodec.asCollection(json);
-    Collection<Map<String, Object>> collection2 = JsonCodec.asCollection(
+    Collection<?> collection1 = JsonCodec.asCollection(json);
+    Collection<?> collection2 = JsonCodec.asCollection(
+        "[{\"key\":\"key1\",\"value\":\"value1\"},{\"key\":\"key2\",\"value\":2},{\"key\":\"key3\",\"value\":false}]");
+
+    Assert.assertEquals(collection1, collection2);
+  }
+
+  @Test
+  public void testDeserializeJsonAsArrayOfObjects() {
+
+    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
+        new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
+    String json = JsonCodec.asString(pojos);
+
+    Assert.assertFalse(Strings.isNullOrEmpty(json));
+
+    Object[] collection1 = JsonCodec.asArray(json);
+    Object[] collection2 = JsonCodec.asArray(
+        "[{\"key\":\"key1\",\"value\":\"value1\"},{\"key\":\"key2\",\"value\":2},{\"key\":\"key3\",\"value\":false}]");
+
+    Assert.assertEquals(collection1, collection2);
+  }
+
+  @Test
+  public void testDeserializeJsonAsCollectionOfUnknownType() {
+
+    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
+        new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
+    String json = JsonCodec.asString(pojos);
+
+    Assert.assertFalse(Strings.isNullOrEmpty(json));
+
+    Collection<?> collection1 = JsonCodec.asCollectionOfUnknownType(json);
+    Collection<?> collection2 = JsonCodec.asCollectionOfUnknownType(
+        "[{\"key\":\"key1\",\"value\":\"value1\"},{\"key\":\"key2\",\"value\":2},{\"key\":\"key3\",\"value\":false}]");
+
+    Assert.assertEquals(collection1, collection2);
+  }
+
+  @Test
+  public void testDeserializeJsonAsArrayOfUnknownType() {
+
+    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
+        new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
+    String json = JsonCodec.asString(pojos);
+
+    Assert.assertFalse(Strings.isNullOrEmpty(json));
+
+    Object[] collection1 = JsonCodec.asArrayOfUnknownType(json);
+    Object[] collection2 = JsonCodec.asArrayOfUnknownType(
         "[{\"key\":\"key1\",\"value\":\"value1\"},{\"key\":\"key2\",\"value\":2},{\"key\":\"key3\",\"value\":false}]");
 
     Assert.assertEquals(collection1, collection2);
@@ -323,7 +371,7 @@ public class JsonCodecTest {
       if (!(o instanceof SimplePojo)) {
         return false;
       }
-      SimplePojo pojo = (SimplePojo) o;
+      SimplePojo<?> pojo = (SimplePojo<?>) o;
       return Objects.equals(key_, pojo.key_) && Objects.equals(value_, pojo.value_);
     }
 

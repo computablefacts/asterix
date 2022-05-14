@@ -106,7 +106,7 @@ final public class JsonCodec {
    * @param <T> the object type.
    * @return a JSON object.
    */
-  public static <T> @NotNull Map<String, Object> asMap(T obj) {
+  public static <T> @NotNull Map<String, Object> dtoToObject(T obj) {
     try {
       return obj == null ? Collections.emptyMap()
           : mapper_.convertValue(obj, new TypeReference<Map<String, Object>>() {});
@@ -123,11 +123,12 @@ final public class JsonCodec {
    * @param <T> the object type.
    * @return a {@link Collection} of JSON objects.
    */
-  public static <T> @NotNull Collection<Map<String, Object>> asCollectionOfMaps(Collection<T> obj) {
+  public static <T> @NotNull Collection<Map<String, Object>> dtosToObjects(Collection<T> obj) {
     if (obj == null) {
       return Collections.emptyList();
     }
-    return obj.stream().filter(Objects::nonNull).map(JsonCodec::asMap).collect(Collectors.toList());
+    return obj.stream().filter(Objects::nonNull).map(JsonCodec::dtoToObject)
+        .collect(Collectors.toList());
   }
 
   /**
@@ -138,11 +139,11 @@ final public class JsonCodec {
    * @return a {@link Collection} of JSON objects.
    */
   @SafeVarargs
-  public static <T> @NotNull Collection<Map<String, Object>> asCollectionOfMaps(T... obj) {
+  public static <T> @NotNull Collection<Map<String, Object>> dtosToObjects(T... obj) {
     if (obj == null) {
       return Collections.emptyList();
     }
-    return Arrays.stream(obj).filter(Objects::nonNull).map(JsonCodec::asMap)
+    return Arrays.stream(obj).filter(Objects::nonNull).map(JsonCodec::dtoToObject)
         .collect(Collectors.toList());
   }
 
@@ -238,6 +239,40 @@ final public class JsonCodec {
     try {
       return json == null ? new Map[0]
           : mapper_.readValue(json, TypeFactory.defaultInstance().constructArrayType(Map.class));
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+    }
+    return new Map[0];
+  }
+
+  /**
+   * Convert a string to a {@link Collection} of objects.
+   *
+   * @param json string.
+   * @return a {@link Collection} of objects.
+   */
+  public static @NotNull Collection<Object> asCollectionOfUnknownType(String json) {
+    try {
+      return json == null ? Collections.emptyList()
+          : mapper_.readValue(json, TypeFactory.defaultInstance()
+              .constructCollectionType(List.class, TypeFactory.unknownType()));
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+    }
+    return Collections.emptyList();
+  }
+
+  /**
+   * Convert a string to an array of objects.
+   *
+   * @param json string.
+   * @return an array of objects.
+   */
+  public static @NotNull Object[] asArrayOfUnknownType(String json) {
+    try {
+      return json == null ? new Map[0]
+          : mapper_.readValue(json,
+              TypeFactory.defaultInstance().constructArrayType(TypeFactory.unknownType()));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
