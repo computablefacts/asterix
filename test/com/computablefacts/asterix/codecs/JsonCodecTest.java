@@ -186,6 +186,67 @@ public class JsonCodecTest {
   }
 
   @Test
+  public void testFlattenKeepArrays() {
+
+    String json =
+        "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
+    Map<String, Object> map = JsonCodec.flattenKeepArrays(json, '¤');
+
+    Assert.assertTrue(map.containsKey("id"));
+    Assert.assertTrue(map.containsKey("type"));
+    Assert.assertTrue(map.containsKey("name"));
+    Assert.assertTrue(map.containsKey("ppu"));
+    Assert.assertTrue(map.containsKey("batters¤batter"));
+    Assert.assertTrue(map.containsKey("topping"));
+
+    Assert.assertEquals("0002", map.get("id"));
+    Assert.assertEquals("donut", map.get("type"));
+    Assert.assertEquals("Raised", map.get("name"));
+    Assert.assertEquals(0.55, map.get("ppu"));
+    Assert.assertEquals(1, ((Collection<?>) map.get("batters¤batter")).size());
+    Assert.assertEquals(5, ((Collection<?>) map.get("topping")).size());
+  }
+
+  @Test
+  public void testFlattenKeepPrimitiveArrays() {
+
+    String json =
+        "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[\"Regular\",\"Slim\"]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
+    Map<String, Object> map = JsonCodec.flattenKeepPrimitiveArrays(json, '¤');
+
+    Assert.assertTrue(map.containsKey("id"));
+    Assert.assertTrue(map.containsKey("type"));
+    Assert.assertTrue(map.containsKey("name"));
+    Assert.assertTrue(map.containsKey("ppu"));
+    Assert.assertTrue(map.containsKey("batters¤batter"));
+    Assert.assertTrue(map.containsKey("topping[0]¤type"));
+    Assert.assertTrue(map.containsKey("topping[1]¤id"));
+    Assert.assertTrue(map.containsKey("topping[1]¤type"));
+    Assert.assertTrue(map.containsKey("topping[2]¤id"));
+    Assert.assertTrue(map.containsKey("topping[2]¤type"));
+    Assert.assertTrue(map.containsKey("topping[3]¤id"));
+    Assert.assertTrue(map.containsKey("topping[3]¤type"));
+    Assert.assertTrue(map.containsKey("topping[4]¤id"));
+    Assert.assertTrue(map.containsKey("topping[4]¤type"));
+
+    Assert.assertEquals("0002", map.get("id"));
+    Assert.assertEquals("donut", map.get("type"));
+    Assert.assertEquals("Raised", map.get("name"));
+    Assert.assertEquals(0.55, map.get("ppu"));
+    Assert.assertEquals(Lists.newArrayList("Regular", "Slim"), map.get("batters¤batter"));
+    Assert.assertEquals("5001", map.get("topping[0]¤id"));
+    Assert.assertEquals("None", map.get("topping[0]¤type"));
+    Assert.assertEquals("5002", map.get("topping[1]¤id"));
+    Assert.assertEquals("Glazed", map.get("topping[1]¤type"));
+    Assert.assertEquals("5005", map.get("topping[2]¤id"));
+    Assert.assertEquals("Sugar", map.get("topping[2]¤type"));
+    Assert.assertEquals("5003", map.get("topping[3]¤id"));
+    Assert.assertEquals("Chocolate", map.get("topping[3]¤type"));
+    Assert.assertEquals("5004", map.get("topping[4]¤id"));
+    Assert.assertEquals("Maple", map.get("topping[4]¤type"));
+  }
+
+  @Test
   public void testUnflattenAsString() {
 
     Map<String, Object> map = new HashMap<>();

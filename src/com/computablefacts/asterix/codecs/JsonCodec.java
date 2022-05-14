@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.wnameless.json.base.JacksonJsonCore;
+import com.github.wnameless.json.flattener.FlattenMode;
 import com.github.wnameless.json.flattener.JsonFlattener;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -48,6 +49,32 @@ final public class JsonCodec {
    */
   public static Map<String, Object> flatten(String json, char separator) {
     return new JsonFlattener(json).withSeparator(separator).flattenAsMap();
+  }
+
+  /**
+   * Flatten a single JSON object using {@code separator} as the attribute separator. Do not flatten
+   * arrays.
+   *
+   * @param json the JSON object.
+   * @param separator the separator to use.
+   * @return a flattened JSON object.
+   */
+  public static Map<String, Object> flattenKeepArrays(String json, char separator) {
+    return new JsonFlattener(json).withSeparator(separator).withFlattenMode(FlattenMode.KEEP_ARRAYS)
+        .flattenAsMap();
+  }
+
+  /**
+   * Flatten a single JSON object using {@code separator} as the attribute separator. Do not flatten
+   * arrays of primitives.
+   *
+   * @param json the JSON object.
+   * @param separator the separator to use.
+   * @return a flattened JSON object.
+   */
+  public static Map<String, Object> flattenKeepPrimitiveArrays(String json, char separator) {
+    return new JsonFlattener(json).withSeparator(separator)
+        .withFlattenMode(FlattenMode.KEEP_PRIMITIVE_ARRAYS).flattenAsMap();
   }
 
   /**
