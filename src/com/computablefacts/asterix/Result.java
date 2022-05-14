@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import com.google.errorprone.annotations.CheckReturnValue;
 
+@Generated
 @CheckReturnValue
 public abstract class Result<T> {
 
