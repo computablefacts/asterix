@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.computablefacts.logfmt.LogFormatter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,6 +27,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 @CheckReturnValue
 final public class JsonCodec {
 
+  private static final Logger logger_ = LoggerFactory.getLogger(JsonCodec.class);
   private static final ObjectMapper mapper_ = new ObjectMapper();
   private static final JacksonJsonCore jsonCore_ = new JacksonJsonCore(mapper_);
 
@@ -79,7 +84,7 @@ final public class JsonCodec {
       return obj == null ? Collections.emptyMap()
           : mapper_.convertValue(obj, new TypeReference<Map<String, Object>>() {});
     } catch (IllegalArgumentException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return Collections.emptyMap();
   }
@@ -125,7 +130,7 @@ final public class JsonCodec {
     try {
       return obj == null ? "{}" : mapper_.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return "{}";
   }
@@ -141,7 +146,7 @@ final public class JsonCodec {
     try {
       return obj == null ? "[]" : mapper_.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return "[]";
   }
@@ -158,7 +163,7 @@ final public class JsonCodec {
     try {
       return obj == null ? "[]" : mapper_.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return "[]";
   }
@@ -174,7 +179,7 @@ final public class JsonCodec {
       return json == null ? Collections.emptyMap()
           : mapper_.readValue(json, TypeFactory.defaultInstance().constructType(Map.class));
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return Collections.emptyMap();
   }
@@ -191,7 +196,7 @@ final public class JsonCodec {
           : mapper_.readValue(json,
               TypeFactory.defaultInstance().constructCollectionType(List.class, Map.class));
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return Collections.emptyList();
   }
@@ -207,7 +212,7 @@ final public class JsonCodec {
       return json == null ? new Map[0]
           : mapper_.readValue(json, TypeFactory.defaultInstance().constructArrayType(Map.class));
     } catch (IOException e) {
-      // FALL THROUGH
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return new Map[0];
   }
