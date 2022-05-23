@@ -104,9 +104,10 @@ final public class BigDecimalCodec {
       this._input = input;
       this._end = this._input.length();
 
+      @Var
       char c = this._input.charAt(this._position);
       if (c == '-') {
-        this._input.charAt(this._position++);
+        c = this._input.charAt(this._position++);
         this._isNegative = true;
       }
 
