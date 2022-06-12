@@ -13,8 +13,8 @@ public class ContextualizeTokensTest {
   public void testContextualizeTokens() {
 
     List<SpanSequence> sentences = View.of(sentences())
-        .map(new TextToNormalizedText(true))
-        .map(new TextToTokens())
+        .map(new NormalizeText(true))
+        .map(new TokenizeText())
         .filter(spans -> spans.size() > 2)
         .map(new ContextualizeTokens(5))
         .toList();

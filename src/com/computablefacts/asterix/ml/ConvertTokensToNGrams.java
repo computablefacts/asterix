@@ -10,11 +10,11 @@ import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 
 @CheckReturnValue
-public class TokensToNGrams implements Function<SpanSequence, SpanSequence> {
+public class ConvertTokensToNGrams implements Function<SpanSequence, SpanSequence> {
 
   private final int length_;
 
-  public TokensToNGrams(int length) {
+  public ConvertTokensToNGrams(int length) {
 
     Preconditions.checkArgument(length > 0, "length must be > 0");
 

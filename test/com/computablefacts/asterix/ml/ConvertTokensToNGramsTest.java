@@ -4,12 +4,12 @@ import com.computablefacts.asterix.SpanSequence;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TokensToNGramsTest {
+public class ConvertTokensToNGramsTest {
 
   @Test
   public void testNGramize() {
 
-    SpanSequence spans = new TokensToNGrams(3).apply(new TextToTokens().apply(text()));
+    SpanSequence spans = new ConvertTokensToNGrams(3).apply(new TokenizeText().apply(text()));
 
     Assert.assertEquals(86, spans.size());
 

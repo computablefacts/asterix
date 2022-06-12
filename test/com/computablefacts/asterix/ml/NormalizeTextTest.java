@@ -5,12 +5,12 @@ import javax.validation.constraints.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TextToNormalizedTextTest {
+public class NormalizeTextTest {
 
   @Test
   public void testNormalizeNullString() {
 
-    String text = new TextToNormalizedText().apply(null);
+    String text = new NormalizeText().apply(null);
 
     Assert.assertEquals(0, text.length());
   }
@@ -18,7 +18,7 @@ public class TextToNormalizedTextTest {
   @Test
   public void testNormalize() {
 
-    TextToNormalizedText ttnt = new TextToNormalizedText(true) {
+    NormalizeText ttnt = new NormalizeText(true) {
 
       @Override
       protected String normalize(@NotNull String text) {

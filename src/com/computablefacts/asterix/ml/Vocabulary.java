@@ -1,5 +1,7 @@
 package com.computablefacts.asterix.ml;
 
+import com.computablefacts.asterix.Span;
+import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
@@ -86,25 +88,33 @@ final public class Vocabulary {
    * Subsampling attempts to minimize the impact of high-frequency words on the training of a word
    * embedding model.
    *
-   * @param sentences a list of sentences.
-   * @return subsampled sentences.
+   * @param spans a span sequence.
+   * @return subsampled spans.
    */
-  public View<List<String>> subSample(View<List<String>> sentences) {
+  public View<SpanSequence> subSample(View<SpanSequence> spans) {
 
-    Preconditions.checkNotNull(sentences, "sentences should not be null");
+    Preconditions.checkNotNull(spans, "spans should not be null");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
     Multiset<String> counts = HashMultiset.create();
-    List<List<String>> newSentences = sentences.map(
-            sentence -> View.of(sentence).map(token -> token(index(token))))
-        .map(sentence -> sentence.peek(counts::add).toList()).toList();
+    List<SpanSequence> newSpans = spans.peek(
+        sentence -> View.of(sentence).map(Span::text).map(token -> token(index(token)))
+            .forEachRemaining(token -> counts.add(token))).toList();
     int nbTokens = counts.size();
     Random random = new Random();
 
-    return View.of(newSentences).map(sentence -> View.of(sentence).filter(
-            token -> random.nextFloat() < Math.sqrt(
-                1e-4 / (double) counts.count(token) * (double) nbTokens)).toList())
-        .filter(sentence -> !sentence.isEmpty());
+    return View.of(newSpans).map(sequence -> {
+
+          SpanSequence newSequence = new SpanSequence();
+
+          View.of(sequence).filter(
+                  token -> random.nextFloat() < Math.sqrt(
+                      1e-4 / (double) counts.count(token.text()) * (double) nbTokens))
+              .forEachRemaining(newSequence::add);
+
+          return newSequence;
+        })
+        .filter(sequence -> sequence.size() > 0);
   }
 
   private void freeze(int minTokenFreq, int maxVocabSize) {

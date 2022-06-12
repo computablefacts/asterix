@@ -1,6 +1,7 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.Span;
+import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -13,8 +14,8 @@ public class VocabularyTest {
   @Test
   public void testVocabulary() {
 
-    TextToNormalizedText ttnt = new TextToNormalizedText(true);
-    TextToTokens ttt = new TextToTokens();
+    NormalizeText ttnt = new NormalizeText(true);
+    TokenizeText ttt = new TokenizeText();
     View<String> tokens = View.of(ttt.apply(ttnt.apply(text()))).map(Span::text);
     Vocabulary vocabulary = Vocabulary.of(tokens, 2, 10);
 
@@ -54,8 +55,8 @@ public class VocabularyTest {
   @Test
   public void testFrequency() {
 
-    TextToNormalizedText ttnt = new TextToNormalizedText(true);
-    TextToTokens ttt = new TextToTokens();
+    NormalizeText ttnt = new NormalizeText(true);
+    TokenizeText ttt = new TokenizeText();
     View<String> tokens = View.of(ttt.apply(ttnt.apply(text()))).map(Span::text);
     Vocabulary vocabulary = Vocabulary.of(tokens, 2, 10);
 
@@ -77,16 +78,13 @@ public class VocabularyTest {
   @Test
   public void testSubSamplingDoesNotReturnEmptyLists() {
 
-    TextToNormalizedText ttnt = new TextToNormalizedText(true);
-    TextToTokens ttt = new TextToTokens();
-    View<String> tokens = View.of(ttt.apply(ttnt.apply(text()))).map(Span::text);
-    Vocabulary vocabulary = Vocabulary.of(tokens, 2, 10);
-    List<List<String>> sentences = vocabulary.subSample(View.of(sentences())
-            .map(sentence -> View.of(ttt.apply(ttnt.apply(sentence))).map(Span::text).toList()))
-        .toList();
+    List<SpanSequence> spans = View.of(sentences()).map(new NormalizeText(true))
+        .map(new TokenizeText()).toList();
+    Vocabulary vocabulary = Vocabulary.of(View.of(spans).flatten(View::of).map(Span::text), 2, 10);
+    List<SpanSequence> samples = vocabulary.subSample(View.of(spans)).toList();
 
-    Assert.assertFalse(sentences.isEmpty());
-    Assert.assertTrue(sentences.stream().noneMatch(List::isEmpty));
+    Assert.assertFalse(samples.isEmpty());
+    Assert.assertTrue(samples.stream().noneMatch(sample -> sample.size() == 0));
   }
 
   private String text() {

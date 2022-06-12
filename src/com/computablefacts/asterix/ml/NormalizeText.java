@@ -7,15 +7,15 @@ import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 
 @CheckReturnValue
-public class TextToNormalizedText implements Function<String, String> {
+public class NormalizeText implements Function<String, String> {
 
   private final boolean lowercase_;
 
-  public TextToNormalizedText() {
+  public NormalizeText() {
     this(false);
   }
 
-  public TextToNormalizedText(boolean lowercase) {
+  public NormalizeText(boolean lowercase) {
     lowercase_ = lowercase;
   }
 
