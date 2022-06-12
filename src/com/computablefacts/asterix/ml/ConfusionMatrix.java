@@ -1,5 +1,6 @@
-package com.computablefacts.asterix;
+package com.computablefacts.asterix.ml;
 
+import com.computablefacts.asterix.Generated;
 import java.util.Collection;
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.computablefacts.asterix;
+package com.computablefacts.asterix.ml;
 
 import java.util.*;
 import java.util.stream.Collectors;

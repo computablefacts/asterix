@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.ml.DocSetLabeler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

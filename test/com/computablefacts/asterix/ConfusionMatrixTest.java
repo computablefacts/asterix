@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.ml.ConfusionMatrix;
 import org.junit.Assert;
 import org.junit.Test;
 
