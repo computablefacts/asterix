@@ -1,14 +1,12 @@
 package com.computablefacts.asterix;
 
+import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.base.Splitter;
 
 public class IOTest {
 
@@ -116,5 +114,41 @@ public class IOTest {
 
     Assert.assertTrue(input.delete());
     Assert.assertTrue(output.delete());
+  }
+
+  @Test
+  public void testMoveFile() throws Exception {
+
+    String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
+    File src = new File(path + File.separator + "src.txt");
+    File dest = new File(path + File.separator + "dest.txt");
+
+    Assert.assertFalse(src.exists());
+    Assert.assertFalse(dest.exists());
+
+    Assert.assertTrue(IO.writeText(src, "Dummy text!", false));
+
+    Assert.assertTrue(src.exists());
+    Assert.assertFalse(dest.exists());
+
+    Assert.assertTrue(IO.move(src.toPath(), dest.toPath()));
+
+    Assert.assertFalse(src.exists());
+    Assert.assertTrue(dest.exists());
+  }
+
+  @Test
+  public void testDeleteFiles() throws Exception {
+
+    String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
+
+    for (int i = 0; i < 10; i++) {
+      File file = new File(path + File.separator + i + ".txt");
+      Assert.assertTrue(IO.writeText(file, "Dummy text!", false));
+    }
+
+    Assert.assertEquals(10, new File(path).listFiles().length);
+    Assert.assertTrue(IO.delete(new File(path)));
+    Assert.assertFalse(new File(path).exists());
   }
 }

@@ -1,29 +1,36 @@
 package com.computablefacts.asterix;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.util.List;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @CheckReturnValue
 final public class IO {
 
   private static final Logger logger_ = LoggerFactory.getLogger(IO.class);
 
-  private IO() {}
+  private IO() {
+  }
 
   public static String readText(File file) {
 
@@ -43,7 +50,7 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file)
+      logger_.error(LogFormatter.create(true).add("file", file)
           .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
           .message(e).formatError());
     }
@@ -60,7 +67,7 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file)
+      logger_.error(LogFormatter.create(true).add("file", file)
           .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
           .message(e).formatError());
     }
@@ -75,7 +82,7 @@ final public class IO {
     try {
       return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file).message(e).formatError());
+      logger_.error(LogFormatter.create(true).add("file", file).message(e).formatError());
     }
     return Lists.newArrayList();
   }
@@ -94,7 +101,8 @@ final public class IO {
       return true;
     } catch (IOException e) {
       logger_.error(
-          LogFormatter.create().add("file", file).add("append", append).message(e).formatError());
+          LogFormatter.create(true).add("file", file).add("append", append).message(e)
+              .formatError());
     }
     return false;
   }
@@ -184,7 +192,8 @@ final public class IO {
       }
     } catch (IOException e) {
       logger_.error(
-          LogFormatter.create().add("input", input).add("output", output).message(e).formatError());
+          LogFormatter.create(true).add("input", input).add("output", output).message(e)
+              .formatError());
     }
     return false;
   }
@@ -210,9 +219,48 @@ final public class IO {
       }
     } catch (IOException e) {
       logger_.error(
-          LogFormatter.create().add("input", input).add("output", output).message(e).formatError());
+          LogFormatter.create(true).add("input", input).add("output", output).message(e)
+              .formatError());
     }
     return false;
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean move(Path source, Path destination) {
+
+    Preconditions.checkNotNull(source, "source should not be null");
+    Preconditions.checkNotNull(destination, "destination should not be null");
+
+    if (!source.toFile().exists()) {
+      return false;
+    }
+    if (destination.toFile().exists()) {
+      return false;
+    }
+    try {
+      Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
+      return true;
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create(true).message(e).formatError());
+    }
+    return false;
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean delete(File file) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+
+    if (!file.exists()) {
+      return false;
+    }
+    if (file.isDirectory()) {
+      File[] files = file.listFiles();
+      for (int i = 0; files != null && i < files.length; ++i) {
+        delete(files[i]);
+      }
+    }
+    return file.delete();
   }
 
   final public static class LineIterator extends AbstractIterator<String> implements AutoCloseable {
@@ -229,7 +277,7 @@ final public class IO {
         try {
           reader_.close();
         } catch (IOException e) {
-          logger_.error(LogFormatter.create().message(e).formatError());
+          logger_.error(LogFormatter.create(true).message(e).formatError());
         }
         reader_ = null;
       }
@@ -250,7 +298,7 @@ final public class IO {
           }
         }
       } catch (IOException e) {
-        logger_.error(LogFormatter.create().message(e).formatError());
+        logger_.error(LogFormatter.create(true).message(e).formatError());
       }
       close();
       return endOfData();
