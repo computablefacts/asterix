@@ -2,6 +2,9 @@ package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,7 +74,28 @@ public class VocabularyTest {
     Assert.assertEquals(2, vocabulary.frequency("in"));
   }
 
+  @Test
+  public void testSubSamplingDoesNotReturnEmptyLists() {
+
+    TextToNormalizedText ttnt = new TextToNormalizedText(true);
+    TextToTokens ttt = new TextToTokens();
+    View<String> tokens = View.of(ttt.apply(ttnt.apply(text()))).map(Span::text);
+    Vocabulary vocabulary = Vocabulary.of(tokens, 2, 10);
+    List<List<String>> sentences = vocabulary.subSample(View.of(sentences())
+            .map(sentence -> View.of(ttt.apply(ttnt.apply(sentence))).map(Span::text).toList()))
+        .toList();
+
+    Assert.assertFalse(sentences.isEmpty());
+    Assert.assertTrue(sentences.stream().noneMatch(List::isEmpty));
+  }
+
   private String text() {
-    return "Welcome to Yahoo!, the world’s most visited home page. Quickly find what you’re searching for, get in touch with friends and stay in-the-know with the latest news and information. CloudSponge provides an interface to easily enable your users to import contacts from a variety of the most popular webmail services including Yahoo, Gmail and Hotmail/MSN as well as popular desktop address books such as Mac Address Book and Outlook.";
+    return Joiner.on(' ').join(sentences());
+  }
+
+  private List<String> sentences() {
+    return Lists.newArrayList("Welcome to Yahoo!, the world’s most visited home page.",
+        "Quickly find what you’re searching for, get in touch with friends and stay in-the-know with the latest news and information.",
+        "CloudSponge provides an interface to easily enable your users to import contacts from a variety of the most popular webmail services including Yahoo, Gmail and Hotmail/MSN as well as popular desktop address books such as Mac Address Book and Outlook.");
   }
 }
