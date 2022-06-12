@@ -7,7 +7,7 @@ import org.junit.Test;
 public class TextToTokensTest {
 
   @Test
-  public void testTokenizer() {
+  public void testTokenize() {
 
     SpanSequence spans = new TextToTokens().apply(text());
 

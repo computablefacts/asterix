@@ -7,7 +7,7 @@ import org.junit.Test;
 public class TokensToNGramsTest {
 
   @Test
-  public void testTokenizer() {
+  public void testNGramize() {
 
     SpanSequence spans = new TokensToNGrams(3).apply(new TextToTokens().apply(text()));
 

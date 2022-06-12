@@ -24,6 +24,8 @@ public class TokensToNGrams implements Function<SpanSequence, SpanSequence> {
   @Override
   final public SpanSequence apply(SpanSequence spans) {
 
+    Preconditions.checkNotNull(spans, "spans should not be null");
+
     SpanSequence newSpans = new SpanSequence();
 
     View.of(spans).overlappingWindow(length_).forEachRemaining(ngram -> {
