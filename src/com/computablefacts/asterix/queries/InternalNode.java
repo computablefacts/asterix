@@ -47,7 +47,7 @@ final public class InternalNode<T extends AbstractQueryEngine> extends AbstractN
     Preconditions.checkNotNull(engine, "engine should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("conjunction", conjunction_)
+      logger_.debug(LogFormatter.create().add("conjunction", conjunction_)
           .add("child1", child1_).add("child2", child2_).formatDebug());
     }
 
@@ -107,7 +107,7 @@ final public class InternalNode<T extends AbstractQueryEngine> extends AbstractN
     Preconditions.checkNotNull(engine, "engine should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("conjunction", conjunction_)
+      logger_.debug(LogFormatter.create().add("conjunction", conjunction_)
           .add("child1", child1_).add("child2", child2_).formatDebug());
     }
 
@@ -117,7 +117,7 @@ final public class InternalNode<T extends AbstractQueryEngine> extends AbstractN
       }
       if (child2_.exclude()) { // (NULL AND/OR NOT B) is not a valid construct
         if (logger_.isErrorEnabled()) {
-          logger_.error(LogFormatter.create(true).add("query", toString())
+          logger_.error(LogFormatter.create().add("query", toString())
               .message("ill-formed query : (NULL AND/OR NOT B)").formatError());
         }
         return View.of();
@@ -127,7 +127,7 @@ final public class InternalNode<T extends AbstractQueryEngine> extends AbstractN
     if (child2_ == null) {
       if (child1_.exclude()) { // (NOT A AND/OR NULL) is not a valid construct
         if (logger_.isErrorEnabled()) {
-          logger_.error(LogFormatter.create(true).add("query", toString())
+          logger_.error(LogFormatter.create().add("query", toString())
               .message("ill-formed query : (NOT A AND/OR NULL)").formatError());
         }
         return View.of();
@@ -139,7 +139,7 @@ final public class InternalNode<T extends AbstractQueryEngine> extends AbstractN
     // A AND NOT B, NOT A OR NOT B}
     if (child1_.exclude() && child2_.exclude()) {
       if (logger_.isErrorEnabled()) {
-        logger_.error(LogFormatter.create(true).add("query", toString())
+        logger_.error(LogFormatter.create().add("query", toString())
             .message("ill-formed query : (NOT A AND/OR NOT B)").formatError());
       }
       return View.of(); // (NOT A AND NOT B) or (NOT A OR NOT B)
@@ -148,7 +148,7 @@ final public class InternalNode<T extends AbstractQueryEngine> extends AbstractN
     // Here, the query is in {A OR B, A AND B, NOT A AND B, A AND NOT B, NOT A OR B, A OR NOT B}
     if (eConjunctionTypes.Or.equals(conjunction_) && (child1_.exclude() || child2_.exclude())) {
       if (logger_.isErrorEnabled()) {
-        logger_.error(LogFormatter.create(true).add("query", toString())
+        logger_.error(LogFormatter.create().add("query", toString())
             .message("ill-formed query : (A OR NOT B) or (NOT A OR B)").formatError());
       }
       return View.of();

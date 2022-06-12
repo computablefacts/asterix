@@ -50,7 +50,7 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create(true).add("file", file)
+      logger_.error(LogFormatter.create().add("file", file)
           .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
           .message(e).formatError());
     }
@@ -67,7 +67,7 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create(true).add("file", file)
+      logger_.error(LogFormatter.create().add("file", file)
           .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
           .message(e).formatError());
     }
@@ -82,7 +82,7 @@ final public class IO {
     try {
       return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
     } catch (IOException e) {
-      logger_.error(LogFormatter.create(true).add("file", file).message(e).formatError());
+      logger_.error(LogFormatter.create().add("file", file).message(e).formatError());
     }
     return Lists.newArrayList();
   }
@@ -101,7 +101,7 @@ final public class IO {
       return true;
     } catch (IOException e) {
       logger_.error(
-          LogFormatter.create(true).add("file", file).add("append", append).message(e)
+          LogFormatter.create().add("file", file).add("append", append).message(e)
               .formatError());
     }
     return false;
@@ -192,7 +192,7 @@ final public class IO {
       }
     } catch (IOException e) {
       logger_.error(
-          LogFormatter.create(true).add("input", input).add("output", output).message(e)
+          LogFormatter.create().add("input", input).add("output", output).message(e)
               .formatError());
     }
     return false;
@@ -219,7 +219,7 @@ final public class IO {
       }
     } catch (IOException e) {
       logger_.error(
-          LogFormatter.create(true).add("input", input).add("output", output).message(e)
+          LogFormatter.create().add("input", input).add("output", output).message(e)
               .formatError());
     }
     return false;
@@ -241,7 +241,7 @@ final public class IO {
       Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create(true).message(e).formatError());
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return false;
   }
@@ -277,7 +277,7 @@ final public class IO {
         try {
           reader_.close();
         } catch (IOException e) {
-          logger_.error(LogFormatter.create(true).message(e).formatError());
+          logger_.error(LogFormatter.create().message(e).formatError());
         }
         reader_ = null;
       }
@@ -298,7 +298,7 @@ final public class IO {
           }
         }
       } catch (IOException e) {
-        logger_.error(LogFormatter.create(true).message(e).formatError());
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
       close();
       return endOfData();

@@ -1,35 +1,40 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.Generated;
-import java.util.Collection;
-import java.util.List;
-
+import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.util.Collection;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of confusion matrix for evaluating learning algorithms.
- *
+ * <p>
  * See https://en.wikipedia.org/wiki/Evaluation_of_binary_classifiers for details.
- *
+ * <p>
  * See https://mkhalusova.github.io/blog/2019/04/11/ml-model-evaluation-metrics-p1 for an overview
  * of MCC.
  */
 @CheckReturnValue
 final public class ConfusionMatrix {
 
+  private static final Logger logger_ = LoggerFactory.getLogger(ConfusionMatrix.class);
+
   private double tp_ = 0;
   private double tn_ = 0;
   private double fp_ = 0;
   private double fn_ = 0;
 
-  public ConfusionMatrix() {}
+  public ConfusionMatrix() {
+  }
 
   /**
    * In a multi-class classification setup, micro-average is preferable if you suspect there might
    * be class imbalance (i.e you may have many more examples of one class than of other classes).
-   * 
+   *
    * @param matrices confusion matrices.
    * @return micro-averages.
    */
@@ -47,7 +52,7 @@ final public class ConfusionMatrix {
     }
 
     StringBuilder builder = new StringBuilder();
-    builder.append("\nMCC : " + matrix.matthewsCorrelationCoefficient());
+    builder.append("MCC : " + matrix.matthewsCorrelationCoefficient());
     builder.append("\nF1 : " + matrix.f1Score());
     builder.append("\nPrecision : " + matrix.precision());
     builder.append("\nRecall : " + matrix.recall());
@@ -61,7 +66,7 @@ final public class ConfusionMatrix {
    * (hence treating all classes equally). The macro-average is used when you want to know how the
    * system performs overall across a given dataset. You should not come up with any specific
    * decision with this average.
-   * 
+   *
    * @param matrices confusion matrices.
    * @return macro-averages.
    */
@@ -91,7 +96,7 @@ final public class ConfusionMatrix {
     }
 
     StringBuilder builder = new StringBuilder();
-    builder.append("\nClass : MACRO_AVG_OF_" + matrices.size() + "_MATRICES");
+    builder.append("Class : MACRO_AVG_OF_" + matrices.size() + "_MATRICES");
     builder.append("\nMCC : " + mcc / matrices.size());
     builder.append("\nF1 : " + f1 / matrices.size());
     builder.append("\nPrecision : " + precision / matrices.size());
@@ -106,7 +111,7 @@ final public class ConfusionMatrix {
   public String toString() {
 
     StringBuilder builder = new StringBuilder();
-    builder.append("\nMCC : " + matthewsCorrelationCoefficient());
+    builder.append("MCC : " + matthewsCorrelationCoefficient());
     builder.append("\nF1 : " + f1Score());
     builder.append("\nPrecision : " + precision());
     builder.append("\nRecall : " + recall());
@@ -121,10 +126,10 @@ final public class ConfusionMatrix {
 
   /**
    * Compute TP, TN, FP and FN. Works only for binary classification.
-   *
+   * <p>
    * If a label other than labelOk/labelKo is met in the actual or predicted lists, the pair is
    * discarded.
-   * 
+   *
    * @param actual gold labels.
    * @param predicted predicted labels.
    * @param labelOk positive label.
@@ -152,7 +157,10 @@ final public class ConfusionMatrix {
         } else if (pred.equals(labelKo)) {
           incrementFalseNegatives();
         } else {
-          // TODO : log warning
+          if (logger_.isWarnEnabled()) {
+            logger_.warn(LogFormatter.create().add("actual", act).add("prediction", pred)
+                .message("unknown label").formatWarn());
+          }
         }
       } else if (act.equals(labelKo)) {
         if (pred.equals(labelOk)) {
@@ -160,10 +168,16 @@ final public class ConfusionMatrix {
         } else if (pred.equals(labelKo)) {
           incrementTrueNegatives();
         } else {
-          // TODO : log warning
+          if (logger_.isWarnEnabled()) {
+            logger_.warn(LogFormatter.create().add("actual", act).add("prediction", pred)
+                .message("unknown label").formatWarn());
+          }
         }
       } else {
-        // TODO : log warning
+        if (logger_.isWarnEnabled()) {
+          logger_.warn(LogFormatter.create().add("actual", act).add("prediction", pred)
+              .message("unknown label").formatWarn());
+        }
       }
     }
   }
@@ -225,10 +239,10 @@ final public class ConfusionMatrix {
    * negatives and is generally regarded as a balanced measure which can be used even if the classes
    * are of very different sizes. The MCC is in essence a correlation coefficient between the
    * observed and predicted binary classifications.
-   * 
+   *
    * @return returns a value between −1 and +1. A coefficient of +1 represents a perfect prediction,
-   *         0 no better than random prediction and −1 indicates total disagreement between
-   *         prediction and observation.
+   * 0 no better than random prediction and −1 indicates total disagreement between prediction and
+   * observation.
    */
   public double matthewsCorrelationCoefficient() {
     return ((tp_ * tn_) - (fp_ * fn_))
@@ -267,7 +281,7 @@ final public class ConfusionMatrix {
   /**
    * The Negative Predictive Value (NPV) is the proportion of negative results that are true
    * negative.
-   * 
+   *
    * @return negative prediction value.
    */
   public double negativePredictionValue() {
@@ -322,7 +336,7 @@ final public class ConfusionMatrix {
    * The False Positive Rate (FPR) or fall-out is the ratio between the number of negative events
    * incorrectly categorized as positive (false positives) and the total number of actual negative
    * events (regardless of classification).
-   * 
+   *
    * @return false positive rate.
    */
   public double falsePositiveRate() {

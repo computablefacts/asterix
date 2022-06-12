@@ -127,7 +127,7 @@ final public class TerminalNode<T extends AbstractQueryEngine> extends AbstractN
     Preconditions.checkNotNull(engine, "engine should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("form", form_).add("key", key_)
+      logger_.debug(LogFormatter.create().add("form", form_).add("key", key_)
           .add("value", value_).formatDebug());
     }
     if (eTermForms.Range.equals(form_)) {
@@ -151,7 +151,7 @@ final public class TerminalNode<T extends AbstractQueryEngine> extends AbstractN
     Preconditions.checkNotNull(engine, "engine should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("form", form_).add("key", key_)
+      logger_.debug(LogFormatter.create().add("form", form_).add("key", key_)
           .add("value", value_).formatDebug());
     }
     if (eTermForms.Range.equals(form_)) {
