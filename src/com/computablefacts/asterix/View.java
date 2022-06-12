@@ -1,29 +1,52 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.logfmt.LogFormatter;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.AbstractSequentialIterator;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.PeekingIterator;
+import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.errorprone.annotations.Var;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
-
 import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.computablefacts.logfmt.LogFormatter;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
-import com.google.errorprone.annotations.CheckReturnValue;
-import com.google.errorprone.annotations.Var;
 
 @CheckReturnValue
 public class View<T> extends AbstractIterator<T> implements AutoCloseable {
@@ -262,7 +285,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param prefix string to add at the beginning of the buffer (optional).
    * @param suffix string to add at the end of the buffer (optional).
    * @return a {@link String} whose format is
-   *         {@code <prefix><el1><separator><el2><separator><el3>...<suffix>}.
+   * {@code <prefix><el1><separator><el2><separator><el3>...<suffix>}.
    */
   public String toString(Function<T, String> fn, String separator, String prefix, String suffix) {
 
@@ -291,7 +314,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param fn transform each view element to a string.
    * @param file where the view elements must be written.
    * @param append false iif a new file must be created. Otherwise, view elements are appended at
-   *        the end of an existing file.
+   * the end of an existing file.
    */
   public void toFile(Function<T, String> fn, File file, boolean append) {
     toFile(fn, file, append, false);
@@ -303,7 +326,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param fn transform each view element to a string.
    * @param file where the view elements must be written.
    * @param append false iif a new file must be created. Otherwise, view elements are appended at
-   *        the end of an existing file.
+   * the end of an existing file.
    * @param compress true iif the output must be compressed (gzip), false otherwise.
    */
   public void toFile(Function<T, String> fn, File file, boolean append, boolean compress) {
@@ -311,8 +334,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     Preconditions.checkNotNull(fn, "fn should not be null");
     Preconditions.checkNotNull(file, "file should not be null");
 
-    try (BufferedWriter writer =
-        (compress ? IO.newCompressedFileWriter(file, append) : IO.newFileWriter(file, append))) {
+    try (BufferedWriter writer = (compress ? IO.newCompressedFileWriter(file, append)
+        : IO.newFileWriter(file, append))) {
       map(fn).forEachRemaining(el -> {
         try {
           writer.write(el);
@@ -323,8 +346,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
         }
       });
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file).add("append", append)
-          .add("compress", compress).message(e).formatError());
+      logger_.error(
+          LogFormatter.create().add("file", file).add("append", append).add("compress", compress)
+              .message(e).formatError());
     }
   }
 
@@ -334,15 +358,14 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    *
    * @param predicate the predicate to match.
    * @return the two sub-lists. {@code Map.Entry.getKey()} returns the elements matching the given
-   *         predicate. {@code Map.Entry.getValue()} returns the elements not matching the given
-   *         predicate.
+   * predicate. {@code Map.Entry.getValue()} returns the elements not matching the given predicate.
    */
   public Map.Entry<List<T>, List<T>> divide(Predicate<T> predicate) {
 
     Preconditions.checkNotNull(predicate, "predicate should not be null");
 
-    Map.Entry<List<T>, List<T>> entry =
-        new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>());
+    Map.Entry<List<T>, List<T>> entry = new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(),
+        new ArrayList<>());
 
     while (hasNext()) {
 
@@ -362,12 +385,12 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * one with the elements in even positions.
    *
    * @return the two sub-lists. {@code Map.Entry.getKey()} returns the elements in odd positions.
-   *         {@code Map.Entry.getValue()} returns the elements in even positions.
+   * {@code Map.Entry.getValue()} returns the elements in even positions.
    */
   public Map.Entry<List<T>, List<T>> divide() {
 
-    Map.Entry<List<T>, List<T>> entry =
-        new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>());
+    Map.Entry<List<T>, List<T>> entry = new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(),
+        new ArrayList<>());
 
     View<Map.Entry<Integer, T>> view = index();
 
@@ -549,7 +572,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    *
    * @param predicate the predicate to satisfy.
    * @return true if every element returned by this view satisfies the given predicate. If the view
-   *         is empty, true is returned.
+   * is empty, true is returned.
    */
   public boolean allMatch(Predicate<? super T> predicate) {
     return Iterators.all(this, predicate::test);
@@ -591,6 +614,31 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
     while (!breaker.shouldBreak() && hasNext()) {
       consumer.accept(next(), breaker);
+    }
+  }
+
+  /**
+   * Performs the given action for each remaining element of the view in parallel until all elements
+   * have been processed.
+   *
+   * @param consumer the action to be performed for each element.
+   */
+  public void forEachRemainingInParallel(Consumer<? super T> consumer) {
+
+    Preconditions.checkNotNull(consumer, "consumer should not be null");
+
+    int cores = Runtime.getRuntime().availableProcessors();
+    ExecutorService executorService = Executors.newFixedThreadPool(cores * 8);
+
+    while (hasNext()) {
+      T element = next();
+      executorService.execute(() -> consumer.accept(element));
+    }
+    try {
+      executorService.shutdown();
+      executorService.awaitTermination(180, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
   }
 
@@ -794,6 +842,53 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Returns a view consisting of the results of applying the given function to the elements of this
+   * view.
+   * <p>
+   * Split the original view into sub-lists, then process the elements of each sub-list in parallel.
+   * Despite these shenanigans, the output of {@link #mapInParallel(int, Function)} is identical to
+   * the output of {@link #map(Function)}.
+   *
+   * @param batchSize the size of each batch.
+   * @param fn the function to apply.
+   * @param <U>
+   * @return a new {@link View}.
+   */
+  public <U> View<U> mapInParallel(int batchSize, Function<? super T, ? extends U> fn) {
+
+    Preconditions.checkArgument(batchSize > 0, "batchSize must be > 0");
+    Preconditions.checkNotNull(fn, "fn should not be null");
+
+    int cores = Runtime.getRuntime().availableProcessors();
+    int threads = cores * 8;
+    return nonOverlappingWindow(batchSize).flatten(list -> {
+
+      ExecutorService executorService = Executors.newFixedThreadPool(threads);
+      List<Callable<U>> callables = new ArrayList<>(list.size());
+
+      for (T t : list) {
+        callables.add(() -> fn.apply(t));
+      }
+      try {
+        List<Future<U>> futures = executorService.invokeAll(callables);
+        executorService.shutdown();
+        executorService.awaitTermination(180, TimeUnit.SECONDS);
+        return View.of(futures).map(future -> {
+          try {
+            return Optional.of(future.get());
+          } catch (InterruptedException | ExecutionException e) {
+            logger_.error(LogFormatter.create().message(e).formatError());
+          }
+          return Optional.empty();
+        });
+      } catch (InterruptedException e) {
+        logger_.error(LogFormatter.create().message(e).formatError());
+      }
+      return View.<Optional<U>>of();
+    }).filter(Optional::isPresent).map(opt -> opt.get());
+  }
+
+  /**
    * Returns a view consisting of the elements of this view matching the given predicate.
    *
    * @param predicate the predicate to satisfy.
@@ -865,7 +960,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Remove consecutive duplicates from the current view.
-   *
+   * <p>
    * The view must be sorted.
    *
    * @return a new {@link View}.
@@ -881,8 +976,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
           return endOfData();
         }
 
-        @Var
-        T curr = stream.next();
+        @Var T curr = stream.next();
 
         while (stream.hasNext() && curr.equals(stream.peek())) {
           curr = stream.next();
@@ -895,7 +989,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Returns elements that are presents in the first view but not in the second one. Duplicate
    * elements are returned only once.
-   *
+   * <p>
    * Both views must be sorted.
    *
    * @param view the other {@link View}.
@@ -937,7 +1031,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Returns elements that are presents in both views. Duplicate elements are returned only once.
-   *
+   * <p>
    * Both views must be sorted.
    *
    * @param view the other {@link View}.
@@ -955,8 +1049,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       @Override
       protected T computeNext() {
 
-        @Var
-        T cur = null;
+        @Var T cur = null;
 
         while (thisStream.hasNext() && thatStream.hasNext()) {
 
@@ -1112,6 +1205,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param capacity the maximum number of element to preload.
    * @return a new {@link View}.
    */
+  @Deprecated
   public View<T> bufferize(int capacity) {
     return bufferize(capacity, defaultExecutor_);
   }
@@ -1123,6 +1217,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param executorService the executor in charge of preloading the next element.
    * @return a new {@link View}.
    */
+  @Deprecated
   public View<T> bufferize(int capacity, ExecutorService executorService) {
 
     Preconditions.checkNotNull(executorService, "executorService should not be null");
@@ -1140,8 +1235,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       @SuppressWarnings("unchecked")
       public void run() {
 
-        @Var
-        T next = (T) END_MARKER;
+        @Var T next = (T) END_MARKER;
 
         if (self.hasNext()) {
 

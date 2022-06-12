@@ -1,19 +1,24 @@
 package com.computablefacts.asterix;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Var;
+import java.io.File;
+import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ViewTest {
 
@@ -480,6 +485,15 @@ public class ViewTest {
   }
 
   @Test
+  public void testMapInParallel() {
+
+    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    List<Integer> list = view.mapInParallel(2, w -> w.length()).toList();
+
+    Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), list);
+  }
+
+  @Test
   public void testConcatViews() {
 
     View<String> left1 = View.of(Lists.newArrayList("a", "ab", "abc"));
@@ -607,7 +621,7 @@ public class ViewTest {
   public void testDedupViewWithDuplicates() {
 
     List<String> actual = View.of(
-        Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "e", "f", "g", "h"))
+            Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "e", "f", "g", "h"))
         .dedupSorted().toList();
     List<String> expected = Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h");
 
@@ -816,6 +830,21 @@ public class ViewTest {
     });
 
     Assert.assertEquals(Lists.newArrayList("cat", "dog"), result);
+  }
+
+  @Test
+  public void testForEachRemainingInParallel() {
+
+    List<String> result = new ArrayList<>();
+    View<String> view = View.of(Stream.of("cat", "dog", "elephant", "fox", "rabbit", "duck"));
+
+    view.forEachRemainingInParallel((elem) -> {
+      if (elem.length() % 2 == 0) {
+        result.add(elem);
+      }
+    });
+
+    Assert.assertEquals(Lists.newArrayList("elephant", "rabbit", "duck"), result);
   }
 
   @Test
