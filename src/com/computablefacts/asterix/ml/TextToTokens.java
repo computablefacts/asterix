@@ -82,7 +82,7 @@ public class TextToTokens implements Function<String, SpanSequence> {
   }
 
   @Override
-  public SpanSequence apply(String text) {
+  final public SpanSequence apply(String text) {
 
     Preconditions.checkNotNull(text, "text should not be null");
 
