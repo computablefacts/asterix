@@ -1,10 +1,9 @@
 package com.computablefacts.asterix;
 
 import com.computablefacts.asterix.ml.ConfusionMatrix;
+import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.collect.Lists;
 
 /**
  * Values verified using https://www.mdapp.co/confusion-matrix-calculator-406/
@@ -33,7 +32,7 @@ public class ConfusionMatrixTest {
     String microAverage =
         ConfusionMatrix.microAverage(Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
 
-    Assert.assertTrue(microAverage.contains("\nMCC : NaN"));
+    Assert.assertTrue(microAverage.contains("MCC : NaN"));
     Assert.assertTrue(microAverage.contains("\nF1 : 0.21848739495798317"));
     Assert.assertTrue(microAverage.contains("\nPrecision : 0.12264150943396226"));
     Assert.assertTrue(microAverage.contains("\nRecall : 1.0"));
@@ -62,7 +61,7 @@ public class ConfusionMatrixTest {
     String macroAverage =
         ConfusionMatrix.macroAverage(Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
 
-    Assert.assertTrue(macroAverage.contains("\nMCC : 0.0"));
+    Assert.assertTrue(macroAverage.contains("MCC : 0.0"));
     Assert.assertTrue(macroAverage.contains("\nF1 : 0.5454545454545454"));
     Assert.assertTrue(macroAverage.contains("\nPrecision : 0.4"));
     Assert.assertTrue(macroAverage.contains("\nRecall : 1"));
@@ -84,7 +83,7 @@ public class ConfusionMatrixTest {
 
     String microAverage = ConfusionMatrix.microAverage(Lists.newArrayList(matrixA, matrixB));
 
-    Assert.assertTrue(microAverage.contains("\nMCC : -0.23495561349012983"));
+    Assert.assertTrue(microAverage.contains("MCC : -0.23495561349012983"));
     Assert.assertTrue(microAverage.contains("\nF1 : 0.7380952380952381"));
     Assert.assertTrue(microAverage.contains("\nPrecision : 0.6595744680851063"));
     Assert.assertTrue(microAverage.contains("\nRecall : 0.8378378378378378"));
@@ -106,7 +105,7 @@ public class ConfusionMatrixTest {
 
     String macroAverage = ConfusionMatrix.macroAverage(Lists.newArrayList(matrixA, matrixB));
 
-    Assert.assertTrue(macroAverage.contains("\nMCC : -0.2559994438028284"));
+    Assert.assertTrue(macroAverage.contains("MCC : -0.2559994438028284"));
     Assert.assertTrue(macroAverage.contains("\nF1 : 0.7121212121212122"));
     Assert.assertTrue(macroAverage.contains("\nPrecision : 0.6281800391389432"));
     Assert.assertTrue(macroAverage.contains("\nRecall : 0.823728813559322"));
