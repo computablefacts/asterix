@@ -1,14 +1,11 @@
-package com.computablefacts.asterix;
+package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.ml.DocSetLabeler;
+import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.collect.Sets;
 
 public class DocSetLabelerTest {
 

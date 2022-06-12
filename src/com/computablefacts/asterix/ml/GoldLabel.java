@@ -86,7 +86,7 @@ public final class GoldLabel implements IGoldLabel<String> {
    * gold labels will be loaded.
    * @return a set of gold labels.
    */
-  public static View<? extends IGoldLabel<String>> load(File file, String label) {
+  public static View<IGoldLabel<String>> load(File file, String label) {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file file does not exist : %s", file);
@@ -128,10 +128,10 @@ public final class GoldLabel implements IGoldLabel<String> {
     IGoldLabel<?> gl = (IGoldLabel<?>) o;
     return Objects.equals(id(), gl.id()) && Objects.equals(label(), gl.label())
         && Objects.equals(data(), gl.data())
-        && Objects.equals(isTrueNegative(), gl.isTrueNegative())
-        && Objects.equals(isTruePositive(), gl.isTruePositive())
-        && Objects.equals(isFalseNegative(), gl.isFalseNegative())
-        && Objects.equals(isFalsePositive(), gl.isFalsePositive());
+        && isTrueNegative() == gl.isTrueNegative()
+        && isTruePositive() == gl.isTruePositive()
+        && isFalseNegative() == gl.isFalseNegative()
+        && isFalsePositive() == gl.isFalsePositive();
   }
 
   @Override
