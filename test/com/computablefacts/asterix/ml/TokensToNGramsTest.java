@@ -9,7 +9,7 @@ public class TokensToNGramsTest {
   @Test
   public void testTokenizer() {
 
-    SpanSequence spans = new TokensToNGrams(3).apply(new SimpleTokenizer().apply(text()));
+    SpanSequence spans = new TokensToNGrams(3).apply(new TextToTokens().apply(text()));
 
     Assert.assertEquals(86, spans.size());
 

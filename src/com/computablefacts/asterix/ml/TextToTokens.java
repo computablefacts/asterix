@@ -10,9 +10,9 @@ import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 
 @CheckReturnValue
-public class SimpleTokenizer implements Function<String, SpanSequence> {
+public class TextToTokens implements Function<String, SpanSequence> {
 
-  public SimpleTokenizer() {
+  public TextToTokens() {
   }
 
   public static boolean isWord(Span span) {

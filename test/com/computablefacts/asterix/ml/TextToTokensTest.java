@@ -4,12 +4,12 @@ import com.computablefacts.asterix.SpanSequence;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SimpleTokenizerTest {
+public class TextToTokensTest {
 
   @Test
   public void testTokenizer() {
 
-    SpanSequence spans = new SimpleTokenizer().apply(text());
+    SpanSequence spans = new TextToTokens().apply(text());
 
     Assert.assertEquals(86, spans.size());
 
@@ -34,20 +34,20 @@ public class SimpleTokenizerTest {
     Assert.assertEquals("page", spans.span(12).text());
     Assert.assertEquals(".", spans.span(13).text());
 
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(0)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(1)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(2)));
-    Assert.assertTrue(SimpleTokenizer.isPunctuation(spans.span(3)));
-    Assert.assertTrue(SimpleTokenizer.isPunctuation(spans.span(4)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(5)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(6)));
-    Assert.assertTrue(SimpleTokenizer.isApostrophe(spans.span(7)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(8)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(9)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(10)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(11)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(12)));
-    Assert.assertTrue(SimpleTokenizer.isPunctuation(spans.span(13)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(0)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(1)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(2)));
+    Assert.assertTrue(TextToTokens.isPunctuation(spans.span(3)));
+    Assert.assertTrue(TextToTokens.isPunctuation(spans.span(4)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(5)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(6)));
+    Assert.assertTrue(TextToTokens.isApostrophe(spans.span(7)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(8)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(9)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(10)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(11)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(12)));
+    Assert.assertTrue(TextToTokens.isPunctuation(spans.span(13)));
 
     Assert.assertEquals("in", spans.span(30).text());
     Assert.assertEquals("-", spans.span(31).text());
@@ -55,11 +55,11 @@ public class SimpleTokenizerTest {
     Assert.assertEquals("-", spans.span(33).text());
     Assert.assertEquals("know", spans.span(34).text());
 
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(30)));
-    Assert.assertTrue(SimpleTokenizer.isListMark(spans.span(31)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(32)));
-    Assert.assertTrue(SimpleTokenizer.isListMark(spans.span(33)));
-    Assert.assertTrue(SimpleTokenizer.isWord(spans.span(34)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(30)));
+    Assert.assertTrue(TextToTokens.isListMark(spans.span(31)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(32)));
+    Assert.assertTrue(TextToTokens.isListMark(spans.span(33)));
+    Assert.assertTrue(TextToTokens.isWord(spans.span(34)));
   }
 
   private String text() {
