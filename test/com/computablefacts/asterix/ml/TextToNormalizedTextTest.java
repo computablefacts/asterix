@@ -18,14 +18,14 @@ public class TextToNormalizedTextTest {
   @Test
   public void testNormalize() {
 
-    TextToNormalizedText tnt = new TextToNormalizedText(true) {
+    TextToNormalizedText ttnt = new TextToNormalizedText(true) {
 
       @Override
       protected String normalize(@NotNull String text) {
         return super.normalize(StringCodec.normalize(text));
       }
     };
-    String text = tnt.apply(text());
+    String text = ttnt.apply(text());
 
     Assert.assertEquals(430, text.length());
     Assert.assertEquals(
