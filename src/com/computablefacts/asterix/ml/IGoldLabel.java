@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.ml;
 
+import com.computablefacts.asterix.Generated;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -176,6 +177,8 @@ public interface IGoldLabel<D> {
    *
    * @return a {@link Map}.
    */
+  @Generated
+  @Deprecated
   default Map<String, Object> asMap() {
 
     Map<String, Object> map = new HashMap<>();
