@@ -20,9 +20,17 @@ public class ContextualizeTokensTest {
         .toList();
 
     Assert.assertEquals(3, sentences.size());
+
     Assert.assertEquals(14, sentences.get(0).size());
     Assert.assertEquals(28, sentences.get(1).size());
     Assert.assertEquals(44, sentences.get(2).size());
+
+    Assert.assertTrue(sentences.get(0).stream()
+        .allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
+    Assert.assertTrue(sentences.get(1).stream()
+        .allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
+    Assert.assertTrue(sentences.get(2).stream()
+        .allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
   }
 
   private List<String> sentences() {

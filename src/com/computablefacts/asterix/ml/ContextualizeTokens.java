@@ -1,14 +1,13 @@
 package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -41,12 +40,23 @@ final public class ContextualizeTokens implements Function<SpanSequence, SpanSeq
       int center = i;
 
       // Center the window around i (excluding the target token at i) and extract tokens before/after the target token at i
-      List<String> context = IntStream.range(Math.max(0, i - windowSize),
+      List<String> tokensBefore = new ArrayList<>();
+      List<String> tokensAfter = new ArrayList<>();
+
+      IntStream.range(Math.max(0, i - windowSize),
               Math.min(spans.size(), i + 1 + windowSize)).boxed().filter(idx -> idx != center)
-          .map(spans::span).map(Span::text).collect(Collectors.toList());
+          .forEach(idx -> {
+            if (idx < center) {
+              tokensBefore.add(spans.span(idx).text());
+            }
+            if (idx > center) {
+              tokensAfter.add(spans.span(idx).text());
+            }
+          });
 
       // Save context as a span's feature
-      spans.span(center).setFeature("CTX", Joiner.on('\0').join(context));
+      spans.span(center).setFeature("CTX_BEFORE", Joiner.on('\0').join(tokensBefore));
+      spans.span(center).setFeature("CTX_AFTER", Joiner.on('\0').join(tokensAfter));
     }
     return spans;
   }
