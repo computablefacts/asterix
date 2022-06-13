@@ -42,6 +42,11 @@ final public class Vocabulary {
     return vocabulary;
   }
 
+  /**
+   * Returns the size of the vocabulary i.e. the number of distinct tokens.
+   *
+   * @return the vocabulary size.
+   */
   public int size() {
 
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
@@ -49,6 +54,12 @@ final public class Vocabulary {
     return idx_.size();
   }
 
+  /**
+   * Map a token to a token index.
+   *
+   * @param token the token.
+   * @return the index.
+   */
   public int index(String token) {
 
     Preconditions.checkNotNull(token, "token should not be null");
@@ -57,6 +68,12 @@ final public class Vocabulary {
     return idx_.getOrDefault(token, idxUnk_);
   }
 
+  /**
+   * Map a token index to a token.
+   *
+   * @param index the index.
+   * @return the token.
+   */
   public String token(int index) {
 
     Preconditions.checkArgument(index >= 0, "index must be >= 0");
@@ -65,6 +82,12 @@ final public class Vocabulary {
     return idx_.inverse().getOrDefault(index, tokenUnk_);
   }
 
+  /**
+   * Returns the number of occurrences of a given token.
+   *
+   * @param token the token.
+   * @return the number of occurrences. This value is in [0, #tokens].
+   */
   public int frequency(String token) {
 
     Preconditions.checkNotNull(token, "token should not be null");
@@ -73,14 +96,34 @@ final public class Vocabulary {
     return freq_.count(token);
   }
 
+  /**
+   * Returns the number of occurrences of a given index.
+   *
+   * @param index the token index in the current vocabulary.
+   * @return the number of occurrences. This value is in [0, #tokens].
+   */
   public int frequency(int index) {
     return frequency(token(index));
   }
 
+  /**
+   * Returns the normalized frequency of a given token i.e. the frequency of the token divided by
+   * the total number of tokens.
+   *
+   * @param token the token.
+   * @return the normalized frequency. This value is in [0, 1].
+   */
   public double normalizedFrequency(String token) {
     return (double) frequency(token) / (double) freq_.size();
   }
 
+  /**
+   * Returns the normalized frequency of a given token index i.e. the frequency of the token index
+   * divided by the total number of tokens.
+   *
+   * @param index the token index in the current vocabulary.
+   * @return the normalized frequency. This value is in [0, 1].
+   */
   public double normalizedFrequency(int index) {
     return normalizedFrequency(token(index));
   }
