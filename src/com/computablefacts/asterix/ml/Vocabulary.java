@@ -77,6 +77,14 @@ final public class Vocabulary {
     return frequency(token(index));
   }
 
+  public double normalizedFrequency(String token) {
+    return (double) frequency(token) / (double) freq_.size();
+  }
+
+  public double normalizedFrequency(int index) {
+    return normalizedFrequency(token(index));
+  }
+
   private void add(String token) {
 
     Preconditions.checkState(!isFrozen_, "vocabulary is frozen");

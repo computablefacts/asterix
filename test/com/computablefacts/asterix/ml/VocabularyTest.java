@@ -14,9 +14,8 @@ public class VocabularyTest {
   @Test
   public void testVocabulary() {
 
-    NormalizeText ttnt = new NormalizeText(true);
-    TokenizeText ttt = new TokenizeText();
-    View<String> tokens = View.of(ttt.apply(ttnt.apply(text()))).map(Span::text);
+    View<String> tokens = View.of(text()).map(new NormalizeText(true)).map(new TokenizeText())
+        .flatten(View::of).map(Span::text);
     Vocabulary vocabulary = Vocabulary.of(tokens, 2, 10);
 
     Assert.assertEquals(10, vocabulary.size());
@@ -55,9 +54,8 @@ public class VocabularyTest {
   @Test
   public void testFrequency() {
 
-    NormalizeText ttnt = new NormalizeText(true);
-    TokenizeText ttt = new TokenizeText();
-    View<String> tokens = View.of(ttt.apply(ttnt.apply(text()))).map(Span::text);
+    View<String> tokens = View.of(text()).map(new NormalizeText(true)).map(new TokenizeText())
+        .flatten(View::of).map(Span::text);
     Vocabulary vocabulary = Vocabulary.of(tokens, 2, 10);
 
     Assert.assertEquals(10, vocabulary.size());
@@ -73,6 +71,28 @@ public class VocabularyTest {
 
     Assert.assertEquals(2, vocabulary.frequency(3));
     Assert.assertEquals(2, vocabulary.frequency("in"));
+  }
+
+  @Test
+  public void testNormalizedFrequency() {
+
+    View<String> tokens = View.of(text()).map(new NormalizeText(true)).map(new TokenizeText())
+        .flatten(View::of).map(Span::text);
+    Vocabulary vocabulary = Vocabulary.of(tokens, 2, 10);
+
+    Assert.assertEquals(10, vocabulary.size());
+
+    Assert.assertEquals(0.0, vocabulary.normalizedFrequency(0), 0.000001);
+    Assert.assertEquals(0.0, vocabulary.normalizedFrequency("<UNK>"), 0.000001);
+
+    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency(1), 0.000001);
+    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency("-"), 0.000001);
+
+    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency(2), 0.000001);
+    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency("address"), 0.000001);
+
+    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency(3), 0.000001);
+    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency("in"), 0.000001);
   }
 
   @Test
