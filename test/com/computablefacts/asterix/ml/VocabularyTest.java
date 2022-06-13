@@ -5,6 +5,8 @@ import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.Var;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -105,6 +107,24 @@ public class VocabularyTest {
 
     Assert.assertFalse(samples.isEmpty());
     Assert.assertTrue(samples.stream().noneMatch(sample -> sample.size() == 0));
+  }
+
+  @Test
+  public void testMostProbableNextToken() {
+
+    List<SpanSequence> spans = View.of(sentences()).map(new NormalizeText(true))
+        .map(new TokenizeText()).toList();
+    Vocabulary vocabulary = Vocabulary.of(View.of(spans).flatten(
+            s1 -> View.of(s1).map(Span::text).overlappingWindow(2).map(s3 -> Joiner.on('\0').join(s3))),
+        2, 10);
+
+    @Var String token = vocabulary.mostProbableNextToken("mac").orElse("<UNK>");
+
+    Assert.assertEquals("address", token);
+
+    token = vocabulary.mostProbableNextToken("the").orElse("<UNK>");
+
+    Assert.assertTrue(Sets.newHashSet("world", "latest", "-", "most").contains(token));
   }
 
   private String text() {

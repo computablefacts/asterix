@@ -8,10 +8,15 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.errorprone.annotations.Var;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.concurrent.NotThreadSafe;
 
 @NotThreadSafe
@@ -128,13 +133,6 @@ final public class Vocabulary {
     return normalizedFrequency(token(index));
   }
 
-  private void add(String token) {
-
-    Preconditions.checkState(!isFrozen_, "vocabulary is frozen");
-
-    freq_.add(token);
-  }
-
   /**
    * Subsampling attempts to minimize the impact of high-frequency words on the training of a word
    * embedding model.
@@ -156,16 +154,63 @@ final public class Vocabulary {
 
     return View.of(newSpans).map(sequence -> {
 
-          SpanSequence newSequence = new SpanSequence();
+      SpanSequence newSequence = new SpanSequence();
 
-          View.of(sequence).filter(
-                  token -> random.nextFloat() < Math.sqrt(
-                      1e-4 / (double) counts.count(token.text()) * (double) nbTokens))
-              .forEachRemaining(newSequence::add);
+      View.of(sequence).filter(token -> random.nextFloat() < Math.sqrt(
+              1e-4 / (double) counts.count(token.text()) * (double) nbTokens))
+          .forEachRemaining(newSequence::add);
 
-          return newSequence;
-        })
-        .filter(sequence -> sequence.size() > 0);
+      return newSequence;
+    }).filter(sequence -> sequence.size() > 0);
+  }
+
+  /**
+   * Find the most probable token following a given ngram.
+   * <p>
+   * In order to properly work:
+   * <ul>
+   * <li>The vocabulary must be for ngrams of length {@code ngram.nb_tokens + 1}</li>
+   * <li>The ngram's tokens must be separated with a single character</li>
+   * </ul>
+   *
+   * @param ngram the prefix.
+   * @return the most probable token following the given prefix.
+   */
+  public Optional<String> mostProbableNextToken(String ngram) {
+
+    Preconditions.checkNotNull(ngram, "ngram should not be null");
+
+    Set<String> ngrams = freq_.elementSet().stream().filter(n -> n.startsWith(ngram))
+        .collect(Collectors.toSet());
+
+    if (ngrams.isEmpty()) {
+      return Optional.empty();
+    }
+    if (ngrams.size() == 1) {
+      String token = Iterables.get(ngrams, 0).substring(ngram.length() + 1 /* separator */);
+      return Optional.of(token);
+    }
+
+    int rnd = new Random().nextInt(ngrams.stream().mapToInt(freq_::count).sum());
+    @Var int sum = 0;
+
+    for (String n : ngrams) {
+
+      sum += freq_.count(n);
+
+      if (rnd < sum) {
+        String token = n.substring(ngram.length() + 1 /* separator */);
+        return Optional.of(token);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private void add(String token) {
+
+    Preconditions.checkState(!isFrozen_, "vocabulary is frozen");
+
+    freq_.add(token);
   }
 
   private void freeze(int minTokenFreq, int maxVocabSize) {
