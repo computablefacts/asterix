@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.ml;
 
+import com.computablefacts.asterix.Generated;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.StringIterator;
@@ -15,68 +16,82 @@ public class TokenizeText implements Function<String, SpanSequence> {
   public TokenizeText() {
   }
 
+  @Generated
   public static boolean isWord(Span span) {
     return span != null && span.hasTag("WORD");
   }
 
+  @Generated
   public static boolean isApostrophe(Span span) {
     return span != null && span.hasTag("APOSTROPHE");
   }
 
+  @Generated
   public static boolean isArrow(Span span) {
     return span != null && span.hasTag("ARROW");
   }
 
+  @Generated
   public static boolean isBracket(Span span) {
     return span != null && span.hasTag("BRACKET");
   }
 
+  @Generated
   public static boolean isCjkSymbol(Span span) {
     return span != null && span.hasTag("CJK_SYMBOL");
   }
 
+  @Generated
   public static boolean isCurrency(Span span) {
     return span != null && span.hasTag("CURRENCY");
   }
 
+  @Generated
   public static boolean isDoubleQuotationMark(Span span) {
-    return span != null && span
-        .hasTag("DOUBLE_QUOTATION_MARK");
+    return span != null && span.hasTag("DOUBLE_QUOTATION_MARK");
   }
 
+  @Generated
   public static boolean isGeneralPunctuation(Span span) {
-    return span != null && span
-        .hasTag("GENERAL_PUNCTUATION");
+    return span != null && span.hasTag("GENERAL_PUNCTUATION");
   }
 
+  @Generated
   public static boolean isNumber(Span span) {
     return span != null && span.hasTag("NUMBER");
   }
 
+  @Generated
   public static boolean isListMark(Span span) {
     return span != null && span.hasTag("LIST_MARK");
   }
 
+  @Generated
   public static boolean isPunctuation(Span span) {
     return span != null && span.hasTag("PUNCTUATION");
   }
 
+  @Generated
   public static boolean isQuotationMark(Span span) {
     return span != null && span.hasTag("QUOTATION_MARK");
   }
 
+  @Generated
   public static boolean isSeparatorMark(Span span) {
     return span != null && span.hasTag("SEPARATOR_MARK");
   }
 
+  @Generated
   public static boolean isSingleQuotationMark(Span span) {
-    return span != null && span.hasTag("QUOTATION_MARK");
+    return span != null && span.hasTag("SINGLE_QUOTATION_MARK");
   }
 
+  @Generated
   public static boolean isTerminalMark(Span span) {
     return span != null && span.hasTag("TERMINAL_MARK");
   }
 
+  @Generated
   public static boolean isUnknown(Span span) {
     return span != null && span.hasTag("UNKNOWN");
   }
@@ -144,7 +159,7 @@ public class TokenizeText implements Function<String, SpanSequence> {
           } else if (isSeparatorMark) {
             span.addTag("SEPARATOR_MARK");
           } else if (isSingleQuotationMark) {
-            span.addTag("QUOTATION_MARK");
+            span.addTag("SINGLE_QUOTATION_MARK");
           } else if (isTerminalMark) {
             span.addTag("TERMINAL_MARK");
           } else {
@@ -191,7 +206,7 @@ public class TokenizeText implements Function<String, SpanSequence> {
           } else if (isSeparatorMark) {
             span2.addTag("SEPARATOR_MARK");
           } else if (isSingleQuotationMark) {
-            span2.addTag("QUOTATION_MARK");
+            span2.addTag("SINGLE_QUOTATION_MARK");
           } else if (isTerminalMark) {
             span2.addTag("TERMINAL_MARK");
           } else {
