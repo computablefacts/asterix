@@ -102,7 +102,7 @@ final public class Vocabulary {
   }
 
   /**
-   * Returns the number of occurrences of a given index.
+   * Returns the number of occurrences of a given token index i.e. the frequency of the token.
    *
    * @param index the token index in the current vocabulary.
    * @return the number of occurrences. This value is in [0, #tokens].
@@ -123,8 +123,8 @@ final public class Vocabulary {
   }
 
   /**
-   * Returns the normalized frequency of a given token index i.e. the frequency of the token index
-   * divided by the total number of tokens.
+   * Returns the normalized frequency of a given token index i.e. the frequency of the token
+   * associated with the index divided by the total number of tokens.
    *
    * @param index the token index in the current vocabulary.
    * @return the normalized frequency. This value is in [0, 1].
