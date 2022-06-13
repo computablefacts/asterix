@@ -1,15 +1,20 @@
 package com.computablefacts.asterix.ml;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.validation.constraints.NotNull;
-
 import com.computablefacts.asterix.console.AsciiProgressBar;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 /**
  * Implements a modified version of the DocSetLabeler algorithm from "Topic Similarity Networks:
@@ -18,7 +23,8 @@ import com.google.errorprone.annotations.Var;
 @CheckReturnValue
 public abstract class DocSetLabeler {
 
-  protected DocSetLabeler() {}
+  protected DocSetLabeler() {
+  }
 
   /**
    * See https://en.wikipedia.org/wiki/Entropy_(information_theory)#Definition for details.
@@ -54,7 +60,7 @@ public abstract class DocSetLabeler {
   /**
    * See https://en.wikipedia.org/wiki/Information_gain_ratio#Information_gain_calculation for
    * details.
-   *
+   * <p>
    * A good high-level overview can be found here
    * https://towardsdatascience.com/entropy-how-decision-trees-make-decisions-2946b9c18c8
    *
@@ -146,9 +152,9 @@ public abstract class DocSetLabeler {
    *
    * @param corpus a corpus of texts.
    * @param subsetOk a subset of the corpus having caller-defined characteristics that should be
-   *        matched.
+   * matched.
    * @param subsetKo a subset of the corpus having caller-defined characteristics that should not be
-   *        matched.
+   * matched.
    * @param nbCandidatesToConsider the number of candidate terms to consider in each document.
    * @param nbLabelsToReturn the number of labels to return.
    * @return labels and scores.
@@ -163,17 +169,17 @@ public abstract class DocSetLabeler {
    *
    * @param corpus a corpus of texts.
    * @param subsetOk a subset of the corpus having caller-defined characteristics that should be
-   *        matched.
+   * matched.
    * @param subsetKo a subset of the corpus having caller-defined characteristics that should not be
-   *        matched.
+   * matched.
    * @param nbCandidatesToConsider the number of candidate terms to consider in each document.
    * @param nbLabelsToReturn the number of labels to return.
-   * @param hasProgressBar true iif a progress bar must be displayed, false otherwise.
+   * @param withProgressBar true iif a progress bar must be displayed, false otherwise.
    * @return labels and scores.
    */
   public List<Map.Entry<String, Double>> label(List<String> corpus, List<String> subsetOk,
       List<String> subsetKo, int nbCandidatesToConsider, int nbLabelsToReturn,
-      boolean hasProgressBar) {
+      boolean withProgressBar) {
 
     Preconditions.checkNotNull(corpus, "corpus should not be null");
     Preconditions.checkNotNull(subsetOk, "subsetOk should not be null");
@@ -200,7 +206,7 @@ public abstract class DocSetLabeler {
     @Var
     int nbTextsProcessed = 0;
     int nbTexts = corpus.size();
-    AsciiProgressBar.ProgressBar bar = hasProgressBar ? AsciiProgressBar.create() : null;
+    AsciiProgressBar.ProgressBar bar = withProgressBar ? AsciiProgressBar.create() : null;
 
     for (String text : corpus) {
 
@@ -259,9 +265,11 @@ public abstract class DocSetLabeler {
   }
 
   protected void init(@NotNull List<String> corpus, @NotNull List<String> subsetOk,
-      @NotNull List<String> subsetKo) {}
+      @NotNull List<String> subsetKo) {
+  }
 
-  protected void uinit() {}
+  protected void uinit() {
+  }
 
   protected abstract Set<String> candidates(String text);
 
