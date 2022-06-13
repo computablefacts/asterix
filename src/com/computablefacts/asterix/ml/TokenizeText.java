@@ -136,34 +136,45 @@ public class TokenizeText implements Function<String, SpanSequence> {
           Span span = new Span(text, iterator.position() - 1, iterator.position());
           if (isApostrophe) {
             span.addTag("APOSTROPHE");
-          } else if (isArrow) {
+          }
+          if (isArrow) {
             span.addTag("ARROW");
-          } else if (isBracket) {
+          }
+          if (isBracket) {
             span.addTag("BRACKET");
-          } else if (isCjkSymbol) {
+          }
+          if (isCjkSymbol) {
             span.addTag("CJK_SYMBOL");
-          } else if (isCurrency) {
+          }
+          if (isCurrency) {
             span.addTag("CURRENCY");
-          } else if (isDoubleQuotationMark) {
+          }
+          if (isDoubleQuotationMark) {
             span.addTag("DOUBLE_QUOTATION_MARK");
-          } else if (isGeneralPunctuation) {
+          }
+          if (isGeneralPunctuation) {
             span.addTag("GENERAL_PUNCTUATION");
-          } else if (isNumber) {
+          }
+          if (isNumber) {
             span.addTag("NUMBER");
-          } else if (isListMark) {
+          }
+          if (isListMark) {
             span.addTag("LIST_MARK");
-          } else if (isPunctuation) {
+          }
+          if (isPunctuation) {
             span.addTag("PUNCTUATION");
-          } else if (isQuotationMark) {
+          }
+          if (isQuotationMark) {
             span.addTag("QUOTATION_MARK");
-          } else if (isSeparatorMark) {
+          }
+          if (isSeparatorMark) {
             span.addTag("SEPARATOR_MARK");
-          } else if (isSingleQuotationMark) {
+          }
+          if (isSingleQuotationMark) {
             span.addTag("SINGLE_QUOTATION_MARK");
-          } else if (isTerminalMark) {
+          }
+          if (isTerminalMark) {
             span.addTag("TERMINAL_MARK");
-          } else {
-            span.addTag("UNKNOWN");
           }
           addMoreTags(span);
           addMoreFeatures(span);
@@ -183,34 +194,45 @@ public class TokenizeText implements Function<String, SpanSequence> {
           Span span2 = new Span(text, iterator.position() - 1, iterator.position());
           if (isApostrophe) {
             span2.addTag("APOSTROPHE");
-          } else if (isArrow) {
+          }
+          if (isArrow) {
             span2.addTag("ARROW");
-          } else if (isBracket) {
+          }
+          if (isBracket) {
             span2.addTag("BRACKET");
-          } else if (isCjkSymbol) {
+          }
+          if (isCjkSymbol) {
             span2.addTag("CJK_SYMBOL");
-          } else if (isCurrency) {
+          }
+          if (isCurrency) {
             span2.addTag("CURRENCY");
-          } else if (isDoubleQuotationMark) {
+          }
+          if (isDoubleQuotationMark) {
             span2.addTag("DOUBLE_QUOTATION_MARK");
-          } else if (isGeneralPunctuation) {
+          }
+          if (isGeneralPunctuation) {
             span2.addTag("GENERAL_PUNCTUATION");
-          } else if (isNumber) {
+          }
+          if (isNumber) {
             span2.addTag("NUMBER");
-          } else if (isListMark) {
+          }
+          if (isListMark) {
             span2.addTag("LIST_MARK");
-          } else if (isPunctuation) {
+          }
+          if (isPunctuation) {
             span2.addTag("PUNCTUATION");
-          } else if (isQuotationMark) {
+          }
+          if (isQuotationMark) {
             span2.addTag("QUOTATION_MARK");
-          } else if (isSeparatorMark) {
+          }
+          if (isSeparatorMark) {
             span2.addTag("SEPARATOR_MARK");
-          } else if (isSingleQuotationMark) {
+          }
+          if (isSingleQuotationMark) {
             span2.addTag("SINGLE_QUOTATION_MARK");
-          } else if (isTerminalMark) {
+          }
+          if (isTerminalMark) {
             span2.addTag("TERMINAL_MARK");
-          } else {
-            span2.addTag("UNKNOWN");
           }
           addMoreTags(span2);
           addMoreFeatures(span2);
