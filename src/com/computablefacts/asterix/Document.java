@@ -1,14 +1,22 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.codecs.JsonCodec;
+import com.computablefacts.asterix.ml.TokenizeText;
+import com.computablefacts.asterix.ml.Vocabulary;
+import com.computablefacts.logfmt.LogFormatter;
+import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.computablefacts.asterix.codecs.JsonCodec;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @CheckReturnValue
 final public class Document {
@@ -29,7 +37,7 @@ final public class Document {
   public static final String SUBJECT = "subject";
   public static final String DESCRIPTION = "description";
   public static final String LANGUAGE = "language";
-
+  private static final Logger logger_ = LoggerFactory.getLogger(Document.class);
   private final String docId_;
   private final Map<String, Object> metadata_ = new HashMap<>();
   private final Map<String, Object> content_ = new HashMap<>();
@@ -62,6 +70,76 @@ final public class Document {
     Preconditions.checkState(json.containsKey(CONTENT), "Missing content in %s", json);
 
     content_.putAll((Map<String, Object>) json.get(CONTENT));
+  }
+
+  /**
+   * Load a corpus of documents.
+   *
+   * @param file the corpus of documents as a gzipped JSONL file.
+   * @param onlyTexts true iif non-textual documents (ex. JSON objects) must be filtered out.
+   * @param withProgressBar true iif a progress bar must be displayed.
+   * @return a {@link View} over the corpus of documents.
+   */
+  public static View<Document> of(File file, boolean onlyTexts, boolean withProgressBar) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkArgument(file.exists(), "file file does not exist : %s", file);
+
+    View<Document> view = View.of(file, true)
+        .filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */).map(row -> {
+          try {
+            return new Document(JsonCodec.asObject(row));
+          } catch (Exception ex) {
+            logger_.error(LogFormatter.create().message(ex).add("line_number", row).formatError());
+          }
+          return new Document("UNK");
+        }).filter(doc -> {
+
+          // Ignore documents when an exception occurred
+          if ("UNK".equals(doc.docId())) {
+            return false;
+          }
+
+          // Ignore empty documents
+          if (doc.isEmpty()) {
+            return false;
+          }
+
+          // Ignore non-textual files
+          if (onlyTexts && !(doc.text() instanceof String)) {
+            return false;
+          }
+          return true;
+        });
+    return withProgressBar ? view.displayProgress(5000) : view;
+  }
+
+  /**
+   * Build a vocabulary from a corpus of documents. To be versatile, this method does not attempt to
+   * remove stop words, diacritical marks or even lowercase tokens.
+   * <ul>
+   * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
+   * <li>{@code args[1]} the threshold under which a token must be excluded from the vocabulary.</li>
+   * <li>{@code args[2]} the maximum size of the {@link Vocabulary}.</li>
+   * <li>{@code args[3]} the set of token's tags to include in the vocabulary.</li>
+   * </ul>
+   */
+  @Beta
+  public static void main(String[] args) {
+
+    File file = new File(args[0]);
+    int minTokenFreq = Integer.parseInt(args[1], 10);
+    int maxVocabSize = Integer.parseInt(args[2], 10);
+    Set<String> includeTags = Sets.newHashSet(
+        Splitter.on(',').trimResults().omitEmptyStrings().split(args[3]));
+    View<Document> docs = Document.of(file, true, true);
+    View<String> tokens = docs.map(doc -> (String) doc.text()).map(new TokenizeText()).flatten(
+        spans -> View.of(spans)
+            .filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
+            .map(Span::text));
+
+    Vocabulary vocabulary = Vocabulary.of(tokens, minTokenFreq, maxVocabSize);
+    vocabulary.save(new File(file.getParent() + File.separator + "vocabulary.tsv.gz"));
   }
 
   @Generated
