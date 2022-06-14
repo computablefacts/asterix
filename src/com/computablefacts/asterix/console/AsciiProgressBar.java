@@ -92,6 +92,7 @@ final public class AsciiProgressBar {
    * 100% ################################################## | <br />
    * <br />
    */
+  @Deprecated
   public static class IndeterminateProgressBar {
 
     private final ProgressBar bar_ = new ProgressBar();
