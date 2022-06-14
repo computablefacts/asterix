@@ -476,6 +476,15 @@ public class ViewTest {
   }
 
   @Test
+  public void testFilterInParallel() {
+
+    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    List<String> list = view.filterInParallel(2, w -> w.length() % 2 == 0).toList();
+
+    Assert.assertEquals(Lists.newArrayList("ab", "abcd"), list);
+  }
+
+  @Test
   public void testMapView() {
 
     View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));

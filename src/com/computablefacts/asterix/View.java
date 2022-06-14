@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -898,6 +899,27 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    */
   public View<T> filter(Predicate<? super T> predicate) {
     return new View<>(Iterators.filter(this, predicate::test));
+  }
+
+  /**
+   * Returns a view consisting of the elements of this view matching the given predicate.
+   * <p>
+   * Split the original view into sub-lists, then process the elements of each sub-list in parallel.
+   * Despite these shenanigans, the output of {@link #filterInParallel(int, Predicate)} is identical
+   * to the output of {@link #filter(Predicate)}.
+   *
+   * @param batchSize the size of each batch.
+   * @param predicate the predicate to satisfy.
+   * @return a new {@link View}.
+   */
+  public View<T> filterInParallel(int batchSize, Predicate<? super T> predicate) {
+
+    Preconditions.checkArgument(batchSize > 0, "batchSize must be > 0");
+    Preconditions.checkNotNull(predicate, "predicate should not be null");
+
+    return mapInParallel(batchSize,
+        t -> new AbstractMap.SimpleImmutableEntry<>(t, predicate.test(t))).filter(
+        SimpleImmutableEntry::getValue).map(SimpleImmutableEntry::getKey);
   }
 
   /**
