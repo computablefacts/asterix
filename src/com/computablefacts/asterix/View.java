@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.console.AsciiProgressBar;
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
@@ -36,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -956,6 +958,37 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    */
   public View<List<T>> partition(int size) {
     return new View<>(Iterators.partition(this, size));
+  }
+
+  /**
+   * Display progress in slices of {@code sliceSize} length.
+   *
+   * @param sliceSize the length of each slice.
+   * @return a new {@link View}.
+   */
+  @Generated
+  public View<T> displayProgress(int sliceSize) {
+
+    AtomicInteger slice = new AtomicInteger(0);
+    AtomicInteger count = new AtomicInteger(0);
+    String msg = "slice_id=%d, slice_count=%d, total_count=%d";
+    AsciiProgressBar.ProgressBar progress = AsciiProgressBar.create();
+
+    return peek(t -> {
+
+      int sliceId = slice.get() + 1;
+      int cnt = count.incrementAndGet();
+      int done = cnt % sliceSize == 0 ? sliceSize : cnt % sliceSize;
+
+      if (hasNext()) {
+        progress.update(done, sliceSize, String.format(msg, sliceId, done, cnt));
+      } else {
+        progress.update(done, done, String.format(msg, sliceId, done, cnt));
+      }
+      if (done == sliceSize) {
+        slice.incrementAndGet();
+      }
+    });
   }
 
   /**
