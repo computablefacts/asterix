@@ -7,6 +7,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Var;
+import java.io.File;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -87,14 +88,14 @@ public class VocabularyTest {
     Assert.assertEquals(0.0, vocabulary.normalizedFrequency(0), 0.000001);
     Assert.assertEquals(0.0, vocabulary.normalizedFrequency("<UNK>"), 0.000001);
 
-    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency(1), 0.000001);
-    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency("-"), 0.000001);
+    Assert.assertEquals(0.05555555555555555, vocabulary.normalizedFrequency(1), 0.000001);
+    Assert.assertEquals(0.05555555555555555, vocabulary.normalizedFrequency("-"), 0.000001);
 
-    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency(2), 0.000001);
-    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency("address"), 0.000001);
+    Assert.assertEquals(0.05555555555555555, vocabulary.normalizedFrequency(2), 0.000001);
+    Assert.assertEquals(0.05555555555555555, vocabulary.normalizedFrequency("address"), 0.000001);
 
-    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency(3), 0.000001);
-    Assert.assertEquals(0.023255813953488372, vocabulary.normalizedFrequency("in"), 0.000001);
+    Assert.assertEquals(0.05555555555555555, vocabulary.normalizedFrequency(3), 0.000001);
+    Assert.assertEquals(0.05555555555555555, vocabulary.normalizedFrequency("in"), 0.000001);
   }
 
   @Test
@@ -115,8 +116,8 @@ public class VocabularyTest {
     List<SpanSequence> spans = View.of(sentences()).map(new NormalizeText(true))
         .map(new TokenizeText()).toList();
     Vocabulary vocabulary = Vocabulary.of(View.of(spans).flatten(
-            s1 -> View.of(s1).map(Span::text).overlappingWindow(2).map(s3 -> Joiner.on('\0').join(s3))),
-        2, 10);
+        s1 -> View.of(s1).map(Span::text).overlappingWindow(2)
+            .map(s3 -> Joiner.on('\0').join(s3))));
 
     @Var String token = vocabulary.mostProbableNextToken("mac").orElse("<UNK>");
 
@@ -125,6 +126,61 @@ public class VocabularyTest {
     token = vocabulary.mostProbableNextToken("the").orElse("<UNK>");
 
     Assert.assertTrue(Sets.newHashSet("world", "latest", "-", "most").contains(token));
+  }
+
+  @Test
+  public void testSaveThenLoad() throws Exception {
+
+    String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
+    File file = new File(path + File.separator + "vocab.tsv.gz");
+    List<SpanSequence> spans = View.of(sentences()).map(new NormalizeText(true))
+        .map(new TokenizeText()).toList();
+
+    Vocabulary vocabulary = Vocabulary.of(View.of(spans).flatten(View::of).map(Span::text));
+    vocabulary.save(file);
+
+    Assert.assertEquals(65, vocabulary.size());
+
+    Assert.assertEquals("<UNK>", vocabulary.token(0));
+    Assert.assertEquals(0, vocabulary.index("<UNK>"));
+
+    Assert.assertEquals("!", vocabulary.token(1));
+    Assert.assertEquals(1, vocabulary.index("!"));
+
+    Assert.assertEquals("/", vocabulary.token(2));
+    Assert.assertEquals(2, vocabulary.index("/"));
+
+    Assert.assertEquals(0.0, vocabulary.normalizedFrequency(0), 0.000001);
+    Assert.assertEquals(0.0, vocabulary.normalizedFrequency("<UNK>"), 0.000001);
+
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency(1), 0.000001);
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency("!"), 0.000001);
+
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency(2), 0.000001);
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency("/"), 0.000001);
+
+    vocabulary.clear();
+    vocabulary.load(file);
+
+    Assert.assertEquals(65, vocabulary.size());
+
+    Assert.assertEquals("<UNK>", vocabulary.token(0));
+    Assert.assertEquals(0, vocabulary.index("<UNK>"));
+
+    Assert.assertEquals("!", vocabulary.token(1));
+    Assert.assertEquals(1, vocabulary.index("!"));
+
+    Assert.assertEquals("/", vocabulary.token(2));
+    Assert.assertEquals(2, vocabulary.index("/"));
+
+    Assert.assertEquals(0.0, vocabulary.normalizedFrequency(0), 0.000001);
+    Assert.assertEquals(0.0, vocabulary.normalizedFrequency("<UNK>"), 0.000001);
+
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency(1), 0.000001);
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency("!"), 0.000001);
+
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency(2), 0.000001);
+    Assert.assertEquals(0.011627906976744186, vocabulary.normalizedFrequency("/"), 0.000001);
   }
 
   private String text() {

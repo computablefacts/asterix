@@ -10,13 +10,16 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Multiset.Entry;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
 @NotThreadSafe
@@ -34,6 +37,31 @@ final public class Vocabulary {
     idx_ = HashBiMap.create();
   }
 
+  /**
+   * Build a vocabulary from a stream of tokens.
+   *
+   * @param tokens the tokens to add to the vocabulary.
+   * @return a {@link Vocabulary}.
+   */
+  public static Vocabulary of(View<String> tokens) {
+
+    Preconditions.checkNotNull(tokens, "tokens should not be null");
+
+    Vocabulary vocabulary = new Vocabulary();
+    tokens.forEachRemaining(vocabulary::add);
+    vocabulary.freeze(-1, -1);
+
+    return vocabulary;
+  }
+
+  /**
+   * Build a vocabulary from a stream of tokens.
+   *
+   * @param tokens the tokens to add to the vocabulary.
+   * @param minTokenFreq the threshold under which a token must be excluded from the vocabulary.
+   * @param maxVocabSize the maximum number of words to include in the vocabulary.
+   * @return a {@link Vocabulary}.
+   */
   public static Vocabulary of(View<String> tokens, int minTokenFreq, int maxVocabSize) {
 
     Preconditions.checkNotNull(tokens, "tokens should not be null");
@@ -45,6 +73,15 @@ final public class Vocabulary {
     vocabulary.freeze(minTokenFreq, maxVocabSize);
 
     return vocabulary;
+  }
+
+  /**
+   * Remove all tokens from the current vocabulary.
+   */
+  public void clear() {
+    freq_.clear();
+    idx_.clear();
+    isFrozen_ = false;
   }
 
   /**
@@ -206,6 +243,43 @@ final public class Vocabulary {
     return Optional.empty();
   }
 
+  /**
+   * Save the current vocabulary as a gzipped TSV file.
+   *
+   * @param file the file to create.
+   */
+  public void save(File file) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
+
+    View.of(freq_.entrySet())
+        .toFile(entry -> entry.getElement() + "\t" + entry.getCount(), file, false, true);
+  }
+
+  /**
+   * Load a vocabulary previously saved using {@link #save(File)}.
+   *
+   * @param file the file to load.
+   */
+  public void load(File file) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
+
+    isFrozen_ = false;
+    idx_.clear(); // it allows us to merge multiple files together
+
+    View.of(file, true).forEachRemaining(row -> {
+      int index = row.indexOf('\t');
+      String token = row.substring(0, index);
+      int count = Integer.parseInt(row.substring(index + 1), 10);
+      freq_.add(token, count);
+    });
+
+    freeze(-1, -1);
+  }
+
   private void add(String token) {
 
     Preconditions.checkState(!isFrozen_, "vocabulary is frozen");
@@ -215,19 +289,27 @@ final public class Vocabulary {
 
   private void freeze(int minTokenFreq, int maxVocabSize) {
 
-    Preconditions.checkArgument(minTokenFreq > 0, "minTokenFreq must be > 0");
     Preconditions.checkState(!isFrozen_, "vocabulary is already frozen");
-    Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
 
     isFrozen_ = true;
     idx_.put(tokenUnk_, idxUnk_);
-    freq_.entrySet().stream().filter(freq -> freq.getCount() >= minTokenFreq).sorted(
-            (e1, e2) -> ComparisonChain.start().compare(e1.getCount(), e2.getCount())
-                .compare(e1.getElement(), e2.getElement()).result()).limit(maxVocabSize - 1 /* UNK */)
-        .forEach(token -> {
-          if (!idx_.containsKey(token.getElement())) {
-            idx_.put(token.getElement(), idx_.size());
-          }
-        });
+
+    if (minTokenFreq > 0) {
+      freq_.entrySet().removeIf(freq -> freq.getCount() < minTokenFreq);
+    }
+
+    @Var Stream<Entry<String>> stream = freq_.entrySet().stream().sorted(
+        (e1, e2) -> ComparisonChain.start().compare(e1.getCount(), e2.getCount())
+            .compare(e1.getElement(), e2.getElement()).result());
+
+    if (maxVocabSize > 0) {
+      stream = stream.limit(maxVocabSize - 1 /* UNK */);
+    }
+
+    stream.forEach(token -> {
+      if (!idx_.containsKey(token.getElement())) {
+        idx_.put(token.getElement(), idx_.size());
+      }
+    });
   }
 }
