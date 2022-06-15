@@ -16,6 +16,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -81,16 +82,15 @@ final public class Document {
    *
    * @param file the corpus of documents as a gzipped JSONL file.
    * @param onlyTexts true iif non-textual documents (ex. JSON objects) must be filtered out.
-   * @param withProgressBar true iif a progress bar must be displayed.
    * @return a {@link View} over the corpus of documents.
    */
-  public static View<Document> of(File file, boolean onlyTexts, boolean withProgressBar) {
+  public static View<Document> of(File file, boolean onlyTexts) {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file file does not exist : %s", file);
 
-    View<Document> view = View.of(file, true)
-        .filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */).map(row -> {
+    return View.of(file, true).filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */)
+        .map(row -> {
           try {
             return new Document(JsonCodec.asObject(row));
           } catch (Exception ex) {
@@ -115,7 +115,6 @@ final public class Document {
           }
           return true;
         });
-    return withProgressBar ? view.displayProgress(5000) : view;
   }
 
   /**
@@ -126,47 +125,57 @@ final public class Document {
    * <li>{@code args[1]} the threshold under which a token must be excluded from the vocabulary.</li>
    * <li>{@code args[2]} the maximum size of the {@link Vocabulary}.</li>
    * <li>{@code args[3]} the type of tokens to keep.</li>
-   * <li>{@code args[4]} the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.</li>
+   * <li>{@code args[4]} the ngrams length that will be part of the vocabulary: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.</li>
    * </ul>
    */
   @Beta
   public static void main(String[] args) {
 
     File file = new File(args[0]);
-    int minTokenFreq = Integer.parseInt(args[1], 10);
-    int maxVocabSize = Integer.parseInt(args[2], 10);
+    int minTermFreq = Integer.parseInt(args[1], 10);
+    int minDocFreq = Integer.parseInt(args[2], 10);
+    int maxVocabSize = Integer.parseInt(args[3], 10);
     Set<String> includeTags = Sets.newHashSet(
-        Splitter.on(',').trimResults().omitEmptyStrings().split(args[3]));
-    int ngramLength = Integer.parseInt(args[4], 10);
+        Splitter.on(',').trimResults().omitEmptyStrings().split(args[4]));
+    int ngramLength = Integer.parseInt(args[5], 10);
 
-    Preconditions.checkArgument(minTokenFreq > 0, "minTokenFreq must be > 0");
+    Preconditions.checkArgument(minTermFreq > 0, "minTermFreq must be > 0");
+    Preconditions.checkArgument(minDocFreq > 0, "minDocFreq must be > 0");
     Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
     Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
     Preconditions.checkArgument(ngramLength > 0, "ngramLength must be > 0");
 
     System.out.printf("Input file is %s\n", file);
     System.out.printf("NGrams length is %d\n", ngramLength);
-    System.out.printf("Min. token freq. is %d\n", minTokenFreq);
+    System.out.printf("Min. term freq. is %d\n", minTermFreq);
+    System.out.printf("Min. document freq. is %d\n", minDocFreq);
     System.out.printf("Max. vocab size is %d\n", maxVocabSize);
     System.out.printf("Included tags are %s\n", includeTags);
     System.out.println("Building vocabulary...");
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    @Var View<String> ngrams = Document.of(file, true, true).map(doc -> (String) doc.text())
-        .map(new TokenizeText()).flatten(seq -> View.of(seq)
-            .filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
-            .map(Span::text));
+    @Var View<SpanSequence> documents = Document.of(file, true).displayProgress(5000)
+        .map(doc -> (String) doc.text()).map(new TokenizeText());
+    View<List<String>> ngrams;
 
-    if (ngramLength > 1) {
-      ngrams = ngrams.overlappingWindow(ngramLength).map(tks -> Joiner.on(' ').join(tks));
+    if (ngramLength == 1) {
+      ngrams = documents.map(
+          seq -> View.of(seq).filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
+              .map(Span::text).toList());
+    } else {
+      ngrams = documents.map(
+          seq -> View.of(seq).filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
+              .map(Span::text).overlappingWindowWithStrictLength(ngramLength)
+              .map(tks -> Joiner.on('_').join(tks)).toList());
     }
 
-    Vocabulary vocabulary = Vocabulary.of(ngrams, minTokenFreq, maxVocabSize);
+    Vocabulary vocabulary = Vocabulary.of(ngrams, minTermFreq, minDocFreq, maxVocabSize);
     vocabulary.save(new File(
         String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength)));
     stopwatch.stop();
 
-    System.out.printf("Vocabulary built in %ds.", stopwatch.elapsed(TimeUnit.SECONDS));
+    System.out.printf("Vocabulary built in %d seconds\n", stopwatch.elapsed(TimeUnit.SECONDS));
+    System.out.printf("Vocabulary size is %d\n", vocabulary.size());
   }
 
   @Generated

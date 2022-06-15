@@ -14,10 +14,13 @@ import com.google.common.collect.Multiset.Entry;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -28,64 +31,131 @@ final public class Vocabulary {
 
   private final String tokenUnk_ = "<UNK>";
   private final int idxUnk_ = 0;
-  private final Multiset<String> freq_;
-  private final BiMap<String, Integer> idx_;
+  private final Multiset<String> tf_; // term frequency
+  private final Multiset<String> df_; // document frequency
+  private final BiMap<String, Integer> idx_; // one-hot encoding
+  private int nbTermsSeen_ = 0;
+  private int nbDocsSeen_ = 0;
   private boolean isFrozen_ = false;
 
   public Vocabulary() {
-    freq_ = HashMultiset.create();
+    tf_ = HashMultiset.create();
+    df_ = HashMultiset.create();
     idx_ = HashBiMap.create();
   }
 
   /**
-   * Build a vocabulary from a stream of tokens.
+   * Build a vocabulary from a set of tokenized documents.
    *
-   * @param tokens the tokens to add to the vocabulary.
+   * @param docs a set of tokenized documents.
    * @return a {@link Vocabulary}.
    */
-  public static Vocabulary of(View<String> tokens) {
+  public static Vocabulary of(View<List<String>> docs) {
 
-    Preconditions.checkNotNull(tokens, "tokens should not be null");
+    Preconditions.checkNotNull(docs, "docs should not be null");
 
+    Set<String> tokensSeen = new HashSet<>();
     Vocabulary vocabulary = new Vocabulary();
-    tokens.forEachRemaining(vocabulary::add);
-    vocabulary.freeze(-1, -1);
+    docs.map(HashMultiset::create).forEachRemaining(terms -> {
+
+      vocabulary.nbDocsSeen_ += 1;
+      AtomicBoolean unkAlreadySeen = new AtomicBoolean(false);
+
+      terms.entrySet().forEach(term -> {
+
+        String token = term.getElement();
+        int count = term.getCount();
+
+        vocabulary.nbTermsSeen_ += count;
+
+        if (tokensSeen.contains(token)) {
+          vocabulary.tf_.add(token, count);
+          vocabulary.df_.add(token);
+        } else {
+
+          tokensSeen.add(token);
+          vocabulary.tf_.add(vocabulary.tokenUnk_);
+
+          if (!unkAlreadySeen.getAndSet(true)) {
+            vocabulary.df_.add(vocabulary.tokenUnk_);
+          }
+          if (count > 1) {
+            vocabulary.tf_.add(token, count - 1);
+            vocabulary.df_.add(token);
+          }
+        }
+      });
+    });
+    vocabulary.freeze(-1, -1, -1);
 
     return vocabulary;
   }
 
   /**
-   * Build a vocabulary from a stream of tokens.
+   * Build a vocabulary from a set of tokenized documents.
    *
-   * @param tokens the tokens to add to the vocabulary.
-   * @param minTokenFreq the threshold under which a token must be excluded from the vocabulary.
-   * @param maxVocabSize the maximum number of words to include in the vocabulary.
+   * @param docs a set of tokenized documents.
+   * @param minTermFreq the term-frequency threshold under which a term must be excluded.
+   * @param minDocFreq the document-frequency threshold under which a term must be excluded.
+   * @param maxVocabSize the maximum number of terms to include in the vocabulary.
    * @return a {@link Vocabulary}.
    */
-  public static Vocabulary of(View<String> tokens, int minTokenFreq, int maxVocabSize) {
+  public static Vocabulary of(View<List<String>> docs, int minTermFreq, int minDocFreq,
+      int maxVocabSize) {
 
-    Preconditions.checkNotNull(tokens, "tokens should not be null");
-    Preconditions.checkArgument(minTokenFreq > 0, "minTokenFreq must be > 0");
+    Preconditions.checkNotNull(docs, "docs should not be null");
+    Preconditions.checkArgument(minTermFreq > 0, "minTermFreq must be > 0");
     Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
 
+    Set<String> tokensSeen = new HashSet<>();
     Vocabulary vocabulary = new Vocabulary();
-    tokens.forEachRemaining(vocabulary::add);
-    vocabulary.freeze(minTokenFreq, maxVocabSize);
+    docs.map(HashMultiset::create).forEachRemaining(terms -> {
+
+      vocabulary.nbDocsSeen_ += 1;
+      AtomicBoolean unkAlreadySeen = new AtomicBoolean(false);
+
+      terms.entrySet().forEach(term -> {
+
+        String token = term.getElement();
+        int count = term.getCount();
+
+        vocabulary.nbTermsSeen_ += count;
+
+        if (tokensSeen.contains(token)) {
+          vocabulary.tf_.add(token, count);
+          vocabulary.df_.add(token);
+        } else {
+
+          tokensSeen.add(token);
+          vocabulary.tf_.add(vocabulary.tokenUnk_);
+
+          if (!unkAlreadySeen.getAndSet(true)) {
+            vocabulary.df_.add(vocabulary.tokenUnk_);
+          }
+          if (count > 1) {
+            vocabulary.tf_.add(token, count - 1);
+            vocabulary.df_.add(token);
+          }
+        }
+      });
+    });
+    vocabulary.freeze(minTermFreq, minDocFreq, maxVocabSize);
 
     return vocabulary;
   }
 
   /**
-   * Remove all tokens from the current vocabulary.
+   * Remove all terms from the current vocabulary.
    */
   public void clear() {
-    freq_.clear();
+    tf_.clear();
+    df_.clear();
     idx_.clear();
     isFrozen_ = false;
   }
 
   /**
-   * Returns the size of the vocabulary i.e. the number of distinct tokens.
+   * Returns the size of the vocabulary i.e. the number of distinct terms.
    *
    * @return the vocabulary size.
    */
@@ -97,26 +167,26 @@ final public class Vocabulary {
   }
 
   /**
-   * Map a token to a token index.
+   * Map a term to a term index.
    *
-   * @param token the token.
+   * @param term the term.
    * @return the index.
    */
-  public int index(String token) {
+  public int index(String term) {
 
-    Preconditions.checkNotNull(token, "token should not be null");
+    Preconditions.checkNotNull(term, "term should not be null");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return idx_.getOrDefault(token, idxUnk_);
+    return idx_.getOrDefault(term, idxUnk_);
   }
 
   /**
-   * Map a token index to a token.
+   * Map a term index to a term.
    *
    * @param index the index.
-   * @return the token.
+   * @return the term.
    */
-  public String token(int index) {
+  public String term(int index) {
 
     Preconditions.checkArgument(index >= 0, "index must be >= 0");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
@@ -125,57 +195,147 @@ final public class Vocabulary {
   }
 
   /**
-   * Returns the number of occurrences of a given token.
+   * Returns the term frequency of a given term.
    *
-   * @param token the token.
-   * @return the number of occurrences. This value is in [0, #tokens].
+   * @param term the term.
+   * @return the term frequency. This value is in [0, #terms].
    */
-  public int frequency(String token) {
+  public int tf(String term) {
 
-    Preconditions.checkNotNull(token, "token should not be null");
+    Preconditions.checkNotNull(term, "term should not be null");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return freq_.count(token);
+    return tf_.count(term(index(term)));
   }
 
   /**
-   * Returns the number of occurrences of a given token index i.e. the frequency of the token.
+   * Returns the term frequency of a given term.
    *
-   * @param index the token index in the current vocabulary.
-   * @return the number of occurrences. This value is in [0, #tokens].
+   * @param index the term index in the current vocabulary.
+   * @return the term frequency. This value is in [0, #terms].
    */
-  public int frequency(int index) {
-    return frequency(token(index));
+  public int tf(int index) {
+
+    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
+
+    return tf_.count(term(index));
   }
 
   /**
-   * Returns the normalized frequency of a given token i.e. the frequency of the token divided by
-   * the total number of tokens.
+   * Returns the document frequency of a given term.
    *
-   * @param token the token.
-   * @return the normalized frequency. This value is in [0, 1].
+   * @param term the term.
+   * @return the document frequency. This value is in [0, #documents].
    */
-  public double normalizedFrequency(String token) {
-    return (double) frequency(token) / (double) freq_.size();
+  public int df(String term) {
+
+    Preconditions.checkNotNull(term, "term should not be null");
+    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
+
+    return df_.count(term(index(term)));
   }
 
   /**
-   * Returns the normalized frequency of a given token index i.e. the frequency of the token
-   * associated with the index divided by the total number of tokens.
+   * Returns the document frequency of a given term.
    *
-   * @param index the token index in the current vocabulary.
-   * @return the normalized frequency. This value is in [0, 1].
+   * @param index the term index in the current vocabulary.
+   * @return the document frequency. This value is in [0, #documents].
    */
-  public double normalizedFrequency(int index) {
-    return normalizedFrequency(token(index));
+  public int df(int index) {
+
+    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
+
+    return df_.count(term(index));
   }
 
+  /**
+   * Returns the normalized term frequency of a given term.
+   *
+   * @param term the term.
+   * @return the normalized term frequency. This value is in [0, 1].
+   */
+  public double ntf(String term) {
+    return (double) tf(term) / (double) nbTermsSeen_;
+  }
+
+  /**
+   * Returns the normalized term frequency of a given term.
+   *
+   * @param index the term index in the current vocabulary.
+   * @return the normalized term frequency. This value is in [0, 1].
+   */
+  public double ntf(int index) {
+    return ntf(term(index));
+  }
+
+  /**
+   * Returns the normalized document frequency of a given term.
+   *
+   * @param term the term.
+   * @return the normalized document frequency. This value is in [0, 1].
+   */
+  public double ndf(String term) {
+    return (double) df(term) / (double) nbDocsSeen_;
+  }
+
+  /**
+   * Returns the normalized document frequency of a given term.
+   *
+   * @param index the term index in the current vocabulary.
+   * @return the normalized document frequency. This value is in [0, 1].
+   */
+  public double ndf(int index) {
+    return ndf(term(index));
+  }
+
+  /**
+   * Returns the inverse document frequency which measures how common a word is among all
+   * documents.
+   *
+   * @param term the term.
+   * @return the inverse document frequency.
+   */
+  public double idf(String term) {
+    return 1 + Math.log((double) nbDocsSeen_ / (double) (1 + df(term)));
+  }
+
+  /**
+   * Returns the inverse document frequency which measures how common a word is among all
+   * documents.
+   *
+   * @param index the term index in the current vocabulary.
+   * @return the inverse document frequency.
+   */
+  public double idf(int index) {
+    return 1 + Math.log((double) nbDocsSeen_ / (double) (1 + df(index)));
+  }
+
+  /**
+   * Computes the TF-IDF score of a given term.
+   *
+   * @param term the term.
+   * @return TF-IDF.
+   */
+  public double tfIdf(String term) {
+    return tf(term) * idf(term);
+  }
+
+  /**
+   * Computes the TF-IDF score of a given term.
+   *
+   * @param index the term index in the current vocabulary.
+   * @return TF-IDF.
+   */
+  public double tfIdf(int index) {
+    return tf(index) * idf(index);
+  }
+  
   /**
    * Subsampling attempts to minimize the impact of high-frequency words on the training of a word
    * embedding model.
    *
    * @param spans a span sequence.
-   * @return subsampled spans.
+   * @return sub-sampled spans.
    */
   public View<SpanSequence> subSample(View<SpanSequence> spans) {
 
@@ -184,7 +344,7 @@ final public class Vocabulary {
 
     Multiset<String> counts = HashMultiset.create();
     List<SpanSequence> newSpans = spans.peek(
-        sentence -> View.of(sentence).map(Span::text).map(token -> token(index(token)))
+        sentence -> View.of(sentence).map(Span::text).map(token -> term(index(token)))
             .forEachRemaining(token -> counts.add(token))).toList();
     int nbTokens = counts.size();
     Random random = new Random();
@@ -202,22 +362,22 @@ final public class Vocabulary {
   }
 
   /**
-   * Find the most probable token following a given ngram.
+   * Find the most probable term following a given ngram.
    * <p>
    * In order to properly work:
    * <ul>
    * <li>The vocabulary must be for ngrams of length {@code ngram.nb_tokens + 1}</li>
-   * <li>The ngram's tokens must be separated with a single character</li>
+   * <li>The ngram's terms must be separated with a single character</li>
    * </ul>
    *
    * @param ngram the prefix.
-   * @return the most probable token following the given prefix.
+   * @return the most probable term following the given prefix.
    */
-  public Optional<String> mostProbableNextToken(String ngram) {
+  public Optional<String> mostProbableNextTerm(String ngram) {
 
     Preconditions.checkNotNull(ngram, "ngram should not be null");
 
-    Set<String> ngrams = freq_.elementSet().stream().filter(n -> n.startsWith(ngram))
+    Set<String> ngrams = tf_.elementSet().stream().filter(n -> n.startsWith(ngram))
         .collect(Collectors.toSet());
 
     if (ngrams.isEmpty()) {
@@ -228,12 +388,12 @@ final public class Vocabulary {
       return Optional.of(token);
     }
 
-    int rnd = new Random().nextInt(ngrams.stream().mapToInt(freq_::count).sum());
+    int rnd = new Random().nextInt(ngrams.stream().mapToInt(tf_::count).sum());
     @Var int sum = 0;
 
     for (String n : ngrams) {
 
-      sum += freq_.count(n);
+      sum += tf_.count(n);
 
       if (rnd < sum) {
         String token = n.substring(ngram.length() + 1 /* separator */);
@@ -253,8 +413,9 @@ final public class Vocabulary {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
 
-    View.of(freq_.entrySet())
-        .toFile(entry -> entry.getElement() + "\t" + entry.getCount(), file, false, true);
+    View.of(idx_.keySet()).map(term -> term + "\t" + tf(term) + "\t" + df(term))
+        .prepend(String.format("# %d %d\nterm\ttf\tdf", nbTermsSeen_, nbDocsSeen_))
+        .toFile(Function.identity(), file, false, true);
   }
 
   /**
@@ -267,40 +428,48 @@ final public class Vocabulary {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
 
-    isFrozen_ = false;
     idx_.clear(); // it allows us to merge multiple files together
 
-    View.of(file, true).forEachRemaining(row -> {
-      int index = row.indexOf('\t');
-      String token = row.substring(0, index);
-      int count = Integer.parseInt(row.substring(index + 1), 10);
-      freq_.add(token, count);
-    });
+    String stats = View.of(file, true).take(1).toList().get(0);
 
-    freeze(-1, -1);
+    int index1 = stats.indexOf(' ');
+    int index2 = stats.lastIndexOf(' ');
+
+    nbTermsSeen_ = Integer.parseInt(stats.substring(index1 + 1, index2), 10);
+    nbDocsSeen_ = Integer.parseInt(stats.substring(index2 + 1), 10);
+
+    View.of(file, true).drop(1 /* number of terms/docs seen */ + 1/* header */)
+        .forEachRemaining(row -> {
+          int idx1 = row.indexOf('\t');
+          int idx2 = row.lastIndexOf('\t');
+          String term = row.substring(0, idx1);
+          int tf = Integer.parseInt(row.substring(idx1 + 1, idx2), 10);
+          int df = Integer.parseInt(row.substring(idx2 + 1), 10);
+          tf_.add(term, tf);
+          df_.add(term, df);
+        });
+
+    freeze(-1, -1, -1);
   }
 
-  private void add(String token) {
-
-    Preconditions.checkState(!isFrozen_, "vocabulary is frozen");
-
-    freq_.add(token);
-  }
-
-  private void freeze(int minTokenFreq, int maxVocabSize) {
+  private void freeze(int minTermFreq, int minDocFreq, int maxVocabSize) {
 
     Preconditions.checkState(!isFrozen_, "vocabulary is already frozen");
 
     isFrozen_ = true;
     idx_.put(tokenUnk_, idxUnk_);
 
-    if (minTokenFreq > 0) {
-      freq_.entrySet().removeIf(freq -> freq.getCount() < minTokenFreq);
+    if (minDocFreq > 0) {
+      df_.entrySet().removeIf(freq -> freq.getCount() < minDocFreq);
+    }
+    if (minTermFreq > 0) {
+      tf_.entrySet().removeIf(freq -> freq.getCount() < minTermFreq);
     }
 
-    @Var Stream<Entry<String>> stream = freq_.entrySet().stream().sorted(
-        (e1, e2) -> ComparisonChain.start().compare(e1.getCount(), e2.getCount())
-            .compare(e1.getElement(), e2.getElement()).result());
+    @Var Stream<Entry<String>> stream = tf_.entrySet().stream()
+        .filter(e -> !tokenUnk_.equals(e.getElement())).sorted(
+            (e1, e2) -> ComparisonChain.start().compare(e1.getCount(), e2.getCount())
+                .compare(e1.getElement(), e2.getElement()).result());
 
     if (maxVocabSize > 0) {
       stream = stream.limit(maxVocabSize - 1 /* UNK */);
@@ -311,5 +480,8 @@ final public class Vocabulary {
         idx_.put(token.getElement(), idx_.size());
       }
     });
+
+    df_.entrySet().removeIf(freq -> !idx_.containsKey(freq.getElement()));
+    tf_.entrySet().removeIf(freq -> !idx_.containsKey(freq.getElement()));
   }
 }
