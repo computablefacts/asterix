@@ -86,6 +86,7 @@ final public class Vocabulary {
         }
       });
     });
+    tokensSeen.clear();
     vocabulary.freeze(-1, -1, -1);
 
     return vocabulary;
@@ -139,6 +140,7 @@ final public class Vocabulary {
         }
       });
     });
+    tokensSeen.clear();
     vocabulary.freeze(minTermFreq, minDocFreq, maxVocabSize);
 
     return vocabulary;
