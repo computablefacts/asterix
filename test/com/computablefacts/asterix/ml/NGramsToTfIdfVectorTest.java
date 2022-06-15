@@ -19,9 +19,7 @@ public class NGramsToTfIdfVectorTest {
 
     View.of(sentences()).map(new NormalizeText(true)).map(new TokenizeText())
         .map(new NGramsToTfIdfVector(vocabulary)).forEachRemaining(vector -> {
-
-          Assert.assertEquals(0.0, vector[0], 0.0);
-          Assert.assertEquals(vocabulary.size(), vector.length);
+          Assert.assertEquals(vocabulary.size() - 1, vector.length);
         });
   }
 

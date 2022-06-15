@@ -28,12 +28,12 @@ final public class NGramsToTfIdfVector implements Function<SpanSequence, double[
 
     Multiset<String> counts = HashMultiset.create();
     View.of(spans).map(Span::text).forEachRemaining(term -> counts.add(term));
-    double[] vector = new double[vocabulary_.size()];
+    double[] vector = new double[vocabulary_.size() - 1];
 
-    for (int i = 0; i < vector.length; i++) {
+    for (int i = 1 /* skip UNK */; i < vector.length; i++) {
       String term = vocabulary_.term(i);
       double tfIdf = vocabulary_.tfIdf(i, counts.count(term));
-      vector[i] = tfIdf;
+      vector[i - 1] = tfIdf;
     }
     return vector;
   }
