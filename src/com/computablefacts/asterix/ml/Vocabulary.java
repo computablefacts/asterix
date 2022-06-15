@@ -329,7 +329,7 @@ final public class Vocabulary {
   public double tfIdf(int index) {
     return tf(index) * idf(index);
   }
-  
+
   /**
    * Subsampling attempts to minimize the impact of high-frequency words on the training of a word
    * embedding model.
@@ -466,6 +466,11 @@ final public class Vocabulary {
       tf_.entrySet().removeIf(freq -> freq.getCount() < minTermFreq);
     }
 
+    while (tf_.elementSet().size() != df_.elementSet().size()) {
+      df_.entrySet().removeIf(freq -> !tf_.contains(freq.getElement()));
+      tf_.entrySet().removeIf(freq -> !df_.contains(freq.getElement()));
+    }
+
     @Var Stream<Entry<String>> stream = tf_.entrySet().stream()
         .filter(e -> !tokenUnk_.equals(e.getElement())).sorted(
             (e1, e2) -> ComparisonChain.start().compare(e1.getCount(), e2.getCount())
@@ -480,8 +485,5 @@ final public class Vocabulary {
         idx_.put(token.getElement(), idx_.size());
       }
     });
-
-    df_.entrySet().removeIf(freq -> !idx_.containsKey(freq.getElement()));
-    tf_.entrySet().removeIf(freq -> !idx_.containsKey(freq.getElement()));
   }
 }
