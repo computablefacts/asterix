@@ -315,21 +315,23 @@ final public class Vocabulary {
   /**
    * Computes the TF-IDF score of a given term.
    *
-   * @param term the term.
+   * @param term the term for which TF-IDF must be computed.
+   * @param count the term frequency in the source document.
    * @return TF-IDF.
    */
-  public double tfIdf(String term) {
-    return tf(term) * idf(term);
+  public double tfIdf(String term, int count) {
+    return count * idf(term);
   }
 
   /**
    * Computes the TF-IDF score of a given term.
    *
-   * @param index the term index in the current vocabulary.
+   * @param index the term index in the current vocabulary for which TF-IDF must be computed.
+   * @param count the term frequency in the source document.
    * @return TF-IDF.
    */
-  public double tfIdf(int index) {
-    return tf(index) * idf(index);
+  public double tfIdf(int index, int count) {
+    return count * idf(index);
   }
 
   /**
