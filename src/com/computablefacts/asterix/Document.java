@@ -147,7 +147,9 @@ final public class Document {
 
     Vocabulary vocabulary;
     File vocab = new File(
-        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+        String.format("%sterms-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+    File pat = new File(
+        String.format("%spatterns-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
 
     System.out.printf("Dataset is %s\n", file);
     System.out.printf("NGrams length is %d\n", ngramLength);
@@ -158,7 +160,7 @@ final public class Document {
     System.out.println("Building vocabulary...");
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    View<SpanSequence> documents = Document.of(file, true).displayProgress(5000)
+    View<SpanSequence> documents = Document.of(file, true).take(100).displayProgress(5000)
         .map(doc -> (String) doc.text()).map(new TokenizeText());
     View<List<String>> ngrams;
 
@@ -175,6 +177,7 @@ final public class Document {
 
     vocabulary = Vocabulary.of(ngrams, minTermFreq, minDocFreq, maxVocabSize);
     vocabulary.save(vocab);
+    vocabulary.patterns().save(pat);
     stopwatch.stop();
 
     System.out.printf("Vocabulary built in %d seconds\n", stopwatch.elapsed(TimeUnit.SECONDS));

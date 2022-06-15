@@ -3,6 +3,7 @@ package com.computablefacts.asterix.ml;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
+import com.computablefacts.asterix.codecs.StringCodec;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
@@ -245,6 +246,7 @@ final public class Vocabulary {
    */
   public int df(int index) {
 
+    Preconditions.checkArgument(index >= 0, "index must be >= 0");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
     return df_.count(term(index));
@@ -380,6 +382,7 @@ final public class Vocabulary {
   public Optional<String> mostProbableNextTerm(String ngram) {
 
     Preconditions.checkNotNull(ngram, "ngram should not be null");
+    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
     Set<String> ngrams = tf_.elementSet().stream().filter(n -> n.startsWith(ngram))
         .collect(Collectors.toSet());
@@ -416,6 +419,7 @@ final public class Vocabulary {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
+    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
     View.of(idx_.keySet()).map(term -> term + "\t" + tf(term) + "\t" + df(term))
         .prepend(String.format("# %d %d\nterm\ttf\tdf", nbTermsSeen_, nbDocsSeen_))
@@ -456,6 +460,34 @@ final public class Vocabulary {
     freeze(-1, -1, -1);
   }
 
+  public Vocabulary patterns() {
+
+    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
+
+    Vocabulary vocabulary = new Vocabulary();
+    vocabulary.nbTermsSeen_ = nbTermsSeen_;
+    vocabulary.nbDocsSeen_ = nbDocsSeen_;
+
+    idx_.keySet().forEach(term -> {
+      if (tokenUnk_.equals(term)) {
+        vocabulary.tf_.add(term, tf(term));
+        vocabulary.df_.add(term, df(term));
+      } else {
+        String pattern = newPattern(term);
+        vocabulary.tf_.add(pattern, tf(term));
+        vocabulary.df_.add(pattern, df(term));
+      }
+    });
+
+    vocabulary.freeze(-1, -1, -1);
+
+    Preconditions.checkState(tf_.size() == vocabulary.tf_.size());
+    Preconditions.checkState(df_.size() == vocabulary.df_.size());
+    Preconditions.checkState(idx_.size() <= vocabulary.idx_.size());
+
+    return vocabulary;
+  }
+
   private void freeze(int minTermFreq, int minDocFreq, int maxVocabSize) {
 
     Preconditions.checkState(!isFrozen_, "vocabulary is already frozen");
@@ -489,5 +521,48 @@ final public class Vocabulary {
         idx_.put(token.getElement(), idx_.size());
       }
     });
+  }
+
+  private String newPattern(String token) {
+
+    Preconditions.checkNotNull(token, "token should not be null");
+
+    String lowercase = token.toLowerCase();
+    String uppercase = token.toUpperCase();
+    String normalizedLowercase = StringCodec.removeDiacriticalMarks(lowercase);
+    String normalizedUppercase = StringCodec.removeDiacriticalMarks(uppercase);
+
+    if (token.length() != lowercase.length() || token.length() != uppercase.length()
+        || token.length() != normalizedLowercase.length()
+        || token.length() != normalizedUppercase.length()) {
+
+      // For example the lowercase character 'ß' is mapped to 'SS' in uppercase...
+      return ".*";
+    }
+
+    StringBuilder pattern = new StringBuilder(token.length());
+
+    for (int k = 0; k < token.length(); k++) {
+
+      char charLowerCase = lowercase.charAt(k);
+      char charUpperCase = uppercase.charAt(k);
+      char charNormalizedLowerCase = normalizedLowercase.charAt(k);
+      char charNormalizedUpperCase = normalizedUppercase.charAt(k);
+
+      pattern.append('[');
+      pattern.append(charLowerCase);
+      if (charLowerCase != charUpperCase) {
+        pattern.append(charUpperCase);
+      }
+      if (charLowerCase != charNormalizedLowerCase && charUpperCase != charNormalizedLowerCase) {
+        pattern.append(charNormalizedLowerCase);
+      }
+      if (charLowerCase != charNormalizedUpperCase && charUpperCase != charNormalizedUpperCase
+          && charNormalizedLowerCase != charNormalizedUpperCase) {
+        pattern.append(charNormalizedUpperCase);
+      }
+      pattern.append(']');
+    }
+    return pattern.toString();
   }
 }
