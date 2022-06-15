@@ -13,7 +13,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
-import com.google.errorprone.annotations.Var;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -129,6 +128,7 @@ final public class Document {
    * </ul>
    */
   @Beta
+  @Generated
   public static void main(String[] args) {
 
     File file = new File(args[0]);
@@ -145,7 +145,11 @@ final public class Document {
     Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
     Preconditions.checkArgument(ngramLength > 0, "ngramLength must be > 0");
 
-    System.out.printf("Input file is %s\n", file);
+    Vocabulary vocabulary;
+    File vocab = new File(
+        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+
+    System.out.printf("Dataset is %s\n", file);
     System.out.printf("NGrams length is %d\n", ngramLength);
     System.out.printf("Min. term freq. is %d\n", minTermFreq);
     System.out.printf("Min. document freq. is %d\n", minDocFreq);
@@ -154,7 +158,7 @@ final public class Document {
     System.out.println("Building vocabulary...");
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    @Var View<SpanSequence> documents = Document.of(file, true).displayProgress(5000)
+    View<SpanSequence> documents = Document.of(file, true).displayProgress(5000)
         .map(doc -> (String) doc.text()).map(new TokenizeText());
     View<List<String>> ngrams;
 
@@ -169,9 +173,8 @@ final public class Document {
               .map(tks -> Joiner.on('_').join(tks)).toList());
     }
 
-    Vocabulary vocabulary = Vocabulary.of(ngrams, minTermFreq, minDocFreq, maxVocabSize);
-    vocabulary.save(new File(
-        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength)));
+    vocabulary = Vocabulary.of(ngrams, minTermFreq, minDocFreq, maxVocabSize);
+    vocabulary.save(vocab);
     stopwatch.stop();
 
     System.out.printf("Vocabulary built in %d seconds\n", stopwatch.elapsed(TimeUnit.SECONDS));
