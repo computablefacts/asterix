@@ -5,16 +5,20 @@ import com.computablefacts.asterix.ml.TokenizeText;
 import com.computablefacts.asterix.ml.Vocabulary;
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.errorprone.annotations.Var;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +125,8 @@ final public class Document {
    * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
    * <li>{@code args[1]} the threshold under which a token must be excluded from the vocabulary.</li>
    * <li>{@code args[2]} the maximum size of the {@link Vocabulary}.</li>
-   * <li>{@code args[3]} the set of token's tags to include in the vocabulary.</li>
+   * <li>{@code args[3]} the type of tokens to keep.</li>
+   * <li>{@code args[4]} the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.</li>
    * </ul>
    */
   @Beta
@@ -132,14 +137,36 @@ final public class Document {
     int maxVocabSize = Integer.parseInt(args[2], 10);
     Set<String> includeTags = Sets.newHashSet(
         Splitter.on(',').trimResults().omitEmptyStrings().split(args[3]));
-    View<Document> docs = Document.of(file, true, true);
-    View<String> tokens = docs.map(doc -> (String) doc.text()).map(new TokenizeText()).flatten(
-        spans -> View.of(spans)
+    int ngramLength = Integer.parseInt(args[4], 10);
+
+    Preconditions.checkArgument(minTokenFreq > 0, "minTokenFreq must be > 0");
+    Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
+    Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
+    Preconditions.checkArgument(ngramLength > 0, "ngramLength must be > 0");
+
+    System.out.printf("Input file is %s\n", file);
+    System.out.printf("NGrams length is %d\n", ngramLength);
+    System.out.printf("Min. token freq. is %d\n", minTokenFreq);
+    System.out.printf("Max. vocab size is %d\n", maxVocabSize);
+    System.out.printf("Included tags are %s\n", includeTags);
+    System.out.println("Building vocabulary...");
+
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    @Var View<String> ngrams = Document.of(file, true, true).map(doc -> (String) doc.text())
+        .map(new TokenizeText()).flatten(seq -> View.of(seq)
             .filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
             .map(Span::text));
 
-    Vocabulary vocabulary = Vocabulary.of(tokens, minTokenFreq, maxVocabSize);
-    vocabulary.save(new File(file.getParent() + File.separator + "vocabulary.tsv.gz"));
+    if (ngramLength > 1) {
+      ngrams = ngrams.overlappingWindow(ngramLength).map(tks -> Joiner.on(' ').join(tks));
+    }
+
+    Vocabulary vocabulary = Vocabulary.of(ngrams, minTokenFreq, maxVocabSize);
+    vocabulary.save(new File(
+        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength)));
+    stopwatch.stop();
+
+    System.out.printf("Vocabulary built in %ds.", stopwatch.elapsed(TimeUnit.SECONDS));
   }
 
   @Generated
