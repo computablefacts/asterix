@@ -483,7 +483,7 @@ final public class Vocabulary {
 
     Preconditions.checkState(tf_.size() == vocabulary.tf_.size());
     Preconditions.checkState(df_.size() == vocabulary.df_.size());
-    Preconditions.checkState(idx_.size() <= vocabulary.idx_.size());
+    Preconditions.checkState(idx_.size() >= vocabulary.idx_.size());
 
     return vocabulary;
   }
