@@ -53,8 +53,8 @@ public class ViewTest {
 
     Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(1, Sets.newHashSet("a"))));
     Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(2, Sets.newHashSet("ab"))));
-    Assert
-        .assertTrue(list.contains(new AbstractMap.SimpleEntry<>(3, Sets.newHashSet("abc", "abc"))));
+    Assert.assertTrue(
+        list.contains(new AbstractMap.SimpleEntry<>(3, Sets.newHashSet("abc", "abc"))));
     Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(4, Sets.newHashSet("abcd"))));
   }
 
@@ -619,8 +619,8 @@ public class ViewTest {
   @Test
   public void testDedupViewWithoutDuplicates() {
 
-    List<String> actual =
-        View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h")).dedupSorted().toList();
+    List<String> actual = View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h"))
+        .dedupSorted().toList();
     List<String> expected = Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h");
 
     Assert.assertEquals(expected, actual);
@@ -738,8 +738,9 @@ public class ViewTest {
   @Test
   public void testIntersectLeftViewHasDuplicatedElements() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d",
-        "d", "d", "d", "d", "e", "e", "e", "e", "e", "e"));
+    View<String> left = View.of(
+        Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "d", "d", "d", "d",
+            "e", "e", "e", "e", "e", "e"));
     View<String> right = View.of(Lists.newArrayList("a", "c", "e"));
     List<String> intersection = left.intersectSorted(right).toList();
 
@@ -864,11 +865,12 @@ public class ViewTest {
     View<String> view3 = View.of(Lists.newArrayList("6", "7", "8", "9", "b", "d", "f"));
     View<String> view4 = View.of(Lists.newArrayList("a", "c", "e", "g"));
 
-    View<String> merged =
-        view1.mergeSorted(Lists.newArrayList(view2, view3, view4), String::compareTo);
+    View<String> merged = view1.mergeSorted(Lists.newArrayList(view2, view3, view4),
+        String::compareTo);
 
-    Assert.assertEquals(Lists.newArrayList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a",
-        "b", "c", "d", "e", "f", "g"), merged.toList());
+    Assert.assertEquals(
+        Lists.newArrayList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d",
+            "e", "f", "g"), merged.toList());
   }
 
   @Test
@@ -900,14 +902,38 @@ public class ViewTest {
   }
 
   @Test
+  public void testOverlappingWindowWithStrictLength() {
+
+    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    List<ImmutableList<String>> windows = view.overlappingWindowWithStrictLength(3).toList();
+
+    Assert.assertEquals(5, windows.size());
+    Assert.assertTrue(windows.contains(ImmutableList.of("1", "2", "3")));
+    Assert.assertTrue(windows.contains(ImmutableList.of("2", "3", "4")));
+    Assert.assertTrue(windows.contains(ImmutableList.of("3", "4", "5")));
+    Assert.assertTrue(windows.contains(ImmutableList.of("4", "5", "6")));
+    Assert.assertTrue(windows.contains(ImmutableList.of("5", "6", "7")));
+  }
+
+  @Test
+  public void testNonOverlappingWindowWithStrictLength() {
+
+    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    List<ImmutableList<String>> windows = view.nonOverlappingWindowWithStrictLength(3).toList();
+
+    Assert.assertEquals(2, windows.size());
+    Assert.assertTrue(windows.contains(ImmutableList.of("1", "2", "3")));
+    Assert.assertTrue(windows.contains(ImmutableList.of("4", "5", "6")));
+  }
+
+  @Test
   public void testGroupSorted() {
 
     List<Integer> list = new ArrayList<>();
     list.add(1);
 
-    @Var
-    List<List<Integer>> groups =
-        View.of(list).groupSorted(Integer::equals).map(View::toList).toList();
+    @Var List<List<Integer>> groups = View.of(list).groupSorted(Integer::equals).map(View::toList)
+        .toList();
 
     Assert.assertEquals(1, groups.size());
     Assert.assertTrue(groups.contains(ImmutableList.of(1)));
@@ -937,8 +963,8 @@ public class ViewTest {
   public void testPeek() {
 
     List<String> valuesPeeked = new ArrayList<>();
-    View<String> view =
-        View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7")).peek(valuesPeeked::add);
+    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"))
+        .peek(valuesPeeked::add);
 
     Assert.assertTrue(valuesPeeked.isEmpty());
 

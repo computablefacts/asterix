@@ -1240,7 +1240,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @return a {@link ImmutableList}.
    */
   public View<ImmutableList<T>> overlappingWindow(int length) {
-    return new View<>(new SlidingWindowIterator<>(this, length, true));
+    return new View<>(new SlidingWindowIterator<>(this, length, true, false));
   }
 
   /**
@@ -1251,7 +1251,30 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @return a {@link ImmutableList}.
    */
   public View<ImmutableList<T>> nonOverlappingWindow(int length) {
-    return new View<>(new SlidingWindowIterator<>(this, length, false));
+    return new View<>(new SlidingWindowIterator<>(this, length, false, false));
+  }
+
+  /**
+   * Split the view into windows of fixed size {@code length} (the final list will never be
+   * smaller). At each step, the first {@code length - 1} elements of the window are a suffix of the
+   * previous window.
+   *
+   * @param length the window size.
+   * @return a {@link ImmutableList}.
+   */
+  public View<ImmutableList<T>> overlappingWindowWithStrictLength(int length) {
+    return new View<>(new SlidingWindowIterator<>(this, length, true, true));
+  }
+
+  /**
+   * Split the view into windows of fixed size {@code length} (the final list will never be
+   * smaller). The returned windows do not intersect.
+   *
+   * @param length the window size.
+   * @return a {@link ImmutableList}.
+   */
+  public View<ImmutableList<T>> nonOverlappingWindowWithStrictLength(int length) {
+    return new View<>(new SlidingWindowIterator<>(this, length, false, true));
   }
 
   /**
@@ -1372,8 +1395,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     private final int length_;
     private final boolean overlaps_;
     private final List<T> list_;
+    private final boolean strictWindowsLength_;
 
-    public SlidingWindowIterator(Iterator<T> iterator, int length, boolean overlaps) {
+    public SlidingWindowIterator(Iterator<T> iterator, int length, boolean overlaps,
+        boolean strictWindowsLength) {
 
       Preconditions.checkNotNull(iterator, "iterator should not be null");
       Preconditions.checkArgument(length > 0, "length must be > 0");
@@ -1382,6 +1407,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       length_ = length;
       overlaps_ = overlaps;
       list_ = new ArrayList<>(length);
+      strictWindowsLength_ = strictWindowsLength;
     }
 
     @Override
@@ -1394,7 +1420,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       while (iterator_.hasNext() && list_.size() < length_) {
         list_.add(iterator_.next());
       }
-      return list_.isEmpty() ? endOfData() : ImmutableList.copyOf(list_);
+      return list_.isEmpty() || (strictWindowsLength_ && list_.size() < length_) ? endOfData()
+          : ImmutableList.copyOf(list_);
     }
   }
 }
