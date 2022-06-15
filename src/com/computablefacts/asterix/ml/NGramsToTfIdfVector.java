@@ -30,10 +30,10 @@ final public class NGramsToTfIdfVector implements Function<SpanSequence, double[
     View.of(spans).map(Span::text).forEachRemaining(term -> counts.add(term));
     double[] vector = new double[vocabulary_.size() - 1];
 
-    for (int i = 1 /* skip UNK */; i < vector.length; i++) {
-      String term = vocabulary_.term(i);
-      double tfIdf = vocabulary_.tfIdf(i, counts.count(term));
-      vector[i - 1] = tfIdf;
+    for (int i = 0 /* skip UNK */; i < vector.length; i++) {
+      String term = vocabulary_.term(i + 1);
+      double tfIdf = vocabulary_.tfIdf(i + 1, counts.count(term));
+      vector[i] = tfIdf;
     }
     return vector;
   }
