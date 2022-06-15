@@ -1,28 +1,28 @@
 package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.StringCodec;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
+import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import com.google.re2j.Pattern;
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -32,17 +32,15 @@ final public class Vocabulary {
 
   private final String tokenUnk_ = "<UNK>";
   private final int idxUnk_ = 0;
-  private final Multiset<String> tf_; // term frequency
-  private final Multiset<String> df_; // document frequency
-  private final BiMap<String, Integer> idx_; // one-hot encoding
+  private final Multiset<String> tf_ = HashMultiset.create(); // normalized term -> term frequency
+  private final Multiset<String> df_ = HashMultiset.create(); // normalized term -> document frequency
+  private final BiMap<String, Integer> idx_ = HashBiMap.create(); // one-hot encoding
+  private final Map<String, Set<String>> forms_ = new HashMap<>(); // normalized term -> raw terms
   private int nbTermsSeen_ = 0;
   private int nbDocsSeen_ = 0;
   private boolean isFrozen_ = false;
 
   public Vocabulary() {
-    tf_ = HashMultiset.create();
-    df_ = HashMultiset.create();
-    idx_ = HashBiMap.create();
   }
 
   /**
@@ -55,7 +53,7 @@ final public class Vocabulary {
 
     Preconditions.checkNotNull(docs, "docs should not be null");
 
-    Set<String> tokensSeen = new HashSet<>();
+    Set<String> normalizedTermsSeen = new HashSet<>();
     Vocabulary vocabulary = new Vocabulary();
     docs.map(HashMultiset::create).forEachRemaining(terms -> {
 
@@ -64,30 +62,35 @@ final public class Vocabulary {
 
       terms.entrySet().forEach(term -> {
 
-        String token = term.getElement();
-        int count = term.getCount();
+        String normalizedTerm = normalize(term.getElement());
+        int termCount = term.getCount();
 
-        vocabulary.nbTermsSeen_ += count;
+        if (!vocabulary.forms_.containsKey(normalizedTerm)) {
+          vocabulary.forms_.put(normalizedTerm, new HashSet<>());
+        }
 
-        if (tokensSeen.contains(token)) {
-          vocabulary.tf_.add(token, count);
-          vocabulary.df_.add(token);
+        vocabulary.forms_.get(normalizedTerm).add(term.getElement());
+        vocabulary.nbTermsSeen_ += termCount;
+
+        if (normalizedTermsSeen.contains(normalizedTerm)) {
+          vocabulary.tf_.add(normalizedTerm, termCount);
+          vocabulary.df_.add(normalizedTerm);
         } else {
 
-          tokensSeen.add(token);
+          normalizedTermsSeen.add(normalizedTerm);
           vocabulary.tf_.add(vocabulary.tokenUnk_);
 
           if (!unkAlreadySeen.getAndSet(true)) {
             vocabulary.df_.add(vocabulary.tokenUnk_);
           }
-          if (count > 1) {
-            vocabulary.tf_.add(token, count - 1);
-            vocabulary.df_.add(token);
+          if (termCount > 1) {
+            vocabulary.tf_.add(normalizedTerm, termCount - 1);
+            vocabulary.df_.add(normalizedTerm);
           }
         }
       });
     });
-    tokensSeen.clear();
+    normalizedTermsSeen.clear();
     vocabulary.freeze(-1, -1, -1);
 
     return vocabulary;
@@ -109,7 +112,7 @@ final public class Vocabulary {
     Preconditions.checkArgument(minTermFreq > 0, "minTermFreq must be > 0");
     Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
 
-    Set<String> tokensSeen = new HashSet<>();
+    Set<String> normalizedTermsSeen = new HashSet<>();
     Vocabulary vocabulary = new Vocabulary();
     docs.map(HashMultiset::create).forEachRemaining(terms -> {
 
@@ -118,33 +121,86 @@ final public class Vocabulary {
 
       terms.entrySet().forEach(term -> {
 
-        String token = term.getElement();
-        int count = term.getCount();
+        String normalizedTerm = normalize(term.getElement());
+        int termCount = term.getCount();
 
-        vocabulary.nbTermsSeen_ += count;
+        if (!vocabulary.forms_.containsKey(normalizedTerm)) {
+          vocabulary.forms_.put(normalizedTerm, new HashSet<>());
+        }
 
-        if (tokensSeen.contains(token)) {
-          vocabulary.tf_.add(token, count);
-          vocabulary.df_.add(token);
+        vocabulary.forms_.get(normalizedTerm).add(term.getElement());
+        vocabulary.nbTermsSeen_ += termCount;
+
+        if (normalizedTermsSeen.contains(normalizedTerm)) {
+          vocabulary.tf_.add(normalizedTerm, termCount);
+          vocabulary.df_.add(normalizedTerm);
         } else {
 
-          tokensSeen.add(token);
+          normalizedTermsSeen.add(normalizedTerm);
           vocabulary.tf_.add(vocabulary.tokenUnk_);
 
           if (!unkAlreadySeen.getAndSet(true)) {
             vocabulary.df_.add(vocabulary.tokenUnk_);
           }
-          if (count > 1) {
-            vocabulary.tf_.add(token, count - 1);
-            vocabulary.df_.add(token);
+          if (termCount > 1) {
+            vocabulary.tf_.add(normalizedTerm, termCount - 1);
+            vocabulary.df_.add(normalizedTerm);
           }
         }
       });
     });
-    tokensSeen.clear();
+    normalizedTermsSeen.clear();
     vocabulary.freeze(minTermFreq, minDocFreq, maxVocabSize);
 
     return vocabulary;
+  }
+
+  private static String normalize(String term) {
+
+    Preconditions.checkNotNull(term, "term should not be null");
+
+    String lowercase = term.toLowerCase();
+    String uppercase = term.toUpperCase();
+    String normalizedLowercase = StringCodec.removeDiacriticalMarks(lowercase);
+    String normalizedUppercase = StringCodec.removeDiacriticalMarks(uppercase);
+
+    if (term.length() != lowercase.length() || term.length() != uppercase.length()
+        || term.length() != normalizedLowercase.length()
+        || term.length() != normalizedUppercase.length()) {
+
+      // For example, the lowercase character 'ß' is mapped to 'SS' in uppercase...
+      return Pattern.quote(term);
+    }
+    if (!term.equals(Pattern.quote(term))) {
+
+      // For example, the characters '[' or ']' must be escaped
+      return Pattern.quote(term);
+    }
+
+    StringBuilder pattern = new StringBuilder(term.length());
+
+    for (int k = 0; k < term.length(); k++) {
+
+      char charLowerCase = lowercase.charAt(k);
+      char charUpperCase = uppercase.charAt(k);
+      char charNormalizedLowerCase = normalizedLowercase.charAt(k);
+      char charNormalizedUpperCase = normalizedUppercase.charAt(k);
+
+      pattern.append('[');
+      pattern.append(charLowerCase);
+      if (charLowerCase != charUpperCase) {
+        pattern.append(charUpperCase);
+      }
+      if (charLowerCase != charNormalizedLowerCase && charUpperCase != charNormalizedLowerCase) {
+        pattern.append(charNormalizedLowerCase);
+      }
+      if (charLowerCase != charNormalizedUpperCase && charUpperCase != charNormalizedUpperCase
+          && charNormalizedLowerCase != charNormalizedUpperCase) {
+        pattern.append(charNormalizedUpperCase);
+      }
+      pattern.append(']');
+    }
+    return pattern.toString();
   }
 
   /**
@@ -154,6 +210,7 @@ final public class Vocabulary {
     tf_.clear();
     df_.clear();
     idx_.clear();
+    forms_.clear();
     isFrozen_ = false;
   }
 
@@ -180,7 +237,7 @@ final public class Vocabulary {
     Preconditions.checkNotNull(term, "term should not be null");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return idx_.getOrDefault(term, idxUnk_);
+    return idx_.getOrDefault(normalize(term), idxUnk_);
   }
 
   /**
@@ -269,7 +326,7 @@ final public class Vocabulary {
    * @return the normalized term frequency. This value is in [0, 1].
    */
   public double ntf(int index) {
-    return ntf(term(index));
+    return (double) tf(index) / (double) nbTermsSeen_;
   }
 
   /**
@@ -289,7 +346,7 @@ final public class Vocabulary {
    * @return the normalized document frequency. This value is in [0, 1].
    */
   public double ndf(int index) {
-    return ndf(term(index));
+    return (double) df(index) / (double) nbDocsSeen_;
   }
 
   /**
@@ -337,80 +394,6 @@ final public class Vocabulary {
   }
 
   /**
-   * Subsampling attempts to minimize the impact of high-frequency words on the training of a word
-   * embedding model.
-   *
-   * @param spans a span sequence.
-   * @return sub-sampled spans.
-   */
-  public View<SpanSequence> subSample(View<SpanSequence> spans) {
-
-    Preconditions.checkNotNull(spans, "spans should not be null");
-    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
-
-    Multiset<String> counts = HashMultiset.create();
-    List<SpanSequence> newSpans = spans.peek(
-        sentence -> View.of(sentence).map(Span::text).map(token -> term(index(token)))
-            .forEachRemaining(token -> counts.add(token))).toList();
-    int nbTokens = counts.size();
-    Random random = new Random();
-
-    return View.of(newSpans).map(sequence -> {
-
-      SpanSequence newSequence = new SpanSequence();
-
-      View.of(sequence).filter(token -> random.nextFloat() < Math.sqrt(
-              1e-4 / (double) counts.count(token.text()) * (double) nbTokens))
-          .forEachRemaining(newSequence::add);
-
-      return newSequence;
-    }).filter(sequence -> sequence.size() > 0);
-  }
-
-  /**
-   * Find the most probable term following a given ngram.
-   * <p>
-   * In order to properly work:
-   * <ul>
-   * <li>The vocabulary must be for ngrams of length {@code ngram.nb_tokens + 1}</li>
-   * <li>The ngram's terms must be separated with a single character</li>
-   * </ul>
-   *
-   * @param ngram the prefix.
-   * @return the most probable term following the given prefix.
-   */
-  public Optional<String> mostProbableNextTerm(String ngram) {
-
-    Preconditions.checkNotNull(ngram, "ngram should not be null");
-    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
-
-    Set<String> ngrams = tf_.elementSet().stream().filter(n -> n.startsWith(ngram))
-        .collect(Collectors.toSet());
-
-    if (ngrams.isEmpty()) {
-      return Optional.empty();
-    }
-    if (ngrams.size() == 1) {
-      String token = Iterables.get(ngrams, 0).substring(ngram.length() + 1 /* separator */);
-      return Optional.of(token);
-    }
-
-    int rnd = new Random().nextInt(ngrams.stream().mapToInt(tf_::count).sum());
-    @Var int sum = 0;
-
-    for (String n : ngrams) {
-
-      sum += tf_.count(n);
-
-      if (rnd < sum) {
-        String token = n.substring(ngram.length() + 1 /* separator */);
-        return Optional.of(token);
-      }
-    }
-    return Optional.empty();
-  }
-
-  /**
    * Save the current vocabulary as a gzipped TSV file.
    *
    * @param file the file to create.
@@ -421,9 +404,11 @@ final public class Vocabulary {
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    View.of(idx_.keySet()).map(term -> term + "\t" + tf(term) + "\t" + df(term))
-        .prepend(String.format("# %d %d\nterm\ttf\tdf", nbTermsSeen_, nbDocsSeen_))
-        .toFile(Function.identity(), file, false, true);
+    View.of(idx_.keySet()).map(
+        term -> idx_.get(term) + "\t" + term + "\t" + tf_.count(term) + "\t" + df_.count(term)
+            + "\t" + Joiner.on('\0').join(forms_.getOrDefault(term, new HashSet<>()))).prepend(
+        String.format("# %d %d\nidx\tnormalized_term\ttf\tdf\traw_terms", nbTermsSeen_,
+            nbDocsSeen_)).toFile(Function.identity(), file, false, true);
   }
 
   /**
@@ -435,9 +420,9 @@ final public class Vocabulary {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
+    Preconditions.checkState(!isFrozen_, "vocabulary should not be frozen");
 
-    idx_.clear(); // it allows us to merge multiple files together
-
+    isFrozen_ = true;
     String stats = View.of(file, true).take(1).toList().get(0);
 
     int index1 = stats.indexOf(' ');
@@ -448,44 +433,19 @@ final public class Vocabulary {
 
     View.of(file, true).drop(1 /* number of terms/docs seen */ + 1/* header */)
         .forEachRemaining(row -> {
-          int idx1 = row.indexOf('\t');
-          int idx2 = row.lastIndexOf('\t');
-          String term = row.substring(0, idx1);
-          int tf = Integer.parseInt(row.substring(idx1 + 1, idx2), 10);
-          int df = Integer.parseInt(row.substring(idx2 + 1), 10);
+
+          List<String> columns = Splitter.on('\t').trimResults().splitToList(row);
+          int idx = Integer.parseInt(columns.get(0), 10);
+          String term = columns.get(1);
+          int tf = Integer.parseInt(columns.get(2), 10);
+          int df = Integer.parseInt(columns.get(3), 10);
+          List<String> forms = Splitter.on('\0').trimResults().splitToList(columns.get(4));
+
           tf_.add(term, tf);
           df_.add(term, df);
+          idx_.put(term, idx);
+          forms_.put(term, Sets.newHashSet(forms));
         });
-
-    freeze(-1, -1, -1);
-  }
-
-  public Vocabulary patterns() {
-
-    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
-
-    Vocabulary vocabulary = new Vocabulary();
-    vocabulary.nbTermsSeen_ = nbTermsSeen_;
-    vocabulary.nbDocsSeen_ = nbDocsSeen_;
-
-    idx_.keySet().forEach(term -> {
-      if (tokenUnk_.equals(term)) {
-        vocabulary.tf_.add(term, tf(term));
-        vocabulary.df_.add(term, df(term));
-      } else {
-        String pattern = newPattern(term);
-        vocabulary.tf_.add(pattern, tf(term));
-        vocabulary.df_.add(pattern, df(term));
-      }
-    });
-
-    vocabulary.freeze(-1, -1, -1);
-
-    Preconditions.checkState(tf_.size() == vocabulary.tf_.size());
-    Preconditions.checkState(df_.size() == vocabulary.df_.size());
-    Preconditions.checkState(idx_.size() >= vocabulary.idx_.size());
-
-    return vocabulary;
   }
 
   private void freeze(int minTermFreq, int minDocFreq, int maxVocabSize) {
@@ -503,8 +463,10 @@ final public class Vocabulary {
     }
 
     while (tf_.elementSet().size() != df_.elementSet().size()) {
-      df_.entrySet().removeIf(freq -> !tf_.contains(freq.getElement()));
-      tf_.entrySet().removeIf(freq -> !df_.contains(freq.getElement()));
+      forms_.entrySet()
+          .removeIf(freq -> !tf_.contains(freq.getKey()) || !df_.contains(freq.getKey()));
+      df_.entrySet().removeIf(freq -> !forms_.containsKey(freq.getElement()));
+      tf_.entrySet().removeIf(freq -> !forms_.containsKey(freq.getElement()));
     }
 
     @Var Stream<Entry<String>> stream = tf_.entrySet().stream()
@@ -521,48 +483,5 @@ final public class Vocabulary {
         idx_.put(token.getElement(), idx_.size());
       }
     });
-  }
-
-  private String newPattern(String token) {
-
-    Preconditions.checkNotNull(token, "token should not be null");
-
-    String lowercase = token.toLowerCase();
-    String uppercase = token.toUpperCase();
-    String normalizedLowercase = StringCodec.removeDiacriticalMarks(lowercase);
-    String normalizedUppercase = StringCodec.removeDiacriticalMarks(uppercase);
-
-    if (token.length() != lowercase.length() || token.length() != uppercase.length()
-        || token.length() != normalizedLowercase.length()
-        || token.length() != normalizedUppercase.length()) {
-
-      // For example the lowercase character 'ß' is mapped to 'SS' in uppercase...
-      return ".*";
-    }
-
-    StringBuilder pattern = new StringBuilder(token.length());
-
-    for (int k = 0; k < token.length(); k++) {
-
-      char charLowerCase = lowercase.charAt(k);
-      char charUpperCase = uppercase.charAt(k);
-      char charNormalizedLowerCase = normalizedLowercase.charAt(k);
-      char charNormalizedUpperCase = normalizedUppercase.charAt(k);
-
-      pattern.append('[');
-      pattern.append(charLowerCase);
-      if (charLowerCase != charUpperCase) {
-        pattern.append(charUpperCase);
-      }
-      if (charLowerCase != charNormalizedLowerCase && charUpperCase != charNormalizedLowerCase) {
-        pattern.append(charNormalizedLowerCase);
-      }
-      if (charLowerCase != charNormalizedUpperCase && charUpperCase != charNormalizedUpperCase
-          && charNormalizedLowerCase != charNormalizedUpperCase) {
-        pattern.append(charNormalizedUpperCase);
-      }
-      pattern.append(']');
-    }
-    return pattern.toString();
   }
 }

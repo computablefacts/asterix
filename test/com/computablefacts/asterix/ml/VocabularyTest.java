@@ -1,12 +1,8 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.errorprone.annotations.Var;
 import java.io.File;
 import java.util.List;
 import org.junit.Assert;
@@ -24,31 +20,31 @@ public class VocabularyTest {
     Assert.assertEquals("<UNK>", vocabulary.term(0));
     Assert.assertEquals(0, vocabulary.index("<UNK>"));
 
-    Assert.assertEquals("-", vocabulary.term(1));
+    Assert.assertEquals("[-]", vocabulary.term(1));
     Assert.assertEquals(1, vocabulary.index("-"));
 
-    Assert.assertEquals("address", vocabulary.term(2));
+    Assert.assertEquals("[aA][dD][dD][rR][eE][sS][sS]", vocabulary.term(2));
     Assert.assertEquals(2, vocabulary.index("address"));
 
-    Assert.assertEquals("in", vocabulary.term(3));
+    Assert.assertEquals("[iI][nN]", vocabulary.term(3));
     Assert.assertEquals(3, vocabulary.index("in"));
 
-    Assert.assertEquals("most", vocabulary.term(4));
+    Assert.assertEquals("[mM][oO][sS][tT]", vocabulary.term(4));
     Assert.assertEquals(4, vocabulary.index("most"));
 
-    Assert.assertEquals("popular", vocabulary.term(5));
+    Assert.assertEquals("[pP][oO][pP][uU][lL][aA][rR]", vocabulary.term(5));
     Assert.assertEquals(5, vocabulary.index("popular"));
 
-    Assert.assertEquals("with", vocabulary.term(6));
+    Assert.assertEquals("[wW][iI][tT][hH]", vocabulary.term(6));
     Assert.assertEquals(6, vocabulary.index("with"));
 
-    Assert.assertEquals("yahoo", vocabulary.term(7));
+    Assert.assertEquals("[yY][aA][hH][oO][oO]", vocabulary.term(7));
     Assert.assertEquals(7, vocabulary.index("yahoo"));
 
-    Assert.assertEquals("’", vocabulary.term(8));
+    Assert.assertEquals("[’]", vocabulary.term(8));
     Assert.assertEquals(8, vocabulary.index("’"));
 
-    Assert.assertEquals(",", vocabulary.term(9));
+    Assert.assertEquals("[,]", vocabulary.term(9));
     Assert.assertEquals(9, vocabulary.index(","));
   }
 
@@ -173,42 +169,6 @@ public class VocabularyTest {
   }
 
   @Test
-  public void testSubSamplingDoesNotReturnEmptyLists() {
-
-    List<SpanSequence> spans = View.of(sentences()).map(new NormalizeText(true))
-        .map(new TokenizeText()).toList();
-
-    View<List<String>> tokens = View.of(spans).map(span -> View.of(span).map(Span::text).toList());
-
-    Vocabulary vocabulary = Vocabulary.of(tokens);
-    List<SpanSequence> samples = vocabulary.subSample(View.of(spans)).toList();
-
-    Assert.assertFalse(samples.isEmpty());
-    Assert.assertTrue(samples.stream().noneMatch(sample -> sample.size() == 0));
-  }
-
-  @Test
-  public void testMostProbableNextToken() {
-
-    List<SpanSequence> spans = View.of(sentences()).concat(View.of(sentences()))
-        .map(new NormalizeText(true)).map(new TokenizeText()).toList();
-
-    View<List<String>> tokens = View.of(spans).map(
-        span -> View.of(span).map(Span::text).overlappingWindowWithStrictLength(2)
-            .map(s3 -> Joiner.on('_').join(s3)).toList());
-
-    Vocabulary vocabulary = Vocabulary.of(View.of(tokens));
-
-    @Var String token = vocabulary.mostProbableNextTerm("mac").orElse("<UNK>");
-
-    Assert.assertEquals("address", token);
-
-    token = vocabulary.mostProbableNextTerm("the").orElse("<UNK>");
-
-    Assert.assertTrue(Sets.newHashSet("world", "latest", "-", "most").contains(token));
-  }
-
-  @Test
   public void testSaveThenLoadVocabulary() throws Exception {
 
     String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
@@ -222,10 +182,10 @@ public class VocabularyTest {
     Assert.assertEquals("<UNK>", vocabulary.term(0));
     Assert.assertEquals(0, vocabulary.index("<UNK>"));
 
-    Assert.assertEquals("-", vocabulary.term(1));
+    Assert.assertEquals("[-]", vocabulary.term(1));
     Assert.assertEquals(1, vocabulary.index("-"));
 
-    Assert.assertEquals("address", vocabulary.term(2));
+    Assert.assertEquals("[aA][dD][dD][rR][eE][sS][sS]", vocabulary.term(2));
     Assert.assertEquals(2, vocabulary.index("address"));
 
     Assert.assertEquals(0.7441860465116279, vocabulary.ntf(0), 0.000001);
@@ -245,10 +205,10 @@ public class VocabularyTest {
     Assert.assertEquals("<UNK>", vocabulary.term(0));
     Assert.assertEquals(0, vocabulary.index("<UNK>"));
 
-    Assert.assertEquals("-", vocabulary.term(1));
+    Assert.assertEquals("[-]", vocabulary.term(1));
     Assert.assertEquals(1, vocabulary.index("-"));
 
-    Assert.assertEquals("address", vocabulary.term(2));
+    Assert.assertEquals("[aA][dD][dD][rR][eE][sS][sS]", vocabulary.term(2));
     Assert.assertEquals(2, vocabulary.index("address"));
 
     Assert.assertEquals(0.7441860465116279, vocabulary.ntf(0), 0.000001);

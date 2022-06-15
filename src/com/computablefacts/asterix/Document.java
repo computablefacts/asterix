@@ -177,7 +177,6 @@ final public class Document {
 
     vocabulary = Vocabulary.of(ngrams, minTermFreq, minDocFreq, maxVocabSize);
     vocabulary.save(vocab);
-    vocabulary.patterns().save(pat);
     stopwatch.stop();
 
     System.out.printf("Vocabulary built in %d seconds\n", stopwatch.elapsed(TimeUnit.SECONDS));
