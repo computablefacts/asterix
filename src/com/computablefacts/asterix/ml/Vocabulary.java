@@ -156,7 +156,7 @@ final public class Vocabulary {
     return vocabulary;
   }
 
-  private static String normalize(String term) {
+  public static String normalize(String term) {
 
     Preconditions.checkNotNull(term, "term should not be null");
 

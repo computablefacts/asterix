@@ -147,9 +147,7 @@ final public class Document {
 
     Vocabulary vocabulary;
     File vocab = new File(
-        String.format("%sterms-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
-    File pat = new File(
-        String.format("%spatterns-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
 
     System.out.printf("Dataset is %s\n", file);
     System.out.printf("NGrams length is %d\n", ngramLength);
