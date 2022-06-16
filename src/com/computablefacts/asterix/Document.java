@@ -160,7 +160,7 @@ final public class Document {
     System.out.println("Building vocabulary...");
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    View<SpanSequence> documents = Document.of(file, true).take(100).displayProgress(5000)
+    View<SpanSequence> documents = Document.of(file, true).displayProgress(5000)
         .map(doc -> (String) doc.text()).map(new TokenizeText());
     View<List<String>> ngrams;
 
