@@ -13,7 +13,7 @@ public class VocabularyTest {
   @Test
   public void testVocabulary() {
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -49,9 +49,24 @@ public class VocabularyTest {
   }
 
   @Test
+  public void testPartialVsFullVocabulary() {
+
+    Vocabulary sample = partialVocabulary();
+    Vocabulary full = fullVocabulary();
+
+    for (int i = 0; i < sample.size(); i++) {
+      Assert.assertEquals(sample.term(i), full.term(i));
+      Assert.assertEquals(sample.tf(i), full.tf(i));
+      Assert.assertEquals(sample.df(i), full.df(i));
+      Assert.assertEquals(sample.ntf(i), full.ntf(i), 0.000001);
+      Assert.assertEquals(sample.ndf(i), full.ndf(i), 0.000001);
+    }
+  }
+
+  @Test
   public void testTermFrequency() {
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -71,7 +86,7 @@ public class VocabularyTest {
   @Test
   public void testDocumentFrequency() {
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -91,7 +106,7 @@ public class VocabularyTest {
   @Test
   public void testNormalizedTermFrequency() {
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -111,7 +126,7 @@ public class VocabularyTest {
   @Test
   public void testNormalizedDocumentFrequency() {
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -131,7 +146,7 @@ public class VocabularyTest {
   @Test
   public void testInverseDocumentFrequency() {
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -151,7 +166,7 @@ public class VocabularyTest {
   @Test
   public void testTfIdf() {
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -174,7 +189,7 @@ public class VocabularyTest {
     String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
     File file = new File(path + File.separator + "vocab.tsv.gz");
 
-    Vocabulary vocabulary = vocabulary();
+    Vocabulary vocabulary = partialVocabulary();
     vocabulary.save(file);
 
     Assert.assertEquals(10, vocabulary.size());
@@ -221,10 +236,16 @@ public class VocabularyTest {
     Assert.assertEquals(0.011627906976744186, vocabulary.ntf("address"), 0.000001);
   }
 
-  private Vocabulary vocabulary() {
+  private Vocabulary partialVocabulary() {
     View<List<String>> tokens = View.of(sentences()).map(new NormalizeText(true))
         .map(new TokenizeText()).map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens, 1, 1, 10);
+  }
+
+  private Vocabulary fullVocabulary() {
+    View<List<String>> tokens = View.of(sentences()).map(new NormalizeText(true))
+        .map(new TokenizeText()).map(spans -> View.of(spans).map(Span::text).toList());
+    return Vocabulary.of(tokens);
   }
 
   private List<String> sentences() {

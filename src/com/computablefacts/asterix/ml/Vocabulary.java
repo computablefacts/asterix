@@ -1,8 +1,8 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.View;
+import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.codecs.StringCodec;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
@@ -16,6 +16,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import com.google.re2j.Pattern;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -406,7 +407,7 @@ final public class Vocabulary {
 
     View.of(idx_.keySet()).map(
         term -> idx_.get(term) + "\t" + term + "\t" + tf_.count(term) + "\t" + df_.count(term)
-            + "\t" + Joiner.on('\0').join(forms_.getOrDefault(term, new HashSet<>()))).prepend(
+            + "\t" + JsonCodec.asString(forms_.getOrDefault(term, new HashSet<>()))).prepend(
         String.format("# %d %d\nidx\tnormalized_term\ttf\tdf\traw_terms", nbTermsSeen_,
             nbDocsSeen_)).toFile(Function.identity(), file, false, true);
   }
@@ -439,12 +440,12 @@ final public class Vocabulary {
           String term = columns.get(1);
           int tf = Integer.parseInt(columns.get(2), 10);
           int df = Integer.parseInt(columns.get(3), 10);
-          List<String> forms = Splitter.on('\0').trimResults().splitToList(columns.get(4));
+          Collection<?> forms = JsonCodec.asCollectionOfUnknownType(columns.get(4));
 
           tf_.add(term, tf);
           df_.add(term, df);
           idx_.put(term, idx);
-          forms_.put(term, Sets.newHashSet(forms));
+          forms_.put(term, Sets.newHashSet((Collection<String>) forms));
         });
   }
 
@@ -462,12 +463,18 @@ final public class Vocabulary {
       tf_.entrySet().removeIf(freq -> freq.getCount() < minTermFreq);
     }
 
-    while (tf_.elementSet().size() != df_.elementSet().size()) {
-      forms_.entrySet()
-          .removeIf(freq -> !tf_.contains(freq.getKey()) || !df_.contains(freq.getKey()));
-      df_.entrySet().removeIf(freq -> !forms_.containsKey(freq.getElement()));
-      tf_.entrySet().removeIf(freq -> !forms_.containsKey(freq.getElement()));
-    }
+    forms_.entrySet()
+        .removeIf(freq -> !tf_.contains(freq.getKey()) || !df_.contains(freq.getKey()));
+    df_.entrySet().removeIf(
+        freq -> !tokenUnk_.equals(freq.getElement()) && !forms_.containsKey(freq.getElement()));
+    tf_.entrySet().removeIf(
+        freq -> !tokenUnk_.equals(freq.getElement()) && !forms_.containsKey(freq.getElement()));
+
+    Preconditions.checkState(!forms_.containsKey(tokenUnk_));
+    Preconditions.checkState(tf_.contains(tokenUnk_));
+    Preconditions.checkState(df_.contains(tokenUnk_));
+    Preconditions.checkState(tf_.elementSet().size() == forms_.keySet().size() + 1);
+    Preconditions.checkState(df_.elementSet().size() == forms_.keySet().size() + 1);
 
     @Var Stream<Entry<String>> stream = tf_.entrySet().stream()
         .filter(e -> !tokenUnk_.equals(e.getElement())).sorted(
