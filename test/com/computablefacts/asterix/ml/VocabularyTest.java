@@ -3,12 +3,29 @@ package com.computablefacts.asterix.ml;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.List;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class VocabularyTest {
+
+  @Test
+  public void testEqualsAndHashCode() {
+    EqualsVerifier.forClass(Vocabulary.class).withIgnoredFields("tokenUnk_", "idxUnk_")
+        .suppress(Warning.NONFINAL_FIELDS).verify();
+  }
+
+  @Test
+  public void testNormalize() {
+    Assert.assertEquals("[vV][éÉeE][hH][iI][cC][uU][lL][eE]", Vocabulary.normalize("véhicule"));
+    Assert.assertEquals("[nN][äÄaA][hH][eE]", Vocabulary.normalize("Nähe"));
+    Assert.assertEquals("\\[OK\\]", Vocabulary.normalize("[OK]"));
+    Assert.assertEquals("Straße", Vocabulary.normalize("Straße"));
+  }
 
   @Test
   public void testVocabulary() {
@@ -234,6 +251,18 @@ public class VocabularyTest {
 
     Assert.assertEquals(0.011627906976744186, vocabulary.ntf(2), 0.000001);
     Assert.assertEquals(0.011627906976744186, vocabulary.ntf("address"), 0.000001);
+  }
+
+  @Test
+  public void testReduce() {
+
+    Vocabulary vocabulary = fullVocabulary();
+
+    Assert.assertEquals(15, vocabulary.size());
+
+    vocabulary.reduce(Sets.newHashSet(10, 11, 12, 13, 14, 15));
+
+    Assert.assertEquals(10, vocabulary.size());
   }
 
   private Vocabulary partialVocabulary() {

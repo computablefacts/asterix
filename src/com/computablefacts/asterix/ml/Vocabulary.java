@@ -21,9 +21,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -202,6 +204,25 @@ final public class Vocabulary {
       pattern.append(']');
     }
     return pattern.toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (!(obj instanceof Vocabulary)) {
+      return false;
+    }
+    Vocabulary v = (Vocabulary) obj;
+    return Objects.equals(tf_, v.tf_) && Objects.equals(df_, v.df_) && Objects.equals(idx_, v.idx_)
+        && Objects.equals(forms_, v.forms_) && nbTermsSeen_ == v.nbTermsSeen_
+        && nbDocsSeen_ == v.nbDocsSeen_ && isFrozen_ == v.isFrozen_;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(tf_, df_, idx_, forms_, nbTermsSeen_, nbDocsSeen_, isFrozen_);
   }
 
   /**
@@ -447,6 +468,46 @@ final public class Vocabulary {
           idx_.put(term, idx);
           forms_.put(term, Sets.newHashSet((Collection<String>) forms));
         });
+  }
+
+  /**
+   * Remove terms from the vocabulary and reindex it.
+   *
+   * @param idxsToRemove the terms to remove.
+   */
+  public void reduce(Set<Integer> idxsToRemove) {
+
+    Preconditions.checkNotNull(idxsToRemove, "idxsToRemove should not be null");
+    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
+
+    Vocabulary vocabulary = new Vocabulary();
+    vocabulary.nbTermsSeen_ = nbTermsSeen_;
+    vocabulary.nbDocsSeen_ = nbDocsSeen_;
+
+    @Var int newIdx = 0;
+    List<Integer> idxs = idx_.values().stream().sorted().collect(Collectors.toList());
+
+    for (int idx : idxs) {
+      if (!idxsToRemove.contains(idx)) {
+
+        String term = term(idx);
+
+        vocabulary.idx_.put(term, newIdx++);
+        vocabulary.tf_.add(term, tf_.count(term));
+        vocabulary.df_.add(term, df_.count(term));
+        vocabulary.forms_.put(term, forms_.get(term));
+      }
+    }
+
+    clear();
+
+    isFrozen_ = true;
+    nbTermsSeen_ = vocabulary.nbTermsSeen_;
+    nbDocsSeen_ = vocabulary.nbDocsSeen_;
+    idx_.putAll(vocabulary.idx_);
+    tf_.addAll(vocabulary.tf_);
+    df_.addAll(vocabulary.df_);
+    forms_.putAll(vocabulary.forms_);
   }
 
   private void freeze(int minTermFreq, int minDocFreq, int maxVocabSize) {
