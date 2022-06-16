@@ -1,8 +1,6 @@
 package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
-import com.computablefacts.asterix.View;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -27,7 +25,7 @@ final public class NGramsToTfIdfVector implements Function<SpanSequence, double[
     Preconditions.checkNotNull(spans, "spans should not be null");
 
     Multiset<String> counts = HashMultiset.create();
-    View.of(spans).map(Span::text).forEachRemaining(term -> counts.add(Vocabulary.normalize(term)));
+    spans.forEach(span -> counts.add(Vocabulary.normalize(span.text())));
     double[] vector = new double[vocabulary_.size() - 1 /* skip UNK */];
 
     for (int i = 0; i < vector.length; i++) {
