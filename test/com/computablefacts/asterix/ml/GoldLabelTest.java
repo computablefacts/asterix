@@ -35,17 +35,44 @@ public class GoldLabelTest {
     Assert.assertEquals("1", goldLabel.id());
     Assert.assertEquals("json", goldLabel.label());
     Assert.assertEquals("test", goldLabel.data());
-    Assert.assertEquals(true, goldLabel.isTruePositive());
-    Assert.assertEquals(false, goldLabel.isFalsePositive());
-    Assert.assertEquals(false, goldLabel.isTrueNegative());
-    Assert.assertEquals(false, goldLabel.isFalseNegative());
+    Assert.assertTrue(goldLabel.isTruePositive());
+    Assert.assertFalse(goldLabel.isFalsePositive());
+    Assert.assertFalse(goldLabel.isTrueNegative());
+    Assert.assertFalse(goldLabel.isFalseNegative());
+  }
+
+  @Test
+  public void testAsMap() {
+
+    Map<String, Object> json = new HashMap<>();
+    json.put("id", "1");
+    json.put("label", "json");
+    json.put("data", "test");
+    json.put("is_true_positive", true);
+    json.put("is_false_positive", false);
+    json.put("is_true_negative", false);
+    json.put("is_false_negative", false);
+
+    GoldLabel goldLabel = new GoldLabel(json);
+
+    Assert.assertEquals(json, goldLabel.asMap());
+  }
+
+  @Test
+  public void testToString() {
+
+    GoldLabel gl = goldLabels().get(0);
+
+    Assert.assertEquals(
+        "GoldLabel{id=1, label=test1, data=test1, is_true_negative=false, is_true_positive=true, is_false_negative=false, is_false_positive=false}",
+        gl.toString());
   }
 
   @Test
   public void testSplit_75_25() {
 
-    Map.Entry<List<IGoldLabel<String>>, List<IGoldLabel<String>>> goldLabels = IGoldLabel.split(
-        goldLabels(), false, 0.75);
+    Map.Entry<List<GoldLabel>, List<GoldLabel>> goldLabels = GoldLabel.split(goldLabels(), false,
+        0.75);
 
     Assert.assertEquals(6, goldLabels.getKey().size());
     Assert.assertEquals(2, goldLabels.getValue().size());
@@ -54,8 +81,7 @@ public class GoldLabelTest {
   @Test
   public void testProportionalSplit_75_25() {
 
-    Map.Entry<List<IGoldLabel<String>>, List<IGoldLabel<String>>> goldLabels = IGoldLabel.split(
-        goldLabels());
+    Map.Entry<List<GoldLabel>, List<GoldLabel>> goldLabels = GoldLabel.split(goldLabels());
 
     Assert.assertEquals(6, goldLabels.getKey().size());
     Assert.assertEquals(2, goldLabels.getValue().size());
@@ -64,13 +90,39 @@ public class GoldLabelTest {
   @Test
   public void testConfusionMatrix() {
 
-    ConfusionMatrix confusionMatrix = IGoldLabel.confusionMatrix(goldLabels().stream()
-        .filter(gl -> gl.label().equals("test1")).collect(Collectors.toList()));
+    ConfusionMatrix confusionMatrix = GoldLabel.confusionMatrix(
+        goldLabels().stream().filter(gl -> gl.label().equals("test1"))
+            .collect(Collectors.toList()));
 
     Assert.assertEquals(4, confusionMatrix.nbTruePositives());
     Assert.assertEquals(0, confusionMatrix.nbTrueNegatives());
     Assert.assertEquals(0, confusionMatrix.nbFalsePositives());
     Assert.assertEquals(0, confusionMatrix.nbFalseNegatives());
+  }
+
+  @Test
+  public void testCopyConstructor() {
+
+    List<GoldLabel> gls = goldLabels().stream().map(gl -> new GoldLabel(gl))
+        .collect(Collectors.toList());
+
+    Assert.assertEquals(gls, goldLabels());
+  }
+
+  @Test
+  public void testSavingToAnExistingFileReturnsFalse() throws Exception {
+
+    File file = java.nio.file.Files.createTempFile("test-", ".jsonl.gz").toFile();
+    List<GoldLabel> gls = goldLabels();
+
+    Assert.assertFalse(GoldLabel.save(file, View.of(gls)));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testLoadingAnUnknownFileThrowsAnException() {
+
+    File file = new File("/tmp/gls.jsonl.gz");
+    View<GoldLabel> gls = GoldLabel.load(file, null);
   }
 
   @Test
@@ -82,19 +134,19 @@ public class GoldLabelTest {
 
     Assert.assertTrue(GoldLabel.save(file, View.of(gls)));
 
-    List<IGoldLabel<String>> allGls = GoldLabel.load(file, null).toList();
+    List<GoldLabel> allGls = GoldLabel.load(file, null).toList();
 
     Assert.assertEquals(gls, allGls);
 
-    List<IGoldLabel<String>> test1Gls = GoldLabel.load(file, "test1").toList();
+    List<GoldLabel> test1Gls = GoldLabel.load(file, "test1").toList();
 
-    Assert.assertEquals(test1Gls, gls.stream().filter(gl -> "test1".equals(gl.label())).collect(
-        Collectors.toList()));
+    Assert.assertEquals(test1Gls,
+        gls.stream().filter(gl -> "test1".equals(gl.label())).collect(Collectors.toList()));
 
-    List<IGoldLabel<String>> test2Gls = GoldLabel.load(file, "test2").toList();
+    List<GoldLabel> test2Gls = GoldLabel.load(file, "test2").toList();
 
-    Assert.assertEquals(test2Gls, gls.stream().filter(gl -> "test2".equals(gl.label())).collect(
-        Collectors.toList()));
+    Assert.assertEquals(test2Gls,
+        gls.stream().filter(gl -> "test2".equals(gl.label())).collect(Collectors.toList()));
   }
 
   private List<GoldLabel> goldLabels() {
@@ -106,7 +158,6 @@ public class GoldLabelTest {
         new GoldLabel(Integer.toString(5, 10), "test2", "test1", false, true, false, false),
         new GoldLabel(Integer.toString(6, 10), "test2", "test2", false, true, false, false),
         new GoldLabel(Integer.toString(7, 10), "test2", "test3", false, true, false, false),
-        new GoldLabel(Integer.toString(8, 10), "test2", "test4", false, true, false,
-            false));
+        new GoldLabel(Integer.toString(8, 10), "test2", "test4", false, true, false, false));
   }
 }
