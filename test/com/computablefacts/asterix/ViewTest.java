@@ -11,6 +11,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -845,7 +846,7 @@ public class ViewTest {
   @Test
   public void testForEachRemainingInParallel() {
 
-    List<String> result = new ArrayList<>();
+    Set<String> result = new HashSet<>();
     View<String> view = View.of(Stream.of("cat", "dog", "elephant", "fox", "rabbit", "duck"));
 
     view.forEachRemainingInParallel((elem) -> {
@@ -854,7 +855,8 @@ public class ViewTest {
       }
     });
 
-    Assert.assertEquals(Lists.newArrayList("elephant", "rabbit", "duck"), result);
+    Assert.assertEquals(3,
+        Sets.intersection(Sets.newHashSet("elephant", "rabbit", "duck"), result).size());
   }
 
   @Test
