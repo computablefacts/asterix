@@ -1,24 +1,14 @@
 package com.computablefacts.asterix;
 
 import com.computablefacts.asterix.codecs.JsonCodec;
-import com.computablefacts.asterix.ml.TokenizeText;
-import com.computablefacts.asterix.ml.Vocabulary;
 import com.computablefacts.logfmt.LogFormatter;
-import com.google.common.annotations.Beta;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,71 +104,6 @@ final public class Document {
           }
           return true;
         });
-  }
-
-  /**
-   * Build a vocabulary from a corpus of documents. To be versatile, this method does not attempt to
-   * remove stop words, diacritical marks or even lowercase tokens.
-   * <ul>
-   * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
-   * <li>{@code args[1]} the threshold under which a token must be excluded from the vocabulary.</li>
-   * <li>{@code args[2]} the maximum size of the {@link Vocabulary}.</li>
-   * <li>{@code args[3]} the type of tokens to keep.</li>
-   * <li>{@code args[4]} the ngrams length that will be part of the vocabulary: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.</li>
-   * </ul>
-   */
-  @Beta
-  @Generated
-  public static void main(String[] args) {
-
-    File file = new File(args[0]);
-    int minTermFreq = Integer.parseInt(args[1], 10);
-    int minDocFreq = Integer.parseInt(args[2], 10);
-    int maxVocabSize = Integer.parseInt(args[3], 10);
-    Set<String> includeTags = Sets.newHashSet(
-        Splitter.on(',').trimResults().omitEmptyStrings().split(args[4]));
-    int ngramLength = Integer.parseInt(args[5], 10);
-
-    Preconditions.checkArgument(minTermFreq > 0, "minTermFreq must be > 0");
-    Preconditions.checkArgument(minDocFreq > 0, "minDocFreq must be > 0");
-    Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
-    Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
-    Preconditions.checkArgument(ngramLength > 0, "ngramLength must be > 0");
-
-    Vocabulary vocabulary;
-    File vocab = new File(
-        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
-
-    System.out.printf("Dataset is %s\n", file);
-    System.out.printf("NGrams length is %d\n", ngramLength);
-    System.out.printf("Min. term freq. is %d\n", minTermFreq);
-    System.out.printf("Min. document freq. is %d\n", minDocFreq);
-    System.out.printf("Max. vocab size is %d\n", maxVocabSize);
-    System.out.printf("Included tags are %s\n", includeTags);
-    System.out.println("Building vocabulary...");
-
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    View<SpanSequence> documents = Document.of(file, true).displayProgress(5000)
-        .map(doc -> (String) doc.text()).map(new TokenizeText());
-    View<List<String>> ngrams;
-
-    if (ngramLength == 1) {
-      ngrams = documents.map(
-          seq -> View.of(seq).filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
-              .map(Span::text).toList());
-    } else {
-      ngrams = documents.map(
-          seq -> View.of(seq).filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
-              .map(Span::text).overlappingWindowWithStrictLength(ngramLength)
-              .map(tks -> Joiner.on('_').join(tks)).toList());
-    }
-
-    vocabulary = Vocabulary.of(ngrams, minTermFreq, minDocFreq, maxVocabSize);
-    vocabulary.save(vocab);
-    stopwatch.stop();
-
-    System.out.printf("Vocabulary built in %d seconds\n", stopwatch.elapsed(TimeUnit.SECONDS));
-    System.out.printf("Vocabulary size is %d\n", vocabulary.size());
   }
 
   @Generated
