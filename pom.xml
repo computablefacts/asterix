@@ -78,17 +78,17 @@
     </dependency>
     <dependency>
       <groupId>org.bytedeco</groupId>
-      <artifactId>javacpp</artifactId>
+      <artifactId>javacpp-platform</artifactId>
       <version>${javacpp.version}</version>
     </dependency>
     <dependency>
       <groupId>org.bytedeco</groupId>
-      <artifactId>openblas</artifactId>
+      <artifactId>openblas-platform</artifactId>
       <version>${openblas.version}</version>
     </dependency>
     <dependency>
       <groupId>org.bytedeco</groupId>
-      <artifactId>arpack-ng</artifactId>
+      <artifactId>arpack-ng-platform</artifactId>
       <version>${arpack.version}</version>
     </dependency>
     <dependency>

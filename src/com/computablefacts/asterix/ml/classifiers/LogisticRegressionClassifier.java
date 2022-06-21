@@ -1,0 +1,58 @@
+package com.computablefacts.asterix.ml.classifiers;
+
+import com.computablefacts.asterix.ml.FeatureVector;
+import com.google.common.base.Preconditions;
+import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.List;
+import java.util.Properties;
+import smile.classification.SparseLogisticRegression;
+import smile.data.SparseDataset;
+
+@CheckReturnValue
+final public class LogisticRegressionClassifier implements AbstractBinaryClassifier {
+
+  private SparseLogisticRegression classifier_;
+
+  public LogisticRegressionClassifier() {
+  }
+
+  @Override
+  public int predict(FeatureVector vector) {
+
+    Preconditions.checkState(classifier_ != null, "classifier should be trained first");
+
+    return classifier_.predict(vector.sparseArray());
+  }
+
+  @Override
+  public void train(List<FeatureVector> vectors, int[] actuals) {
+
+    Preconditions.checkNotNull(vectors, "vectors should not be null");
+    Preconditions.checkNotNull(actuals, "actuals should not be null");
+    Preconditions.checkArgument(vectors.size() == actuals.length,
+        "mismatch between the number of vectors and the number of actuals");
+    Preconditions.checkState(classifier_ == null, "classifier has already been trained");
+
+    Properties properties = new Properties();
+    properties.setProperty("smile.logit.max.iterations", "1000");
+
+    classifier_ = SparseLogisticRegression.binomial(
+        SparseDataset.of(vectors.stream().map(FeatureVector::sparseArray)), actuals, properties);
+  }
+
+  @Override
+  public void update(FeatureVector vector, int actual) {
+
+    Preconditions.checkNotNull(vector, "vector should not be null");
+    Preconditions.checkArgument(actual == KO || actual == OK,
+        "invalid class: should be either 1 (in class) or 0 (not in class)");
+    Preconditions.checkState(classifier_ != null, "classifier should be trained first");
+
+    classifier_.update(vector.sparseArray(), actual);
+  }
+
+  @Override
+  public boolean supportsIncrementalTraining() {
+    return true;
+  }
+}

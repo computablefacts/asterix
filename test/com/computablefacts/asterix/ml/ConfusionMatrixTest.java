@@ -1,7 +1,7 @@
 package com.computablefacts.asterix.ml;
 
-import static com.computablefacts.asterix.ml.binaryclassifiers.AbstractClassifier.KO;
-import static com.computablefacts.asterix.ml.binaryclassifiers.AbstractClassifier.OK;
+import static com.computablefacts.asterix.ml.classifiers.AbstractBinaryClassifier.KO;
+import static com.computablefacts.asterix.ml.classifiers.AbstractBinaryClassifier.OK;
 
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
