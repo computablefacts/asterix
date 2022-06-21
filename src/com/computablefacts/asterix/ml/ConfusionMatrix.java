@@ -1,7 +1,9 @@
 package com.computablefacts.asterix.ml;
 
+import static com.computablefacts.asterix.ml.binaryclassifiers.AbstractClassifier.KO;
+import static com.computablefacts.asterix.ml.binaryclassifiers.AbstractClassifier.OK;
+
 import com.computablefacts.asterix.Generated;
-import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
@@ -74,16 +76,11 @@ final public class ConfusionMatrix {
 
     Preconditions.checkNotNull(matrices, "matrices should not be null");
 
-    @Var
-    double mcc = 0;
-    @Var
-    double f1 = 0;
-    @Var
-    double precision = 0;
-    @Var
-    double recall = 0;
-    @Var
-    double accuracy = 0;
+    @Var double mcc = 0;
+    @Var double f1 = 0;
+    @Var double precision = 0;
+    @Var double recall = 0;
+    @Var double accuracy = 0;
 
     for (ConfusionMatrix m : matrices) {
       mcc +=
@@ -126,58 +123,51 @@ final public class ConfusionMatrix {
 
   /**
    * Compute TP, TN, FP and FN. Works only for binary classification.
-   * <p>
-   * If a label other than labelOk/labelKo is met in the actual or predicted lists, the pair is
-   * discarded.
    *
    * @param actual gold labels.
    * @param predicted predicted labels.
-   * @param labelOk positive label.
-   * @param labelKo negative label.
-   * @param <T> type of label.
    */
-  public <T> void addAll(List<T> actual, List<T> predicted, T labelOk, T labelKo) {
+  public void addAll(List<Integer> actual, List<Integer> predicted) {
 
     Preconditions.checkNotNull(actual, "actual should not be null");
     Preconditions.checkNotNull(predicted, "predicted should not be null");
-    Preconditions.checkNotNull(labelOk, "labelOk should not be null");
-    Preconditions.checkNotNull(labelKo, "labelKo should not be null");
     Preconditions.checkArgument(actual.size() == predicted.size(),
         "mismatch between the number of actual and predicted labels : %s expected vs %s found",
         actual.size(), predicted.size());
 
     for (int i = 0; i < actual.size(); i++) {
 
-      T act = actual.get(i);
-      T pred = predicted.get(i);
+      int act = actual.get(i);
+      int pred = predicted.get(i);
 
-      if (act.equals(labelOk)) {
-        if (pred.equals(labelOk)) {
-          incrementTruePositives();
-        } else if (pred.equals(labelKo)) {
-          incrementFalseNegatives();
-        } else {
-          if (logger_.isWarnEnabled()) {
-            logger_.warn(LogFormatter.create().add("actual", act).add("prediction", pred)
-                .message("unknown label").formatWarn());
-          }
-        }
-      } else if (act.equals(labelKo)) {
-        if (pred.equals(labelOk)) {
-          incrementFalsePositives();
-        } else if (pred.equals(labelKo)) {
-          incrementTrueNegatives();
-        } else {
-          if (logger_.isWarnEnabled()) {
-            logger_.warn(LogFormatter.create().add("actual", act).add("prediction", pred)
-                .message("unknown label").formatWarn());
-          }
-        }
+      add(act, pred);
+    }
+  }
+
+  /**
+   * Compute TP, TN, FP and FN. Works only for binary classification.
+   *
+   * @param act gold label.
+   * @param pred predicted label.
+   */
+  public void add(int act, int pred) {
+
+    Preconditions.checkState(act == KO || act == OK,
+        "invalid actual: should be either 1 (in class) or 0 (not in class)");
+    Preconditions.checkState(pred == KO || pred == OK,
+        "invalid prediction: should be either 1 (in class) or 0 (not in class)");
+
+    if (act == OK) {
+      if (pred == OK) {
+        incrementTruePositives();
       } else {
-        if (logger_.isWarnEnabled()) {
-          logger_.warn(LogFormatter.create().add("actual", act).add("prediction", pred)
-              .message("unknown label").formatWarn());
-        }
+        incrementFalseNegatives();
+      }
+    } else {
+      if (pred == OK) {
+        incrementFalsePositives();
+      } else {
+        incrementTrueNegatives();
       }
     }
   }
@@ -245,8 +235,8 @@ final public class ConfusionMatrix {
    * observation.
    */
   public double matthewsCorrelationCoefficient() {
-    return ((tp_ * tn_) - (fp_ * fn_))
-        / Math.sqrt((tp_ + fp_) * (tp_ + fn_) * (tn_ + fp_) * (tn_ + fn_));
+    return ((tp_ * tn_) - (fp_ * fn_)) / Math.sqrt(
+        (tp_ + fp_) * (tp_ + fn_) * (tn_ + fp_) * (tn_ + fn_));
   }
 
   /**

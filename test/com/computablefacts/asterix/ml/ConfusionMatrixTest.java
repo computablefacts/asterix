@@ -1,7 +1,11 @@
-package com.computablefacts.asterix;
+package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.ml.ConfusionMatrix;
+import static com.computablefacts.asterix.ml.binaryclassifiers.AbstractClassifier.KO;
+import static com.computablefacts.asterix.ml.binaryclassifiers.AbstractClassifier.OK;
+
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -29,8 +33,8 @@ public class ConfusionMatrixTest {
     matrixD.addTruePositives(1);
     matrixD.addFalsePositives(1);
 
-    String microAverage =
-        ConfusionMatrix.microAverage(Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
+    String microAverage = ConfusionMatrix.microAverage(
+        Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
 
     Assert.assertTrue(microAverage.contains("MCC : NaN"));
     Assert.assertTrue(microAverage.contains("\nF1 : 0.21848739495798317"));
@@ -58,8 +62,8 @@ public class ConfusionMatrixTest {
     matrixD.addTruePositives(1);
     matrixD.addFalsePositives(1);
 
-    String macroAverage =
-        ConfusionMatrix.macroAverage(Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
+    String macroAverage = ConfusionMatrix.macroAverage(
+        Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
 
     Assert.assertTrue(macroAverage.contains("MCC : 0.0"));
     Assert.assertTrue(macroAverage.contains("\nF1 : 0.5454545454545454"));
@@ -110,6 +114,46 @@ public class ConfusionMatrixTest {
     Assert.assertTrue(macroAverage.contains("\nPrecision : 0.6281800391389432"));
     Assert.assertTrue(macroAverage.contains("\nRecall : 0.823728813559322"));
     Assert.assertTrue(macroAverage.contains("\nAccuracy : 0.5548780487804879"));
+  }
+
+  @Test
+  public void testGetters() {
+
+    ConfusionMatrix matrix = confusionMatrix1();
+
+    Assert.assertEquals(620, matrix.nbTruePositives());
+    Assert.assertEquals(8820, matrix.nbTrueNegatives());
+    Assert.assertEquals(180, matrix.nbFalsePositives());
+    Assert.assertEquals(380, matrix.nbFalseNegatives());
+  }
+
+  @Test
+  public void testAddAll() {
+
+    List<Integer> actual = new ArrayList<>();
+    List<Integer> predicted = new ArrayList<>();
+
+    for (int i = 0; i < 620; i++) {
+      actual.add(OK);
+      predicted.add(OK);
+    }
+    for (int i = 0; i < 8820; i++) {
+      actual.add(KO);
+      predicted.add(KO);
+    }
+    for (int i = 0; i < 180; i++) {
+      actual.add(KO);
+      predicted.add(OK);
+    }
+    for (int i = 0; i < 380; i++) {
+      actual.add(OK);
+      predicted.add(KO);
+    }
+
+    ConfusionMatrix matrix = new ConfusionMatrix();
+    matrix.addAll(actual, predicted);
+
+    Assert.assertEquals(matrix.toString(), confusionMatrix().toString());
   }
 
   @Test
@@ -255,16 +299,16 @@ public class ConfusionMatrixTest {
     ConfusionMatrix matrix = new ConfusionMatrix();
 
     for (int i = 0; i < 620; i++) {
-      matrix.addAll(Lists.newArrayList(""), Lists.newArrayList(""), "", "<UNK>");
+      matrix.add(OK, OK);
     }
     for (int i = 0; i < 8820; i++) {
-      matrix.addAll(Lists.newArrayList("<UNK>"), Lists.newArrayList("<UNK>"), "", "<UNK>");
+      matrix.add(KO, KO);
     }
     for (int i = 0; i < 180; i++) {
-      matrix.addAll(Lists.newArrayList("<UNK>"), Lists.newArrayList(""), "", "<UNK>");
+      matrix.add(KO, OK);
     }
     for (int i = 0; i < 380; i++) {
-      matrix.addAll(Lists.newArrayList(""), Lists.newArrayList("<UNK>"), "", "<UNK>");
+      matrix.add(OK, KO);
     }
     return matrix;
   }
