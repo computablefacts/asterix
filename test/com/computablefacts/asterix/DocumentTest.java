@@ -1,20 +1,46 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.codecs.JsonCodec;
+import com.google.common.collect.Lists;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-
 public class DocumentTest {
+
+  public static View<Document> papers() {
+    File input = new File("test/resources/papers.jsonl.gz");
+    return View.of(input, true).map(JsonCodec::asObject).map(json -> {
+
+      String id = json.getOrDefault("Id", "").toString();
+      String title = (String) json.getOrDefault("Title", "");
+      String eventType = (String) json.getOrDefault("EventType", "");
+      String pdfName = (String) json.getOrDefault("PdfName", "");
+      String paperAbstract = (String) json.getOrDefault("Abstract", "");
+      String paperText = (String) json.getOrDefault("PaperText", "");
+
+      Map<String, String> metadata = new HashMap<>();
+      metadata.put("dataset", "NIPS2015 papers");
+      metadata.put("event_type", eventType);
+      metadata.put("abstract", paperAbstract);
+
+      Document document = new Document(id);
+      document.setTextType();
+      document.title(title);
+      document.path(pdfName);
+      document.metadata(metadata);
+      document.text(paperText);
+
+      return document;
+    });
+  }
 
   @Test
   public void testNewDocumentWithDocId() {
