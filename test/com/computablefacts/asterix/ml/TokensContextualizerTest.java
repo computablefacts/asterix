@@ -7,16 +7,16 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ContextualizeTokensTest {
+public class TokensContextualizerTest {
 
   @Test
   public void testContextualizeTokens() {
 
     List<SpanSequence> sentences = View.of(sentences())
-        .map(new NormalizeText(true))
-        .map(new TokenizeText())
+        .map(new TextNormalizer(true))
+        .map(new TextTokenizer())
         .filter(spans -> spans.size() > 2)
-        .map(new ContextualizeTokens(5))
+        .map(new TokensContextualizer(5))
         .toList();
 
     Assert.assertEquals(3, sentences.size());

@@ -15,12 +15,12 @@ import java.util.stream.IntStream;
  * size as the context tokens of the given center target token.
  */
 @CheckReturnValue
-final public class ContextualizeTokens implements Function<SpanSequence, SpanSequence> {
+final public class TokensContextualizer implements Function<SpanSequence, SpanSequence> {
 
   private final Random random_ = new Random();
   private final int maxWindowSize_;
 
-  public ContextualizeTokens(int maxWindowSize) {
+  public TokensContextualizer(int maxWindowSize) {
 
     Preconditions.checkArgument(maxWindowSize > 1, "maxWindowSize must be > 1");
 
@@ -43,9 +43,8 @@ final public class ContextualizeTokens implements Function<SpanSequence, SpanSeq
       List<String> tokensBefore = new ArrayList<>();
       List<String> tokensAfter = new ArrayList<>();
 
-      IntStream.range(Math.max(0, i - windowSize),
-              Math.min(spans.size(), i + 1 + windowSize)).boxed().filter(idx -> idx != center)
-          .forEach(idx -> {
+      IntStream.range(Math.max(0, i - windowSize), Math.min(spans.size(), i + 1 + windowSize))
+          .boxed().filter(idx -> idx != center).forEach(idx -> {
             if (idx < center) {
               tokensBefore.add(spans.span(idx).text());
             }
