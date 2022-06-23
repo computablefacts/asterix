@@ -186,17 +186,17 @@ public class VocabularyTest {
 
     Assert.assertEquals(10, vocabulary.size());
 
-    Assert.assertEquals(0.7123179275482191, vocabulary.idf(0), 0.000001);
-    Assert.assertEquals(0.7123179275482191, vocabulary.idf("<UNK>"), 0.000001);
+    Assert.assertEquals(1.0, vocabulary.idf(0), 0.000001);
+    Assert.assertEquals(1.0, vocabulary.idf("<UNK>"), 0.000001);
 
-    Assert.assertEquals(1.4054651081081644, vocabulary.idf(1), 0.000001);
-    Assert.assertEquals(1.4054651081081644, vocabulary.idf("-"), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.idf(1), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.idf("-"), 0.000001);
 
-    Assert.assertEquals(1.4054651081081644, vocabulary.idf(2), 0.000001);
-    Assert.assertEquals(1.4054651081081644, vocabulary.idf("address"), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.idf(2), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.idf("address"), 0.000001);
 
-    Assert.assertEquals(1.4054651081081644, vocabulary.idf(3), 0.000001);
-    Assert.assertEquals(1.4054651081081644, vocabulary.idf("in"), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.idf(3), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.idf("in"), 0.000001);
   }
 
   @Test
@@ -206,17 +206,17 @@ public class VocabularyTest {
 
     Assert.assertEquals(10, vocabulary.size());
 
-    Assert.assertEquals(0.7123179275482191, vocabulary.tfIdf(0, 1), 0.000001);
-    Assert.assertEquals(0.7123179275482191, vocabulary.tfIdf("<UNK>", 1), 0.000001);
+    Assert.assertEquals(1.0, vocabulary.tfIdf(0, 1), 0.000001);
+    Assert.assertEquals(1.0, vocabulary.tfIdf("<UNK>", 1), 0.000001);
 
-    Assert.assertEquals(1.4054651081081644, vocabulary.tfIdf(1, 1), 0.000001);
-    Assert.assertEquals(1.4054651081081644, vocabulary.tfIdf("-", 1), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.tfIdf(1, 1), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.tfIdf("-", 1), 0.000001);
 
-    Assert.assertEquals(1.4054651081081644, vocabulary.tfIdf(2, 1), 0.000001);
-    Assert.assertEquals(1.4054651081081644, vocabulary.tfIdf("address", 1), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.tfIdf(2, 1), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.tfIdf("address", 1), 0.000001);
 
-    Assert.assertEquals(1.4054651081081644, vocabulary.tfIdf(3, 1), 0.000001);
-    Assert.assertEquals(1.4054651081081644, vocabulary.tfIdf("in", 1), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.tfIdf(3, 1), 0.000001);
+    Assert.assertEquals(1.6931471805599454, vocabulary.tfIdf("in", 1), 0.000001);
   }
 
   @Test

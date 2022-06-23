@@ -410,7 +410,7 @@ final public class Vocabulary {
    * @return the inverse document frequency.
    */
   public double idf(String term) {
-    return 1 + Math.log((double) nbDocsSeen_ / (double) (1 + df(term)));
+    return 1 + Math.log((double) (1 + nbDocsSeen_) / (double) (1 + df(term)));
   }
 
   /**
@@ -421,7 +421,7 @@ final public class Vocabulary {
    * @return the inverse document frequency.
    */
   public double idf(int index) {
-    return 1 + Math.log((double) nbDocsSeen_ / (double) (1 + df(index)));
+    return 1 + Math.log((double) (1 + nbDocsSeen_) / (double) (1 + df(index)));
   }
 
   /**
