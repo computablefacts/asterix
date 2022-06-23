@@ -175,7 +175,16 @@ public class FeatureVectorTest {
     FeatureVector vector = new FeatureVector(src);
     vector.normalizeUsingEuclideanNorm();
 
-    Assert.assertArrayEquals(new double[]{0.0, 0.604, 0.0, 0.0, 0.79}, vector.denseArray(),
-        0.01);
+    Assert.assertArrayEquals(new double[]{0.0, 0.604, 0.0, 0.0, 0.79}, vector.denseArray(), 0.01);
+  }
+
+  @Test
+  public void testNormalizeUsingMinMax() {
+
+    double[] src = new double[]{8, 10, 15, 20};
+    FeatureVector vector = new FeatureVector(src);
+    vector.normalizeUsingMinMax();
+
+    Assert.assertArrayEquals(new double[]{0.0, 0.16, 0.58, 1.0}, vector.denseArray(), 0.01);
   }
 }

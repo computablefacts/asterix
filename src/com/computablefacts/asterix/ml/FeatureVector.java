@@ -142,4 +142,14 @@ final public class FeatureVector {
       entry.setValue(entry.getValue() / normalizer);
     }
   }
+
+  public void normalizeUsingMinMax() {
+
+    double min = nonZeroEntries_.values().stream().mapToDouble(x -> x).min().orElse(0.0);
+    double max = nonZeroEntries_.values().stream().mapToDouble(x -> x).max().orElse(min);
+
+    for (Map.Entry<Integer, Double> entry : nonZeroEntries_.entrySet()) {
+      entry.setValue((entry.getValue() - min) / (max - min));
+    }
+  }
 }
