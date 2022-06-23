@@ -59,8 +59,8 @@ final public class Vocabulary {
    * remove stop words, diacritical marks or even lowercase tokens.
    * <ul>
    * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
-   * <li>{@code args[1]} the threshold (term frequency) under which a token must be excluded from the vocabulary.</li>
-   * <li>{@code args[2]} the threshold (document frequency) under which a token must be excluded from the vocabulary.</li>
+   * <li>{@code args[1]} the threshold (document frequency) under which a token must be excluded from the vocabulary.</li>
+   * <li>{@code args[2]} the threshold (document frequency) above which a token must be excluded from the vocabulary.</li>
    * <li>{@code args[3]} the maximum size of the {@link Vocabulary}.</li>
    * <li>{@code args[4]} the types of tokens to keep: WORD, PUNCTUATION, etc.</li>
    * <li>{@code args[5]} the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.</li>
@@ -71,16 +71,18 @@ final public class Vocabulary {
   public static void main(String[] args) {
 
     File file = new File(args[0]);
-    int minTermFreq = Integer.parseInt(args[1], 10);
-    int minDocFreq = Integer.parseInt(args[2], 10);
+    double minDocFreq = Double.parseDouble(args[1]);
+    double maxDocFreq = Double.parseDouble(args[2]);
     int maxVocabSize = Integer.parseInt(args[3], 10);
     Set<String> includeTags = Sets.newHashSet(
         Splitter.on(',').trimResults().omitEmptyStrings().split(args[4]));
     int ngramLength = Integer.parseInt(args[5], 10);
 
-    Preconditions.checkArgument(minTermFreq > 0, "minTermFreq must be > 0");
-    Preconditions.checkArgument(minDocFreq > 0, "minDocFreq must be > 0");
-    Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
+    Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
+        "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
+    Preconditions.checkArgument(minDocFreq <= maxDocFreq && maxDocFreq <= 1.0,
+        "minDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
+    Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be = -1 or > 0");
     Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
     Preconditions.checkArgument(ngramLength > 0, "ngramLength must be > 0");
 
@@ -90,8 +92,8 @@ final public class Vocabulary {
 
     System.out.printf("Dataset is %s\n", file);
     System.out.printf("NGrams length is %d\n", ngramLength);
-    System.out.printf("Min. term freq. is %d\n", minTermFreq);
-    System.out.printf("Min. document freq. is %d\n", minDocFreq);
+    System.out.printf("Min. document freq. is %.01f%% of all documents\n", minDocFreq * 100);
+    System.out.printf("Max. document freq. is %.01f%% of all documents\n", maxDocFreq * 100);
     System.out.printf("Max. vocab size is %d\n", maxVocabSize);
     System.out.printf("Included tags are %s\n", includeTags);
     System.out.println("Building vocabulary...");
@@ -112,7 +114,7 @@ final public class Vocabulary {
               .map(tks -> Joiner.on('_').join(tks)).toList());
     }
 
-    vocabulary = Vocabulary.of(ngrams, minTermFreq, minDocFreq, maxVocabSize);
+    vocabulary = Vocabulary.of(ngrams, minDocFreq, maxDocFreq, maxVocabSize);
     vocabulary.save(vocab);
     stopwatch.stop();
 
@@ -127,48 +129,32 @@ final public class Vocabulary {
    * @return a {@link Vocabulary}.
    */
   public static Vocabulary of(View<List<String>> docs) {
+    return of(docs, 0.0, 1.0, -1);
+  }
+
+  /**
+   * Build a vocabulary from a set of tokenized documents.
+   *
+   * @param docs a set of tokenized documents.
+   * @param minDocFreq the document-frequency threshold (as a number of documents) under which a
+   * term must be excluded.
+   * @param maxDocFreq the document-frequency threshold (as a number of documents) above which a
+   * term must be excluded.
+   * @param maxVocabSize the maximum number of terms to include in the vocabulary.
+   * @return a {@link Vocabulary}.
+   */
+  public static Vocabulary of(View<List<String>> docs, int minDocFreq, int maxDocFreq,
+      int maxVocabSize) {
 
     Preconditions.checkNotNull(docs, "docs should not be null");
+    Preconditions.checkArgument(0 <= minDocFreq, "minDocFreq must be >= 0");
+    Preconditions.checkArgument(minDocFreq <= maxDocFreq, "minDocFreq must be >= minDocFreq ");
+    Preconditions.checkArgument(maxVocabSize == -1 || maxVocabSize > 0,
+        "maxVocabSize must be = -1 or > 0");
 
-    Set<String> normalizedTermsSeen = new HashSet<>();
     Vocabulary vocabulary = new Vocabulary();
-    docs.map(HashMultiset::create).forEachRemaining(terms -> {
-
-      vocabulary.nbDocsSeen_ += 1;
-      AtomicBoolean unkAlreadySeen = new AtomicBoolean(false);
-
-      terms.entrySet().forEach(term -> {
-
-        String normalizedTerm = normalize(term.getElement());
-        int termCount = term.getCount();
-
-        if (!vocabulary.forms_.containsKey(normalizedTerm)) {
-          vocabulary.forms_.put(normalizedTerm, new HashSet<>());
-        }
-
-        vocabulary.forms_.get(normalizedTerm).add(term.getElement());
-        vocabulary.nbTermsSeen_ += termCount;
-
-        if (normalizedTermsSeen.contains(normalizedTerm)) {
-          vocabulary.tf_.add(normalizedTerm, termCount);
-          vocabulary.df_.add(normalizedTerm);
-        } else {
-
-          normalizedTermsSeen.add(normalizedTerm);
-          vocabulary.tf_.add(vocabulary.tokenUnk_);
-
-          if (!unkAlreadySeen.getAndSet(true)) {
-            vocabulary.df_.add(vocabulary.tokenUnk_);
-          }
-          if (termCount > 1) {
-            vocabulary.tf_.add(normalizedTerm, termCount - 1);
-            vocabulary.df_.add(normalizedTerm);
-          }
-        }
-      });
-    });
-    normalizedTermsSeen.clear();
-    vocabulary.freeze(-1, -1, -1);
+    vocabulary.fill(docs);
+    vocabulary.freeze(minDocFreq, maxDocFreq, maxVocabSize);
 
     return vocabulary;
   }
@@ -177,57 +163,28 @@ final public class Vocabulary {
    * Build a vocabulary from a set of tokenized documents.
    *
    * @param docs a set of tokenized documents.
-   * @param minTermFreq the term-frequency threshold under which a term must be excluded.
-   * @param minDocFreq the document-frequency threshold under which a term must be excluded.
+   * @param minDocFreq the document-frequency threshold (as a percentage of the total number of
+   * documents) under which a term must be excluded.
+   * @param maxDocFreq the document-frequency threshold (as a percentage of the total number of
+   * documents) above which a term must be excluded.
    * @param maxVocabSize the maximum number of terms to include in the vocabulary.
    * @return a {@link Vocabulary}.
    */
-  public static Vocabulary of(View<List<String>> docs, int minTermFreq, int minDocFreq,
+  public static Vocabulary of(View<List<String>> docs, double minDocFreq, double maxDocFreq,
       int maxVocabSize) {
 
     Preconditions.checkNotNull(docs, "docs should not be null");
-    Preconditions.checkArgument(minTermFreq > 0, "minTermFreq must be > 0");
-    Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be > 0");
+    Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
+        "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
+    Preconditions.checkArgument(minDocFreq <= maxDocFreq && maxDocFreq <= 1.0,
+        "minDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
+    Preconditions.checkArgument(maxVocabSize == -1 || maxVocabSize > 0,
+        "maxVocabSize must be = -1 or > 0");
 
-    Set<String> normalizedTermsSeen = new HashSet<>();
     Vocabulary vocabulary = new Vocabulary();
-    docs.map(HashMultiset::create).forEachRemaining(terms -> {
-
-      vocabulary.nbDocsSeen_ += 1;
-      AtomicBoolean unkAlreadySeen = new AtomicBoolean(false);
-
-      terms.entrySet().forEach(term -> {
-
-        String normalizedTerm = normalize(term.getElement());
-        int termCount = term.getCount();
-
-        if (!vocabulary.forms_.containsKey(normalizedTerm)) {
-          vocabulary.forms_.put(normalizedTerm, new HashSet<>());
-        }
-
-        vocabulary.forms_.get(normalizedTerm).add(term.getElement());
-        vocabulary.nbTermsSeen_ += termCount;
-
-        if (normalizedTermsSeen.contains(normalizedTerm)) {
-          vocabulary.tf_.add(normalizedTerm, termCount);
-          vocabulary.df_.add(normalizedTerm);
-        } else {
-
-          normalizedTermsSeen.add(normalizedTerm);
-          vocabulary.tf_.add(vocabulary.tokenUnk_);
-
-          if (!unkAlreadySeen.getAndSet(true)) {
-            vocabulary.df_.add(vocabulary.tokenUnk_);
-          }
-          if (termCount > 1) {
-            vocabulary.tf_.add(normalizedTerm, termCount - 1);
-            vocabulary.df_.add(normalizedTerm);
-          }
-        }
-      });
-    });
-    normalizedTermsSeen.clear();
-    vocabulary.freeze(minTermFreq, minDocFreq, maxVocabSize);
+    vocabulary.fill(docs);
+    vocabulary.freeze((int) (minDocFreq * vocabulary.nbDocsSeen_),
+        (int) (maxDocFreq * vocabulary.nbDocsSeen_), maxVocabSize);
 
     return vocabulary;
   }
@@ -584,22 +541,63 @@ final public class Vocabulary {
     forms_.putAll(vocabulary.forms_);
   }
 
-  private void freeze(int minTermFreq, int minDocFreq, int maxVocabSize) {
+  private void fill(View<List<String>> docs) {
+
+    Preconditions.checkNotNull(docs, "docs should not be null");
+
+    Set<String> normalizedTermsSeen = new HashSet<>();
+
+    docs.map(HashMultiset::create).forEachRemaining(terms -> {
+
+      nbDocsSeen_ += 1;
+      AtomicBoolean unkAlreadySeen = new AtomicBoolean(false);
+
+      terms.entrySet().forEach(term -> {
+
+        String normalizedTerm = normalize(term.getElement());
+        int termCount = term.getCount();
+
+        if (!forms_.containsKey(normalizedTerm)) {
+          forms_.put(normalizedTerm, new HashSet<>());
+        }
+
+        forms_.get(normalizedTerm).add(term.getElement());
+        nbTermsSeen_ += termCount;
+
+        if (normalizedTermsSeen.contains(normalizedTerm)) {
+          tf_.add(normalizedTerm, termCount);
+          df_.add(normalizedTerm);
+        } else {
+
+          normalizedTermsSeen.add(normalizedTerm);
+          tf_.add(tokenUnk_);
+
+          if (!unkAlreadySeen.getAndSet(true)) {
+            df_.add(tokenUnk_);
+          }
+          if (termCount > 1) {
+            tf_.add(normalizedTerm, termCount - 1);
+            df_.add(normalizedTerm);
+          }
+        }
+      });
+    });
+  }
+
+  private void freeze(int minDocFreq, int maxDocFreq, int maxVocabSize) {
 
     Preconditions.checkState(!isFrozen_, "vocabulary is already frozen");
 
     isFrozen_ = true;
     idx_.put(tokenUnk_, idxUnk_);
 
-    if (minDocFreq > 0) {
-      df_.entrySet().removeIf(freq -> freq.getCount() < minDocFreq);
-    }
-    if (minTermFreq > 0) {
-      tf_.entrySet().removeIf(freq -> freq.getCount() < minTermFreq);
-    }
-
-    forms_.entrySet()
-        .removeIf(freq -> !tf_.contains(freq.getKey()) || !df_.contains(freq.getKey()));
+    df_.entrySet()
+        .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && freq.getCount() < minDocFreq);
+    df_.entrySet()
+        .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && freq.getCount() > maxDocFreq);
+    forms_.entrySet().removeIf(
+        freq -> !tokenUnk_.equals(freq.getKey()) && (!tf_.contains(freq.getKey()) || !df_.contains(
+            freq.getKey())));
     df_.entrySet().removeIf(
         freq -> !tokenUnk_.equals(freq.getElement()) && !forms_.containsKey(freq.getElement()));
     tf_.entrySet().removeIf(

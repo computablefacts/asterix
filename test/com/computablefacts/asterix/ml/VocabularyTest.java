@@ -34,7 +34,7 @@ public class VocabularyTest {
   @Test
   public void testVocabulary() {
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -70,9 +70,24 @@ public class VocabularyTest {
   }
 
   @Test
-  public void testPartialVsFullVocabulary() {
+  public void testPartialAsPercentageVsFullVocabulary() {
 
-    Vocabulary sample = partialVocabulary();
+    Vocabulary sample = partialVocabularyAsPercentage();
+    Vocabulary full = fullVocabulary();
+
+    for (int i = 0; i < sample.size(); i++) {
+      Assert.assertEquals(sample.term(i), full.term(i));
+      Assert.assertEquals(sample.tf(i), full.tf(i));
+      Assert.assertEquals(sample.df(i), full.df(i));
+      Assert.assertEquals(sample.ntf(i), full.ntf(i), 0.000001);
+      Assert.assertEquals(sample.ndf(i), full.ndf(i), 0.000001);
+    }
+  }
+
+  @Test
+  public void testPartialAsNumberVsFullVocabulary() {
+
+    Vocabulary sample = partialVocabularyAsNumber();
     Vocabulary full = fullVocabulary();
 
     for (int i = 0; i < sample.size(); i++) {
@@ -87,7 +102,7 @@ public class VocabularyTest {
   @Test
   public void testTermFrequency() {
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -107,7 +122,7 @@ public class VocabularyTest {
   @Test
   public void testDocumentFrequency() {
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -127,7 +142,7 @@ public class VocabularyTest {
   @Test
   public void testNormalizedTermFrequency() {
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -147,7 +162,7 @@ public class VocabularyTest {
   @Test
   public void testNormalizedDocumentFrequency() {
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -167,7 +182,7 @@ public class VocabularyTest {
   @Test
   public void testInverseDocumentFrequency() {
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -187,7 +202,7 @@ public class VocabularyTest {
   @Test
   public void testTfIdf() {
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -210,7 +225,7 @@ public class VocabularyTest {
     String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
     File file = new File(path + File.separator + "vocab.tsv.gz");
 
-    Vocabulary vocabulary = partialVocabulary();
+    Vocabulary vocabulary = partialVocabularyAsPercentage();
     vocabulary.save(file);
 
     Assert.assertEquals(10, vocabulary.size());
@@ -289,7 +304,7 @@ public class VocabularyTest {
       Assert.assertTrue(vocabDeompressed.delete());
     }
 
-    String[] args = new String[]{file.getAbsolutePath(), "5", "5", "1000",
+    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000",
         "WORD,NUMBER,TERMINAL_MARK", Integer.toString(ngramLength, 10)};
     Vocabulary.main(args);
 
@@ -334,7 +349,7 @@ public class VocabularyTest {
       Assert.assertTrue(vocabDeompressed.delete());
     }
 
-    String[] args = new String[]{file.getAbsolutePath(), "5", "5", "1000",
+    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000",
         "WORD,NUMBER,TERMINAL_MARK", Integer.toString(ngramLength, 10)};
     Vocabulary.main(args);
 
@@ -359,10 +374,16 @@ public class VocabularyTest {
     }
   }
 
-  private Vocabulary partialVocabulary() {
+  private Vocabulary partialVocabularyAsNumber() {
     View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
         .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
-    return Vocabulary.of(tokens, 1, 1, 10);
+    return Vocabulary.of(tokens, 0, 3, 10);
+  }
+
+  private Vocabulary partialVocabularyAsPercentage() {
+    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
+        .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
+    return Vocabulary.of(tokens, 0.01, 1.0, 10);
   }
 
   private Vocabulary fullVocabulary() {
