@@ -1,10 +1,14 @@
 package com.computablefacts.asterix.ml;
 
+import com.computablefacts.asterix.DocumentTest;
+import com.computablefacts.asterix.IO;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
+import com.computablefacts.asterix.codecs.JsonCodec;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
@@ -265,15 +269,105 @@ public class VocabularyTest {
     Assert.assertEquals(10, vocabulary.size());
   }
 
+  @Test
+  public void testCallCommandLineForUnigrams() throws Exception {
+
+    File file = Files.createTempFile("tmp-", "").toFile();
+    DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, true, true);
+
+    int ngramLength = 1;
+
+    File vocabCompressed = new File(
+        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+    File vocabDeompressed = new File(
+        String.format("%svocabulary-%d.tsv", file.getParent() + File.separator, ngramLength));
+
+    if (vocabCompressed.exists()) {
+      Assert.assertTrue(vocabCompressed.delete());
+    }
+    if (vocabDeompressed.exists()) {
+      Assert.assertTrue(vocabDeompressed.delete());
+    }
+
+    String[] args = new String[]{file.getAbsolutePath(), "5", "5", "1000",
+        "WORD,NUMBER,TERMINAL_MARK", Integer.toString(ngramLength, 10)};
+    Vocabulary.main(args);
+
+    Assert.assertTrue(vocabCompressed.exists());
+    Assert.assertFalse(vocabDeompressed.exists());
+    Assert.assertTrue(IO.gunzip(vocabCompressed, vocabDeompressed));
+    Assert.assertTrue(vocabDeompressed.exists());
+
+    List<String> lines = IO.readLines(vocabDeompressed);
+
+    Assert.assertEquals(1002, lines.size());
+    Assert.assertTrue(lines.get(0).matches("# \\d+ \\d+"));
+    Assert.assertEquals("idx\tnormalized_term\ttf\tdf\traw_terms", lines.get(1));
+    Assert.assertTrue(lines.get(2).matches("0\t<UNK>\t\\d+\t\\d+\t\\[.*\\]"));
+
+    for (int i = 3; i < lines.size(); i++) {
+
+      String line = lines.get(i);
+
+      Assert.assertTrue(
+          line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+\t\\[.*\\]"));
+    }
+  }
+
+  @Test
+  public void testCallCommandLineForBigrams() throws Exception {
+
+    File file = Files.createTempFile("tmp-", "").toFile();
+    DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, true, true);
+
+    int ngramLength = 2;
+
+    File vocabCompressed = new File(
+        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+    File vocabDeompressed = new File(
+        String.format("%svocabulary-%d.tsv", file.getParent() + File.separator, ngramLength));
+
+    if (vocabCompressed.exists()) {
+      Assert.assertTrue(vocabCompressed.delete());
+    }
+    if (vocabDeompressed.exists()) {
+      Assert.assertTrue(vocabDeompressed.delete());
+    }
+
+    String[] args = new String[]{file.getAbsolutePath(), "5", "5", "1000",
+        "WORD,NUMBER,TERMINAL_MARK", Integer.toString(ngramLength, 10)};
+    Vocabulary.main(args);
+
+    Assert.assertTrue(vocabCompressed.exists());
+    Assert.assertFalse(vocabDeompressed.exists());
+    Assert.assertTrue(IO.gunzip(vocabCompressed, vocabDeompressed));
+    Assert.assertTrue(vocabDeompressed.exists());
+
+    List<String> lines = IO.readLines(vocabDeompressed);
+
+    Assert.assertEquals(1002, lines.size());
+    Assert.assertTrue(lines.get(0).matches("# \\d+ \\d+"));
+    Assert.assertEquals("idx\tnormalized_term\ttf\tdf\traw_terms", lines.get(1));
+    Assert.assertTrue(lines.get(2).matches("0\t<UNK>\t\\d+\t\\d+\t\\[.*\\]"));
+
+    for (int i = 3; i < lines.size(); i++) {
+
+      String line = lines.get(i);
+
+      Assert.assertTrue(
+          line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+\t\\[.*\\]"));
+    }
+  }
+
   private Vocabulary partialVocabulary() {
-    View<List<String>> tokens = View.of(sentences()).map(new NormalizeText(true))
-        .map(new TokenizeText()).map(spans -> View.of(spans).map(Span::text).toList());
+    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
+        .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens, 1, 1, 10);
   }
 
   private Vocabulary fullVocabulary() {
-    View<List<String>> tokens = View.of(sentences()).map(new NormalizeText(true))
-        .map(new TokenizeText()).map(spans -> View.of(spans).map(Span::text).toList());
+    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
+        .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens);
   }
 
