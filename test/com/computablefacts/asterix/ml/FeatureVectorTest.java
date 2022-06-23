@@ -167,4 +167,15 @@ public class FeatureVectorTest {
 
     Assert.assertEquals(Lists.newArrayList(1, 3), vector.zeroes());
   }
+
+  @Test
+  public void testNormalizeUsingEuclideanNorm() {
+
+    double[] src = new double[]{0.0, 0.640, 0.0, 0.0, 0.845};
+    FeatureVector vector = new FeatureVector(src);
+    vector.normalizeUsingEuclideanNorm();
+
+    Assert.assertArrayEquals(new double[]{0.0, 0.604, 0.0, 0.0, 0.79}, vector.denseArray(),
+        0.01);
+  }
 }

@@ -133,4 +133,13 @@ final public class FeatureVector {
     }
     return zeroes;
   }
+
+  public void normalizeUsingEuclideanNorm() {
+
+    double normalizer = Math.sqrt(nonZeroEntries_.values().stream().mapToDouble(x -> x * x).sum());
+
+    for (Map.Entry<Integer, Double> entry : nonZeroEntries_.entrySet()) {
+      entry.setValue(entry.getValue() / normalizer);
+    }
+  }
 }
