@@ -1,7 +1,6 @@
 package com.computablefacts.asterix.ml;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Assert;
@@ -105,58 +104,6 @@ public class FeatureVectorTest {
     Assert.assertEquals(2.0, vector.get(2), 0.0);
     Assert.assertEquals(-1.0, vector.get(3), 0.0);
     Assert.assertEquals(4.0, vector.get(4), 0.0);
-  }
-
-  @Test
-  public void testRemove() {
-
-    double[] array = new double[]{1.0, 0.0, 3.0, 0.0, 5.0};
-    FeatureVector vector = new FeatureVector(array);
-
-    Assert.assertFalse(vector.isEmpty());
-    Assert.assertEquals(5, vector.length());
-    Assert.assertEquals(1.0, vector.get(0), 0.0);
-    Assert.assertEquals(0.0, vector.get(1), 0.0);
-    Assert.assertEquals(3.0, vector.get(2), 0.0);
-    Assert.assertEquals(0.0, vector.get(3), 0.0);
-    Assert.assertEquals(5.0, vector.get(4), 0.0);
-
-    vector.remove(0);
-    vector.remove(2);
-    vector.remove(4);
-
-    Assert.assertTrue(vector.isEmpty());
-    Assert.assertEquals(5, vector.length());
-    Assert.assertEquals(0.0, vector.get(0), 0.0);
-    Assert.assertEquals(0.0, vector.get(1), 0.0);
-    Assert.assertEquals(0.0, vector.get(2), 0.0);
-    Assert.assertEquals(0.0, vector.get(3), 0.0);
-    Assert.assertEquals(0.0, vector.get(4), 0.0);
-  }
-
-  @Test
-  public void testRemoveAll() {
-
-    double[] array = new double[]{1.0, 0.0, 3.0, 0.0, 5.0};
-    FeatureVector vector = new FeatureVector(array);
-
-    Assert.assertFalse(vector.isEmpty());
-    Assert.assertEquals(5, vector.length());
-    Assert.assertEquals(1.0, vector.get(0), 0.0);
-    Assert.assertEquals(0.0, vector.get(1), 0.0);
-    Assert.assertEquals(3.0, vector.get(2), 0.0);
-    Assert.assertEquals(0.0, vector.get(3), 0.0);
-    Assert.assertEquals(5.0, vector.get(4), 0.0);
-
-    vector.remove(Sets.newHashSet(0, 2, 4));
-
-    Assert.assertTrue(vector.isEmpty());
-    Assert.assertEquals(5, vector.length());
-    Assert.assertEquals(0.0, vector.get(0), 0.0);
-    Assert.assertEquals(0.0, vector.get(1), 0.0);
-    Assert.assertEquals(0.0, vector.get(2), 0.0);
-    Assert.assertEquals(0.0, vector.get(3), 0.0);
-    Assert.assertEquals(0.0, vector.get(4), 0.0);
   }
 
   @Test
