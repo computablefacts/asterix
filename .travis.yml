@@ -3,10 +3,10 @@ dist: xenial
 language: java
 jdk:
   - openjdk15
-addons:
-  apt:
-    packages:
-      - libmkl-dev
+before_install:
+  - echo "deb http://ppa.launchpad.net/system76/pop/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/mkl.list
+  - sudo apt-get -q update
+  - sudo apt-get -y install libmkl-dev
 install: "/bin/true"
 script:
   - mvn clean install -q -B
