@@ -3,9 +3,10 @@ dist: xenial
 language: java
 jdk:
   - openjdk15
-before_install:
-  - sudo apt-get -q update
-  - sudo apt-get -y install libmkl-dev
+addons:
+  apt:
+    packages:
+      - libmkl-dev
 install: "/bin/true"
 script:
   - mvn clean install -q -B
