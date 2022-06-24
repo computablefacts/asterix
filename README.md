@@ -126,7 +126,7 @@ Span span = sequence.span(1) // span456
 
 ### ConfusionMatrix
 
-A [ConfusionMatrix](src/com/computablefacts/asterix/ConfusionMatrix.java) is
+A [ConfusionMatrix](src/com/computablefacts/asterix/ml/ConfusionMatrix.java) is
 a tool to evaluate the accuracy of a classification. The following metrics are
 available :
 
