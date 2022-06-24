@@ -4,7 +4,7 @@ language: java
 jdk:
   - openjdk15
 before_install:
-  - echo "deb http://ppa.launchpad.net/system76/pop/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/mkl.list
+  - echo "deb http://us.archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages" | sudo tee /etc/apt/sources.list.d/mkl.list
   - sudo apt-get -q update
   - sudo apt-get -y install libmkl-dev
 install: "/bin/true"
