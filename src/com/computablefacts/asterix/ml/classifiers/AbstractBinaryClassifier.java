@@ -12,7 +12,7 @@ public interface AbstractBinaryClassifier {
 
   int predict(FeatureVector vector);
 
-  // actual values must be either 0 (in class) or 1 (not in class)
+  // actual values must be either 0 (not in class) or 1 (in class)
   void train(List<FeatureVector> vectors, int[] actuals);
 
   void update(FeatureVector vector, int actual);
