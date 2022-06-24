@@ -77,7 +77,7 @@ public abstract class AbstractBinaryClassifierTest {
 
   protected abstract AbstractBinaryClassifier classifier();
 
-  private FeatureVector vector(int i) {
+  protected FeatureVector vector(int i) {
     FeatureVector vector = new FeatureVector(2);
     vector.set(0, i % 2);
     vector.set(1, 1 - i % 2); // ensure at least one non-zero entry
