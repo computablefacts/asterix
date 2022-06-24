@@ -44,9 +44,6 @@
     <guava.version>29.0-jre</guava.version>
     <re2j.version>1.2</re2j.version>
     <smile.version>2.6.0</smile.version>
-    <javacpp.version>1.5.4</javacpp.version>
-    <openblas.version>0.3.10-1.5.4</openblas.version>
-    <arpack.version>3.7.0-1.5.4</arpack.version>
     <jsonflattener.version>0.12.0</jsonflattener.version>
     <jackson-dataformat-csv.version>2.12.0</jackson-dataformat-csv.version>
     <equalsverifier.version>3.4.2</equalsverifier.version>
@@ -76,20 +73,11 @@
       <artifactId>smile-core</artifactId>
       <version>${smile.version}</version>
     </dependency>
+    <!-- sudo apt install libmkl-dev -->
     <dependency>
-      <groupId>org.bytedeco</groupId>
-      <artifactId>javacpp-platform</artifactId>
-      <version>${javacpp.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.bytedeco</groupId>
-      <artifactId>openblas-platform</artifactId>
-      <version>${openblas.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.bytedeco</groupId>
-      <artifactId>arpack-ng-platform</artifactId>
-      <version>${arpack.version}</version>
+      <groupId>com.github.haifengl</groupId>
+      <artifactId>smile-mkl</artifactId>
+      <version>${smile.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
