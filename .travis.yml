@@ -4,7 +4,7 @@ language: java
 jdk:
   - openjdk15
 before_install:
-  - echo "deb http://us.archive.ubuntu.com/ubuntu jammy/multiverse amd64" | sudo tee /etc/apt/sources.list.d/mkl.list
+  - echo "deb http://us.archive.ubuntu.com/ubuntu jammy/multiverse" | sudo tee /etc/apt/sources.list.d/mkl.list
   - sudo apt-get -q update
   - sudo apt-get -y install libmkl-dev
 install: "/bin/true"
