@@ -9,6 +9,11 @@
 
 set -e
 
+# https://www.gnupg.org/documentation/manuals/gnupg/Invoking-GPG_002dAGENT.html
+# https://unix.stackexchange.com/questions/257061/gentoo-linux-gpg-encrypts-properly-a-file-passed-through-parameter-but-throws-i/257065#257065
+# https://github.com/keybase/keybase-issues/issues/2798
+GPG_TTY=$(tty)
+
 echo "Checking environment variables..."
 
 if [ -z "$OSSRH_USERNAME" ]; then
