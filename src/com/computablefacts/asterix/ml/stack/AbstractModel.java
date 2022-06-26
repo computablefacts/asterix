@@ -10,14 +10,14 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
 
 @CheckReturnValue
-public abstract class BaseStack implements AbstractStack {
+public abstract class AbstractModel implements AbstractStack {
 
   private final String label_;
   private final ConfusionMatrix confusionMatrix_ = new ConfusionMatrix();
   private FeatureVector actuals_;
   private FeatureVector predictions_;
 
-  public BaseStack(String label) {
+  public AbstractModel(String label) {
 
     Preconditions.checkNotNull(label, "label should not be null");
 

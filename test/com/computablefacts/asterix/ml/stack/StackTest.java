@@ -105,7 +105,7 @@ public class StackTest {
   }
 
   @CheckReturnValue
-  private static class IsDivisibleByFive extends BaseStack {
+  private static class IsDivisibleByFive extends AbstractModel {
 
     private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
 
@@ -124,7 +124,7 @@ public class StackTest {
   }
 
   @CheckReturnValue
-  private static class IsDivisibleByThree extends BaseStack {
+  private static class IsDivisibleByThree extends AbstractModel {
 
     private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
 
@@ -143,7 +143,7 @@ public class StackTest {
   }
 
   @CheckReturnValue
-  private static class IsDivisibleByTwo extends BaseStack {
+  private static class IsDivisibleByTwo extends AbstractModel {
 
     private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
 
