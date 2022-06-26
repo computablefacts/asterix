@@ -33,9 +33,9 @@ public abstract class AbstractBinaryClassifierTest {
     classifier.train(train, actuals);
 
     for (int i = 100; i < 1000; i++) {
-      System.out.println(
-          "[CLASSIFY] i=" + i + ", expected=" + (i % 2 == 0 ? EVEN : ODD) + ", actual="
-              + classifier.predict(vector(i)));
+      //System.out.println(
+      //  "[CLASSIFY] i=" + i + ", expected=" + (i % 2 == 0 ? EVEN : ODD) + ", actual="
+      //    + classifier.predict(vector(i)));
       Assert.assertEquals(i % 2 == 0 ? EVEN : ODD, classifier.predict(vector(i)));
     }
   }
@@ -61,9 +61,9 @@ public abstract class AbstractBinaryClassifierTest {
       }
 
       for (int i = 200; i < 1000; i++) {
-        System.out.println(
-            "[UPDATE] i=" + i + ", expected=" + (i % 2 == 0 ? EVEN : ODD) + ", actual="
-                + classifier.predict(vector(i)));
+        //System.out.println(
+        //  "[UPDATE] i=" + i + ", expected=" + (i % 2 == 0 ? EVEN : ODD) + ", actual="
+        //    + classifier.predict(vector(i)));
         Assert.assertEquals(i % 2 == 0 ? EVEN : ODD, classifier.predict(vector(i)));
       }
     } else {
