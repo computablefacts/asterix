@@ -21,42 +21,7 @@ import org.junit.Test;
 
 public class FactAndDocumentTest {
 
-  @Test
-  public void testHashcodeAndEquals() {
-    EqualsVerifier.forClass(FactAndDocument.class).suppress(Warning.NONFINAL_FIELDS).verify();
-  }
-
-  @Test
-  public void testMain() throws Exception {
-
-    File facts = facts();
-    String[] args = new String[]{facts.getAbsolutePath(), documents().getAbsolutePath()};
-    FactAndDocument.main(args);
-
-    List<FactAndDocument> fads = FactAndDocument.load(new File(
-            String.format("%sfacts_and_documents.jsonl.gz", facts.getParent() + File.separator)), null)
-        .toList();
-
-    Assert.assertEquals(39, fads.size());
-    Assert.assertEquals(39,
-        FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
-    Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(335, FactAndDocument.syntheticGoldLabels(View.of(fads)).toList().size());
-  }
-
-  @Test
-  public void testMergeThenSaveThenLoad() throws Exception {
-
-    List<FactAndDocument> fads = FactAndDocument.load(factsAndDocuments(), null).toList();
-
-    Assert.assertEquals(39, fads.size());
-    Assert.assertEquals(39,
-        FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
-    Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(335, FactAndDocument.syntheticGoldLabels(View.of(fads)).toList().size());
-  }
-
-  private File factsAndDocuments() throws Exception {
+  public static File factsAndDocuments() throws Exception {
 
     File dataset = new File(
         Files.createTempDirectory("").toFile().getAbsolutePath() + File.separator
@@ -66,7 +31,7 @@ public class FactAndDocumentTest {
     return dataset;
   }
 
-  private File facts() throws Exception {
+  private static File facts() throws Exception {
 
     File facts = java.nio.file.Files.createTempFile("facts-", ".jsonl.gz").toFile();
 
@@ -103,7 +68,7 @@ public class FactAndDocumentTest {
     return facts;
   }
 
-  private File documents() throws Exception {
+  private static File documents() throws Exception {
 
     File documents = java.nio.file.Files.createTempFile("documents-", ".jsonl.gz").toFile();
 
@@ -117,7 +82,8 @@ public class FactAndDocumentTest {
     return documents;
   }
 
-  private Map<String, Object> newFact(int id, String type, String docId, int page, String span) {
+  private static Map<String, Object> newFact(int id, String type, String docId, int page,
+      String span) {
 
     List<String> values = Lists.newArrayList("ref0", "ref1", Integer.toString(page, 10));
 
@@ -149,5 +115,40 @@ public class FactAndDocumentTest {
     fact.put("provenances", Lists.newArrayList(provenance));
 
     return fact;
+  }
+
+  @Test
+  public void testHashcodeAndEquals() {
+    EqualsVerifier.forClass(FactAndDocument.class).suppress(Warning.NONFINAL_FIELDS).verify();
+  }
+
+  @Test
+  public void testMain() throws Exception {
+
+    File facts = facts();
+    String[] args = new String[]{facts.getAbsolutePath(), documents().getAbsolutePath()};
+    FactAndDocument.main(args);
+
+    List<FactAndDocument> fads = FactAndDocument.load(new File(
+            String.format("%sfacts_and_documents.jsonl.gz", facts.getParent() + File.separator)), null)
+        .toList();
+
+    Assert.assertEquals(39, fads.size());
+    Assert.assertEquals(39,
+        FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
+    Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(335, FactAndDocument.syntheticGoldLabels(View.of(fads)).toList().size());
+  }
+
+  @Test
+  public void testMergeThenSaveThenLoad() throws Exception {
+
+    List<FactAndDocument> fads = FactAndDocument.load(factsAndDocuments(), null).toList();
+
+    Assert.assertEquals(39, fads.size());
+    Assert.assertEquals(39,
+        FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
+    Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(335, FactAndDocument.syntheticGoldLabels(View.of(fads)).toList().size());
   }
 }
