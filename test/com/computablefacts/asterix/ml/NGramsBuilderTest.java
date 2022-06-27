@@ -32,6 +32,19 @@ public class NGramsBuilderTest {
     Assert.assertEquals("visited home page", spans.span(10).text());
     Assert.assertEquals("home page.", spans.span(11).text());
 
+    Assert.assertEquals("Welcome_to_Yahoo", spans.span(0).getFeature("NGRAM"));
+    Assert.assertEquals("to_Yahoo_!", spans.span(1).getFeature("NGRAM"));
+    Assert.assertEquals("Yahoo_!_,", spans.span(2).getFeature("NGRAM"));
+    Assert.assertEquals("!_,_the", spans.span(3).getFeature("NGRAM"));
+    Assert.assertEquals(",_the_world", spans.span(4).getFeature("NGRAM"));
+    Assert.assertEquals("the_world_’", spans.span(5).getFeature("NGRAM"));
+    Assert.assertEquals("world_’_s", spans.span(6).getFeature("NGRAM"));
+    Assert.assertEquals("’_s_most", spans.span(7).getFeature("NGRAM"));
+    Assert.assertEquals("s_most_visited", spans.span(8).getFeature("NGRAM"));
+    Assert.assertEquals("most_visited_home", spans.span(9).getFeature("NGRAM"));
+    Assert.assertEquals("visited_home_page", spans.span(10).getFeature("NGRAM"));
+    Assert.assertEquals("home_page_.", spans.span(11).getFeature("NGRAM"));
+
     Assert.assertTrue(spans.span(0).tags().isEmpty());
     Assert.assertTrue(spans.span(1).tags().isEmpty());
     Assert.assertTrue(spans.span(2).tags().isEmpty());

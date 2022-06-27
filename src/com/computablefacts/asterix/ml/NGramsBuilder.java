@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @CheckReturnValue
@@ -32,6 +33,7 @@ public class NGramsBuilder implements Function<SpanSequence, SpanSequence> {
       int first = ngram.get(0).begin();
       int last = ngram.get(ngram.size() - 1).end();
       Span newSpan = new Span(ngram.get(0).rawText(), first, last);
+      newSpan.setFeature("NGRAM", ngram.stream().map(Span::text).collect(Collectors.joining("_")));
       addMoreTags(newSpan, ngram);
       addMoreFeatures(newSpan, ngram);
       newSpans.add(newSpan);
