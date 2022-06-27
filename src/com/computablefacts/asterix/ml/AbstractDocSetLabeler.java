@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -21,9 +22,9 @@ import javax.validation.constraints.NotNull;
  * Visual Analytics for Large Document Sets" by Arun S. Maiya and Robert M. Rolfe.
  */
 @CheckReturnValue
-public abstract class DocSetLabeler {
+public abstract class AbstractDocSetLabeler {
 
-  protected DocSetLabeler() {
+  protected AbstractDocSetLabeler() {
   }
 
   /**
@@ -49,8 +50,8 @@ public abstract class DocSetLabeler {
     double positive = nbPosDocs / nbDocs;
     double negative = nbNegDocs / nbDocs;
 
-    return (positive == 0.0 ? 0.0 : -positive * log2(positive))
-        + (negative == 0.0 ? 0.0 : -negative * log2(negative));
+    return (positive == 0.0 ? 0.0 : -positive * log2(positive)) + (negative == 0.0 ? 0.0
+        : -negative * log2(negative));
   }
 
   static double log2(double a) {
@@ -89,10 +90,10 @@ public abstract class DocSetLabeler {
     double nbCandidateMatchInDocs = nbCandidateMatchInPosDocs + nbCandidateMatchInNegDocs;
 
     double h = entropy(nbDocs, nbCandidateMatchInDocs, nbDocs - nbCandidateMatchInDocs);
-    double hPos =
-        entropy(nbPosDocs, nbCandidateMatchInPosDocs, nbPosDocs - nbCandidateMatchInPosDocs);
-    double hNeg =
-        entropy(nbNegDocs, nbCandidateMatchInNegDocs, nbNegDocs - nbCandidateMatchInNegDocs);
+    double hPos = entropy(nbPosDocs, nbCandidateMatchInPosDocs,
+        nbPosDocs - nbCandidateMatchInPosDocs);
+    double hNeg = entropy(nbNegDocs, nbCandidateMatchInNegDocs,
+        nbNegDocs - nbCandidateMatchInNegDocs);
 
     return h - ((nbPosDocs / nbDocs) * hPos + (nbNegDocs / nbDocs) * hNeg);
   }
@@ -138,8 +139,7 @@ public abstract class DocSetLabeler {
       Map<String, Set<String>> neg, Set<String> contenders) {
 
     double informationGain = informationGain(candidate, pos, neg);
-    @Var
-    double intrinsicValue = 0.0d;
+    @Var double intrinsicValue = 0.0d;
 
     for (String challenger : contenders) {
       intrinsicValue += intrinsicValue(challenger, pos, neg);
@@ -159,9 +159,9 @@ public abstract class DocSetLabeler {
    * @param nbLabelsToReturn the number of labels to return.
    * @return labels and scores.
    */
-  public List<Map.Entry<String, Double>> label(List<String> corpus, List<String> subsetOk,
+  public List<Map.Entry<String, Double>> labels(List<String> corpus, List<String> subsetOk,
       List<String> subsetKo, int nbCandidatesToConsider, int nbLabelsToReturn) {
-    return label(corpus, subsetOk, subsetKo, nbCandidatesToConsider, nbLabelsToReturn, false);
+    return labels(corpus, subsetOk, subsetKo, nbCandidatesToConsider, nbLabelsToReturn, false);
   }
 
   /**
@@ -177,7 +177,7 @@ public abstract class DocSetLabeler {
    * @param withProgressBar true iif a progress bar must be displayed, false otherwise.
    * @return labels and scores.
    */
-  public List<Map.Entry<String, Double>> label(List<String> corpus, List<String> subsetOk,
+  public List<Map.Entry<String, Double>> labels(List<String> corpus, List<String> subsetOk,
       List<String> subsetKo, int nbCandidatesToConsider, int nbLabelsToReturn,
       boolean withProgressBar) {
 
@@ -195,16 +195,14 @@ public abstract class DocSetLabeler {
 
     init(corpus, subsetOk, subsetKo);
 
-    Comparator<Map.Entry<String, Double>> byScoreDesc =
-        Comparator.comparingDouble((Map.Entry<String, Double> pair) -> pair.getValue())
-            .thenComparingInt(pair -> pair.getKey().length()).thenComparing(pair -> pair.getKey())
-            .reversed();
+    Comparator<Map.Entry<String, Double>> byScoreDesc = Comparator.comparingDouble(
+            (Map.Entry<String, Double> pair) -> pair.getValue())
+        .thenComparingInt(pair -> pair.getKey().length()).thenComparing(Entry::getKey).reversed();
 
     Map<String, Set<String>> pos = new HashMap<>();
     Map<String, Set<String>> neg = new HashMap<>();
 
-    @Var
-    int nbTextsProcessed = 0;
+    @Var int nbTextsProcessed = 0;
     int nbTexts = corpus.size();
     AsciiProgressBar.ProgressBar bar = withProgressBar ? AsciiProgressBar.create() : null;
 
@@ -251,14 +249,14 @@ public abstract class DocSetLabeler {
     uinit();
 
     // For each candidate keyword compute the information gain
-    Set<String> contenders =
-        Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
-            neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+    Set<String> contenders = Sets.union(
+        pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
 
     List<Map.Entry<String, Double>> candidates = pos.values().stream().flatMap(Collection::stream)
         .map(candidate -> new AbstractMap.SimpleEntry<>(candidate,
-            calcScore(candidate, pos, neg, contenders)))
-        .sorted(byScoreDesc).distinct().collect(Collectors.toList());
+            calcScore(candidate, pos, neg, contenders))).sorted(byScoreDesc).distinct()
+        .collect(Collectors.toList());
 
     // Keep the keywords with the highest information gain
     return filter(candidates).stream().limit(nbLabelsToReturn).collect(Collectors.toList());
