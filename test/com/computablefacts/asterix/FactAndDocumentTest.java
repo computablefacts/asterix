@@ -22,10 +22,10 @@ import org.junit.Test;
 public class FactAndDocumentTest {
 
   public static File factsAndDocuments() throws Exception {
-
-    File dataset = new File(
-        Files.createTempDirectory("").toFile().getAbsolutePath() + File.separator
-            + "facts-and-documents.jsonl.gz");
+    
+    // Use a random directory because FactAndDocument.main() uses it
+    String path = Files.createTempDirectory("").toFile().getAbsolutePath();
+    File dataset = new File(path + File.separator + "facts-and-documents.jsonl.gz");
     FactAndDocument.save(dataset, FactAndDocument.merge(facts(), documents(), null));
 
     return dataset;
@@ -33,7 +33,9 @@ public class FactAndDocumentTest {
 
   private static File facts() throws Exception {
 
-    File facts = java.nio.file.Files.createTempFile("facts-", ".jsonl.gz").toFile();
+    // Use a random directory because FactAndDocument.main() uses it
+    String path = Files.createTempDirectory("").toFile().getAbsolutePath();
+    File facts = new File(path + File.separator + "facts.jsonl.gz");
 
     DocumentTest.papers().index().flatten(e -> {
 
@@ -70,7 +72,9 @@ public class FactAndDocumentTest {
 
   private static File documents() throws Exception {
 
-    File documents = java.nio.file.Files.createTempFile("documents-", ".jsonl.gz").toFile();
+    // Use a random directory because FactAndDocument.main() uses it
+    String path = Files.createTempDirectory("").toFile().getAbsolutePath();
+    File documents = new File(path + File.separator + "documents.jsonl.gz");
 
     DocumentTest.papers().map(doc -> {
 
