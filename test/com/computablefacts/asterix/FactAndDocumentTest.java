@@ -22,7 +22,7 @@ import org.junit.Test;
 public class FactAndDocumentTest {
 
   public static File factsAndDocuments() throws Exception {
-    
+
     // Use a random directory because FactAndDocument.main() uses it
     String path = Files.createTempDirectory("").toFile().getAbsolutePath();
     File dataset = new File(path + File.separator + "facts-and-documents.jsonl.gz");
@@ -65,7 +65,7 @@ public class FactAndDocumentTest {
         }
       }
       return View.of(factz);
-    }).toFile(JsonCodec::asString, facts, true, true);
+    }).toFile(JsonCodec::asString, facts, false, true);
 
     return facts;
   }
@@ -81,7 +81,7 @@ public class FactAndDocumentTest {
       Map<String, Object> json = doc.json();
       json.put(ID_MAGIC_KEY, doc.docId());
       return json;
-    }).toFile(JsonCodec::asString, documents, true, true);
+    }).toFile(JsonCodec::asString, documents, false, true);
 
     return documents;
   }
@@ -133,9 +133,9 @@ public class FactAndDocumentTest {
     String[] args = new String[]{facts.getAbsolutePath(), documents().getAbsolutePath()};
     FactAndDocument.main(args);
 
-    List<FactAndDocument> fads = FactAndDocument.load(new File(
-            String.format("%sfacts_and_documents.jsonl.gz", facts.getParent() + File.separator)), null)
-        .toList();
+    String path = facts.getParent();
+    List<FactAndDocument> fads = FactAndDocument.load(
+        new File(path + File.separator + "facts_and_documents.jsonl.gz"), null).toList();
 
     Assert.assertEquals(39, fads.size());
     Assert.assertEquals(39,
