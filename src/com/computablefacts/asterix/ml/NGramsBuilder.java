@@ -29,7 +29,7 @@ public class NGramsBuilder implements Function<SpanSequence, SpanSequence> {
 
     SpanSequence newSpans = new SpanSequence();
 
-    View.of(spans).overlappingWindow(length_).forEachRemaining(ngram -> {
+    View.of(spans).overlappingWindowWithStrictLength(length_).forEachRemaining(ngram -> {
       int first = ngram.get(0).begin();
       int last = ngram.get(ngram.size() - 1).end();
       Span newSpan = new Span(ngram.get(0).rawText(), first, last);

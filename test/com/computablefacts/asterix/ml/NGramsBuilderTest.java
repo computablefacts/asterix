@@ -11,7 +11,7 @@ public class NGramsBuilderTest {
 
     SpanSequence spans = new NGramsBuilder(3).apply(new TextTokenizer().apply(text()));
 
-    Assert.assertEquals(86, spans.size());
+    Assert.assertEquals(84, spans.size());
 
     for (int i = 0; i < spans.size(); i++) {
       System.out.println(
