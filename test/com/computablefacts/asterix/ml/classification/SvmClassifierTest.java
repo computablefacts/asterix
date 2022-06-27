@@ -1,9 +1,9 @@
-package com.computablefacts.asterix.ml.classifiers;
+package com.computablefacts.asterix.ml.classification;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class KNearestNeighborsClassifierTest extends AbstractBinaryClassifierTest {
+public class SvmClassifierTest extends AbstractBinaryClassifierTest {
 
   @Test
   public void testSupportsIncrementalTraining() {
@@ -12,6 +12,6 @@ public class KNearestNeighborsClassifierTest extends AbstractBinaryClassifierTes
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new KNearestNeighborClassifier();
+    return new SvmClassifier();
   }
 }

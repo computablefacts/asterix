@@ -1,9 +1,9 @@
-package com.computablefacts.asterix.ml.classifiers;
+package com.computablefacts.asterix.ml.classification;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class MultiLayerPerceptronClassifierTest extends AbstractBinaryClassifierTest {
+public class DiscreteNaiveBayesClassifierTest extends AbstractBinaryClassifierTest {
 
   @Test
   public void testSupportsIncrementalTraining() {
@@ -12,6 +12,6 @@ public class MultiLayerPerceptronClassifierTest extends AbstractBinaryClassifier
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new MultiLayerPerceptronClassifier();
+    return new DiscreteNaiveBayesClassifier();
   }
 }

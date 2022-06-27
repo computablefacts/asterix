@@ -1,18 +1,18 @@
-package com.computablefacts.asterix.ml.classifiers;
+package com.computablefacts.asterix.ml.classification;
 
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
-import smile.classification.KNN;
+import smile.classification.FLD;
 
 @CheckReturnValue
-final public class KNearestNeighborClassifier implements AbstractBinaryClassifier {
+final public class FisherLinearDiscriminantClassifier implements AbstractBinaryClassifier {
 
-  private KNN<double[]> classifier_;
+  private FLD classifier_;
 
-  public KNearestNeighborClassifier() {
+  public FisherLinearDiscriminantClassifier() {
   }
 
   @Override
@@ -38,12 +38,12 @@ final public class KNearestNeighborClassifier implements AbstractBinaryClassifie
       newVectors[i] = vectors.get(i).denseArray();
     }
 
-    classifier_ = KNN.fit(newVectors, actuals);
+    classifier_ = FLD.fit(newVectors, actuals);
   }
 
   @Override
   public void update(FeatureVector vector, int actual) {
-    throw new NotImplementedException("KNN classifier cannot be incrementally trained");
+    throw new NotImplementedException("FLD classifier cannot be incrementally trained");
   }
 
   @Override

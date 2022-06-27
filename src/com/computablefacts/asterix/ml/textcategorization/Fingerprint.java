@@ -1,4 +1,4 @@
-package com.computablefacts.asterix.ml.textcat;
+package com.computablefacts.asterix.ml.textcategorization;
 
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;

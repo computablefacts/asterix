@@ -1,9 +1,9 @@
-package com.computablefacts.asterix.ml.classifiers;
+package com.computablefacts.asterix.ml.classification;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DiscreteNaiveBayesClassifierTest extends AbstractBinaryClassifierTest {
+public class LogisticRegressionClassifierTest extends AbstractBinaryClassifierTest {
 
   @Test
   public void testSupportsIncrementalTraining() {
@@ -12,6 +12,6 @@ public class DiscreteNaiveBayesClassifierTest extends AbstractBinaryClassifierTe
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new DiscreteNaiveBayesClassifier();
+    return new LogisticRegressionClassifier();
   }
 }

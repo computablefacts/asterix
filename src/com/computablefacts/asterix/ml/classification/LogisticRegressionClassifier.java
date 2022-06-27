@@ -1,4 +1,4 @@
-package com.computablefacts.asterix.ml.classifiers;
+package com.computablefacts.asterix.ml.classification;
 
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;

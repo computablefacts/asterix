@@ -1,4 +1,4 @@
-package com.computablefacts.asterix.ml.stack;
+package com.computablefacts.asterix.ml.stacking;
 
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;

@@ -1,9 +1,9 @@
-package com.computablefacts.asterix.ml.classifiers;
+package com.computablefacts.asterix.ml.classification;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class LogisticRegressionClassifierTest extends AbstractBinaryClassifierTest {
+public class MultiLayerPerceptronClassifierTest extends AbstractBinaryClassifierTest {
 
   @Test
   public void testSupportsIncrementalTraining() {
@@ -12,6 +12,6 @@ public class LogisticRegressionClassifierTest extends AbstractBinaryClassifierTe
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new LogisticRegressionClassifier();
+    return new MultiLayerPerceptronClassifier();
   }
 }

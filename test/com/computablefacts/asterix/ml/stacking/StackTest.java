@@ -1,10 +1,10 @@
-package com.computablefacts.asterix.ml.stack;
+package com.computablefacts.asterix.ml.stacking;
 
-import static com.computablefacts.asterix.ml.classifiers.AbstractBinaryClassifier.KO;
-import static com.computablefacts.asterix.ml.classifiers.AbstractBinaryClassifier.OK;
+import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
+import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
 import com.computablefacts.asterix.ml.FeatureVector;
-import com.computablefacts.asterix.ml.classifiers.LogisticRegressionClassifier;
+import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifier;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.ArrayList;

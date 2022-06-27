@@ -1,4 +1,4 @@
-package com.computablefacts.asterix.ml.textcat;
+package com.computablefacts.asterix.ml.textcategorization;
 
 import com.google.common.collect.Lists;
 import java.util.List;
