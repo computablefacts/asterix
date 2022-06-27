@@ -66,7 +66,10 @@ final public class AndStack implements AbstractStack {
 
   @Override
   public int predict(FeatureVector vector) {
-    return reduce(leftStack_.predict(vector), rightStack_.predict(vector));
+    if (leftStack_.predict(vector) == KO) {
+      return KO;
+    }
+    return rightStack_.predict(vector);
   }
 
   private int reduce(int prediction1, int prediction2) {
