@@ -127,7 +127,7 @@ public class FactAndDocumentTest {
   }
 
   @Test
-  public void testMain() throws Exception {
+  public void testCallCommandLine() throws Exception {
 
     File facts = facts();
     String[] args = new String[]{facts.getAbsolutePath(), documents().getAbsolutePath()};
