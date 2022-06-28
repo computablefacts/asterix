@@ -2,18 +2,22 @@ package com.computablefacts.asterix.ml.textcategorization;
 
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
+import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.TextTokenizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.io.File;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 /**
  * A {@link  Fingerprint} maps so called NGrams to their number of occurrences in the corresponding
@@ -42,6 +46,24 @@ final public class Fingerprint {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    Fingerprint other = (Fingerprint) obj;
+    return Objects.equals(category_, other.category_) && Objects.equals(ngrams_, other.ngrams_)
+        && Objects.equals(entries_, other.entries_);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(category_, ngrams_, entries_);
+  }
+
+  @Override
   public String toString() {
 
     StringBuilder builder = new StringBuilder();
@@ -50,6 +72,34 @@ final public class Fingerprint {
       builder.append(ngram.getElement()).append("\t").append(ngram.getCount()).append("\n");
     }
     return builder.toString();
+  }
+
+  public void save(File file) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
+
+    View.of(entries_).map(ngram -> ngram.getElement() + "\t" + ngram.getCount())
+        .toFile(Function.identity(), file, false, true);
+  }
+
+  public void load(File file) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
+
+    ngrams_.clear();
+    entries_.clear();
+    View.of(file, true).forEachRemaining(row -> {
+
+      int index = row.lastIndexOf('\t');
+      String ngram = row.substring(0, index);
+      int count = Integer.parseInt(row.substring(index + 1), 10);
+
+      ngrams_.add(ngram, count);
+    });
+
+    entries_.addAll(ngrams_.entrySet());
   }
 
   public String category() {

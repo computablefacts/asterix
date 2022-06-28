@@ -1,12 +1,20 @@
 package com.computablefacts.asterix.ml.textcategorization;
 
 import com.google.common.collect.Lists;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class FingerprintTest {
+
+  @Test
+  public void testEqualsAndHashCode() {
+    EqualsVerifier.forClass(Fingerprint.class).suppress(Warning.NONFINAL_FIELDS).verify();
+  }
 
   @Test
   public void testCopyConstructor() {
@@ -101,6 +109,29 @@ public class FingerprintTest {
             + "_einf\t1\n" + "_gehe\t1\n" + "_sage\t1\n" + "efon_\t1\n" + "einfa\t1\n"
             + "elefo\t1\n" + "fach_\t1\n" + "gehe_\t1\n" + "infac\t1\n" + "lefon\t1\n"
             + "nfach\t1\n" + "sage_\t1\n", fp.toString());
+  }
+
+  @Test
+  public void testSaveThenLoad() throws Exception {
+
+    Fingerprint fp1 = new Fingerprint();
+    fp1.category("EN");
+    sentencesEn().forEach(fp1::add);
+
+    String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
+    File file = new File(path + File.separator + "fingerprint.tsv.gz");
+    fp1.save(file);
+
+    Assert.assertTrue(file.exists());
+
+    Fingerprint fp2 = new Fingerprint();
+    fp2.load(file);
+
+    Assert.assertNotEquals(fp1, fp2);
+
+    fp2.category("EN");
+
+    Assert.assertEquals(fp1, fp2);
   }
 
   private List<String> sentencesEn() {
