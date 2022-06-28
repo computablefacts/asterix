@@ -289,7 +289,7 @@ public class VocabularyTest {
 
     String path = Files.createTempDirectory("").toFile().getAbsolutePath();
     File file = new File(path + File.separator + "papers.jsonl.gz");
-    DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, true, true);
+    DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, false, true);
 
     int ngramLength = 1;
 
@@ -335,7 +335,7 @@ public class VocabularyTest {
 
     String path = Files.createTempDirectory("").toFile().getAbsolutePath();
     File file = new File(path + File.separator + "papers.jsonl.gz");
-    DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, true, true);
+    DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, false, true);
 
     int ngramLength = 2;
 
