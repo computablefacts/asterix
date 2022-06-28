@@ -8,12 +8,14 @@ import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.GoldLabel;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@link TextCategorizer} is able to categorize texts by computing the similarity of the
@@ -31,7 +33,6 @@ final public class TextCategorizer {
    * Build a {@link TextCategorizer} from a set of gold labels.
    * <ul>
    * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
-   * <li>{@code args[1]} the category to load.</li>
    * </ul>
    */
   @Beta
@@ -39,28 +40,43 @@ final public class TextCategorizer {
   public static void main(String[] args) {
 
     File file = new File(args[0]);
-    String label = args.length == 2 ? args[1] : null;
+
+    Preconditions.checkArgument(file.exists(), "missing gold labels: %s", file);
+
+    System.out.printf("Gold labels dataset is %s\n", file);
+    System.out.println("Creating fingerprints...");
+
+    Stopwatch stopwatch = Stopwatch.createStarted();
     Map<String, Fingerprint> categories = new HashMap<>();
 
-    GoldLabel.load(file, label).filter(gl -> gl.isTruePositive() || gl.isFalseNegative())
-        .forEachRemaining(gl -> {
+    GoldLabel.load(file, null).displayProgress(500)
+        .filter(gl -> gl.isTruePositive() || gl.isFalseNegative()).forEachRemaining(gl -> {
 
           String lbl = gl.label();
 
           if (!categories.containsKey(lbl)) {
+
             Fingerprint fingerprint = new Fingerprint();
             fingerprint.category(lbl);
+
             categories.put(lbl, fingerprint);
           }
           categories.get(lbl).add(gl.data());
         });
 
+    stopwatch.stop();
+
+    System.out.printf("Fingerprints created in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+    System.out.println("Initializing text categorizer...");
+
     TextCategorizer categorizer = new TextCategorizer();
     categories.values().forEach(categorizer::add);
 
+    System.out.println("Text categorizer initialized.");
+
     ConfusionMatrix confusionMatrix = new ConfusionMatrix();
 
-    GoldLabel.load(file, label).forEachRemaining(gl -> {
+    GoldLabel.load(file, null).displayProgress(500).forEachRemaining(gl -> {
 
       String actual = gl.label();
       int act = gl.isTruePositive() || gl.isFalseNegative() ? OK : KO;
