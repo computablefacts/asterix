@@ -287,7 +287,8 @@ public class VocabularyTest {
   @Test
   public void testCallCommandLineForUnigrams() throws Exception {
 
-    File file = Files.createTempFile("tmp-", "").toFile();
+    String path = Files.createTempDirectory("").toFile().getAbsolutePath();
+    File file = new File(path + File.separator + "papers.jsonl.gz");
     DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, true, true);
 
     int ngramLength = 1;
@@ -332,7 +333,8 @@ public class VocabularyTest {
   @Test
   public void testCallCommandLineForBigrams() throws Exception {
 
-    File file = Files.createTempFile("tmp-", "").toFile();
+    String path = Files.createTempDirectory("").toFile().getAbsolutePath();
+    File file = new File(path + File.separator + "papers.jsonl.gz");
     DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, true, true);
 
     int ngramLength = 2;
