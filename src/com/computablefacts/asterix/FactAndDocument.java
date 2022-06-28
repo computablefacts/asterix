@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -209,12 +210,27 @@ public final class FactAndDocument {
    * @param facts a set of facts and documents.
    * @return a set of gold labels.
    */
-  public static View<GoldLabel> syntheticGoldLabels(View<FactAndDocument> facts) {
+  public static View<GoldLabel> syntheticPagesAsGoldLabels(View<FactAndDocument> facts) {
 
     Preconditions.checkNotNull(facts, "facts should not be null");
 
     return facts.filter(FactAndDocument::isAccepted)
-        .flatten(fact -> View.of(fact.syntheticGoldLabels()));
+        .flatten(fact -> View.of(fact.syntheticPagesAsGoldLabels()));
+  }
+
+  /**
+   * For each accepted fact returns a single random span from each unmatched pages as 'true
+   * negative' gold labels.
+   *
+   * @param facts a set of facts and documents.
+   * @return a set of gold labels.
+   */
+  public static View<GoldLabel> syntheticFactsAsGoldLabels(View<FactAndDocument> facts) {
+
+    Preconditions.checkNotNull(facts, "facts should not be null");
+
+    return facts.filter(FactAndDocument::isAccepted)
+        .flatten(fact -> View.of(fact.syntheticFactsAsGoldLabels()));
   }
 
   @Override
@@ -393,7 +409,7 @@ public final class FactAndDocument {
    *
    * @return a set of synthetic gold labels.
    */
-  public Set<GoldLabel> syntheticGoldLabels() {
+  public Set<GoldLabel> syntheticPagesAsGoldLabels() {
 
     Preconditions.checkState(isAccepted(),
         "unverified or rejected facts cannot be used to create synthetic gold labels");
@@ -401,6 +417,27 @@ public final class FactAndDocument {
     return unmatchedPages().stream().filter(page -> !Strings.isNullOrEmpty(page))
         .map(page -> new GoldLabel(id(), label(), page, true, false, false, false))
         .collect(Collectors.toSet());
+  }
+
+  /**
+   * If the current fact has been accepted, returns a single random span from unmatched pages as
+   * 'true negative' gold labels.
+   *
+   * @return a set of synthetic gold labels.
+   */
+  public Set<GoldLabel> syntheticFactsAsGoldLabels() {
+
+    Preconditions.checkState(isAccepted(),
+        "unverified or rejected facts cannot be used to create synthetic gold labels");
+
+    Random random = new Random();
+    return unmatchedPages().stream().filter(page -> !Strings.isNullOrEmpty(page))
+        .filter(page -> page.length() > 300).map(page -> {
+          int begin = random.nextInt(page.length() - 300);
+          int end = begin + 300;
+          return new GoldLabel(id(), label(), page.substring(begin, end), true, false, false,
+              false);
+        }).collect(Collectors.toSet());
   }
 
   /**

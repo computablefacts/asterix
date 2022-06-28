@@ -59,7 +59,8 @@ public class FactAndDocumentTest {
           int end = matcher.end(1);
           String span = page.substring(begin, end);
           String snippet = SnippetExtractor.extract(Lists.newArrayList(span), page, 300, 50, "");
-          Map<String, Object> fact = newFact(id, type, docId, i + 1, snippet);
+          Map<String, Object> fact = newFact(id, type, docId, i + 1, page, page.indexOf(snippet),
+              page.indexOf(snippet) + snippet.length());
 
           factz.add(fact);
         }
@@ -87,7 +88,7 @@ public class FactAndDocumentTest {
   }
 
   private static Map<String, Object> newFact(int id, String type, String docId, int page,
-      String span) {
+      String text, int startIdx, int endIdx) {
 
     List<String> values = Lists.newArrayList("ref0", "ref1", Integer.toString(page, 10));
 
@@ -100,10 +101,10 @@ public class FactAndDocumentTest {
     Map<String, Object> provenance = new HashMap<>();
     provenance.put("source_store", "");
     provenance.put("source_type", "");
-    provenance.put("string_span", span);
+    provenance.put("string_span", text);
     provenance.put("string_span_hash", null);
-    provenance.put("start_index", 0);
-    provenance.put("end_index", span.length());
+    provenance.put("start_index", startIdx);
+    provenance.put("end_index", endIdx);
     provenance.put("source", source);
 
     Map<String, Object> fact = new HashMap<>();
@@ -141,7 +142,10 @@ public class FactAndDocumentTest {
     Assert.assertEquals(39,
         FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
     Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(335, FactAndDocument.syntheticGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(316,
+        FactAndDocument.syntheticFactsAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(335,
+        FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
   }
 
   @Test
@@ -153,6 +157,9 @@ public class FactAndDocumentTest {
     Assert.assertEquals(39,
         FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
     Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(335, FactAndDocument.syntheticGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(316,
+        FactAndDocument.syntheticFactsAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(335,
+        FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
   }
 }
