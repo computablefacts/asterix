@@ -4,10 +4,12 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
 import com.computablefacts.asterix.Generated;
+import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.GoldLabel;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
@@ -32,7 +34,8 @@ final public class TextCategorizer {
   /**
    * Build a {@link TextCategorizer} from a set of gold labels.
    * <ul>
-   * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
+   * <li>{@code args[0]} the gold labels as a gzipped JSONL file.</li>
+   * <li>{@code args[1]} the list of labels to consider.</li>
    * </ul>
    */
   @Beta
@@ -40,56 +43,70 @@ final public class TextCategorizer {
   public static void main(String[] args) {
 
     File file = new File(args[0]);
+    List<String> labels = Splitter.on(',').trimResults()
+        .splitToList(args.length < 2 ? "" : args[1]);
 
     Preconditions.checkArgument(file.exists(), "missing gold labels: %s", file);
 
     System.out.printf("Gold labels dataset is %s\n", file);
-    System.out.println("Creating fingerprints...");
 
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    Map<String, Fingerprint> categories = new HashMap<>();
+    for (String label : labels) {
 
-    GoldLabel.load(file, null).displayProgress(500)
-        .filter(gl -> gl.isTruePositive() || gl.isFalseNegative()).forEachRemaining(gl -> {
+      System.out.println(
+          "================================================================================");
+      System.out.printf("== Label is %s\n", label);
+      System.out.println(
+          "================================================================================");
+      System.out.println("Creating fingerprints...");
 
-          String lbl = gl.label();
+      Stopwatch stopwatch = Stopwatch.createStarted();
+      Map<String, Fingerprint> categories = new HashMap<>();
 
-          if (!categories.containsKey(lbl)) {
+      GoldLabel.load(file, label).displayProgress(5000)
+          .filter(gl -> gl.isTruePositive() || gl.isFalseNegative()).forEachRemaining(gl -> {
 
-            Fingerprint fingerprint = new Fingerprint();
-            fingerprint.category(lbl);
+            String lbl = gl.label();
 
-            categories.put(lbl, fingerprint);
-          }
-          categories.get(lbl).add(gl.data());
-        });
+            if (!categories.containsKey(lbl)) {
 
-    stopwatch.stop();
+              Fingerprint fingerprint = new Fingerprint();
+              fingerprint.category(lbl);
 
-    System.out.printf("Fingerprints created in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-    System.out.println("Initializing text categorizer...");
+              categories.put(lbl, fingerprint);
+            }
+            categories.get(lbl).add(gl.data());
+          });
 
-    TextCategorizer categorizer = new TextCategorizer();
-    categories.values().forEach(categorizer::add);
+      stopwatch.stop();
 
-    System.out.println("Text categorizer initialized.");
+      System.out.printf("Fingerprints created in %d seconds for %d categories.\n",
+          stopwatch.elapsed(TimeUnit.SECONDS), categories.size());
+      System.out.println("Initializing text categorizer...");
 
-    ConfusionMatrix confusionMatrix = new ConfusionMatrix();
+      TextCategorizer categorizer = new TextCategorizer();
+      categories.values().forEach(categorizer::add);
 
-    GoldLabel.load(file, null).displayProgress(500).forEachRemaining(gl -> {
+      System.out.println("Text categorizer initialized.");
 
-      String actual = gl.label();
-      int act = gl.isTruePositive() || gl.isFalseNegative() ? OK : KO;
+      ConfusionMatrix confusionMatrix = new ConfusionMatrix();
 
-      String prediction = categorizer.categorize(gl.data());
-      int pred =
-          (act == OK && prediction.equals(actual)) || (act == KO && !prediction.equals(actual)) ? OK
-              : KO;
+      View<GoldLabel> sample = View.of(
+          GoldLabel.load(file, null).filter(gl -> !label.equals(gl.label())).sample(5000));
 
-      confusionMatrix.add(act, pred);
-    });
+      GoldLabel.load(file, label).concat(sample).displayProgress(5000).forEachRemaining(gl -> {
 
-    System.out.println(confusionMatrix);
+        String actualLabel = gl.label();
+        int actual = gl.isTruePositive() || gl.isFalseNegative() ? OK : KO;
+
+        String predictedLabel = categorizer.categorize(gl.data());
+        int prediction = (actual == OK && predictedLabel.equals(actualLabel)) || (actual == KO
+            && !predictedLabel.equals(actualLabel)) ? OK : KO;
+
+        confusionMatrix.add(actual, prediction);
+      });
+
+      System.out.println(confusionMatrix);
+    }
   }
 
   public void add(Fingerprint fp) {

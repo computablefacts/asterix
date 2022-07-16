@@ -52,7 +52,7 @@ public final class FactAndDocument {
   }
 
   /**
-   * Merge facts and documents together.
+   * Merge facts and documents together. Export the page associated with each fact as a gold label.
    * <ul>
    *  <li>{@code args[0]} the facts as a gzipped JSONL file.</li>
    * <li>{@code args[1]} the documents as a gzipped JSONL file.</li>
@@ -76,8 +76,26 @@ public final class FactAndDocument {
     System.out.printf("Merged dataset is %s\n", dataset);
     System.out.println("Merging facts and documents...");
 
-    if (save(dataset, merge(facts, documents, null).displayProgress(5000))) {
-      System.out.println("Facts and documents merged.");
+    if (!save(dataset, merge(facts, documents, null).displayProgress(5000))) {
+      System.out.println("An error occurred.");
+      return;
+    }
+
+    System.out.println("Facts and documents merged.");
+
+    File goldLabels = new File(
+        String.format("%sgold_labels.jsonl.gz", facts.getParent() + File.separator));
+
+    System.out.printf("Gold labels dataset is %s\n", goldLabels);
+    System.out.println("Exporting gold labels...");
+
+    if (GoldLabel.save(goldLabels, load(dataset, null).flatten(fad -> {
+      View<GoldLabel> view =
+          (fad.isAccepted() || fad.isRejected()) && !Strings.isNullOrEmpty(fad.matchedPage())
+              ? View.of(fad.pageAsGoldLabel()) : View.of();
+      return fad.isAccepted() ? view.concat(View.of(fad.syntheticPagesAsGoldLabels())) : view;
+    }).displayProgress(5000))) {
+      System.out.println("Gold labels exported.");
     } else {
       System.out.println("An error occurred.");
     }
@@ -373,6 +391,8 @@ public final class FactAndDocument {
 
     Preconditions.checkState(isAccepted() || isRejected(),
         "unverified facts cannot be treated as gold labels");
+    Preconditions.checkState(!Strings.isNullOrEmpty(matchedPage()),
+        "empty pages cannot be used as as gold labels");
 
     return new GoldLabel(id(), label(), matchedPage(), isRejected(), isAccepted(), false, false);
   }

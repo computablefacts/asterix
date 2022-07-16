@@ -3,6 +3,7 @@ package com.computablefacts.asterix;
 import static com.computablefacts.asterix.Document.ID_MAGIC_KEY;
 
 import com.computablefacts.asterix.codecs.JsonCodec;
+import com.computablefacts.asterix.ml.GoldLabel;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.re2j.Matcher;
@@ -146,6 +147,15 @@ public class FactAndDocumentTest {
         FactAndDocument.syntheticFactsAsGoldLabels(View.of(fads)).toList().size());
     Assert.assertEquals(335,
         FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
+
+    List<GoldLabel> gls = GoldLabel.load(new File(path + File.separator + "gold_labels.jsonl.gz"),
+        null).toList();
+
+    Assert.assertEquals(39 + 335, gls.size());
+    Assert.assertEquals(39, gls.stream().filter(GoldLabel::isTruePositive).count());
+    Assert.assertEquals(335, gls.stream().filter(GoldLabel::isTrueNegative).count());
+    Assert.assertEquals(0, gls.stream().filter(GoldLabel::isFalsePositive).count());
+    Assert.assertEquals(0, gls.stream().filter(GoldLabel::isFalseNegative).count());
   }
 
   @Test
