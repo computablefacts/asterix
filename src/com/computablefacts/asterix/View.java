@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -353,6 +354,18 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
           LogFormatter.create().add("file", file).add("append", append).add("compress", compress)
               .message(e).formatError());
     }
+  }
+
+  /**
+   * Returns a sample of values using Algorithm L.
+   *
+   * @param size the sample size.
+   * @return the sample.
+   */
+  public List<T> sample(int size) {
+    AlgorithmL<T> algorithmL = new AlgorithmL<>(size);
+    this.forEachRemaining(algorithmL::add);
+    return algorithmL.sample();
   }
 
   /**
@@ -1422,6 +1435,48 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       }
       return list_.isEmpty() || (strictWindowsLength_ && list_.size() < length_) ? endOfData()
           : ImmutableList.copyOf(list_);
+    }
+  }
+
+  /**
+   * Extracted from https://richardstartin.github.io/posts/reservoir-sampling
+   */
+  private static class AlgorithmL<T> {
+
+    private final int capacity_;
+    private final List<T> reservoir_;
+    private long counter_;
+    private long next_;
+    private double w_;
+
+    public AlgorithmL(int capacity) {
+      capacity_ = capacity;
+      reservoir_ = new ArrayList<>(capacity);
+      counter_ = 0;
+      next_ = capacity_;
+      w_ = Math.exp(Math.log(ThreadLocalRandom.current().nextDouble()) / capacity_);
+      skip();
+    }
+
+    public List<T> sample() {
+      return reservoir_;
+    }
+
+    public void add(T value) {
+      if (counter_ < capacity_) {
+        reservoir_.add(value);
+      } else {
+        if (counter_ == next_) {
+          reservoir_.set(ThreadLocalRandom.current().nextInt(capacity_), value);
+          skip();
+        }
+      }
+      ++counter_;
+    }
+
+    private void skip() {
+      next_ += (long) (Math.log(ThreadLocalRandom.current().nextDouble()) / Math.log(1 - w_)) + 1;
+      w_ *= Math.exp(Math.log(ThreadLocalRandom.current().nextDouble()) / capacity_);
     }
   }
 }

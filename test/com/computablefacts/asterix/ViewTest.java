@@ -1086,4 +1086,29 @@ public class ViewTest {
     Assert.assertEquals(Lists.newArrayList(1, 3, 5, 7), even);
     Assert.assertEquals(Lists.newArrayList(2, 4, 6), odd);
   }
+
+  @Test
+  public void testSampleIsSmallerThanListSize() {
+
+    List<Integer> sample = View.iterate(1, x -> x + 1).take(3).sample(5);
+
+    Assert.assertEquals(Lists.newArrayList(1, 2, 3), sample);
+  }
+
+  @Test
+  public void testSampleIsEqualToListSize() {
+
+    List<Integer> sample = View.iterate(1, x -> x + 1).take(5).sample(5);
+
+    Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), sample);
+  }
+
+  @Test
+  public void testSampleIsLargerThanListSize() {
+
+    List<Integer> sample = View.iterate(1, x -> x + 1).take(5).sample(1);
+
+    Assert.assertEquals(1, sample.size());
+    Assert.assertTrue(1 <= sample.get(0) && sample.get(0) <= 5);
+  }
 }
