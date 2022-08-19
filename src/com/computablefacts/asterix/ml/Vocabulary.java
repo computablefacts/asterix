@@ -54,6 +54,10 @@ final public class Vocabulary {
   public Vocabulary() {
   }
 
+  public Vocabulary(File file) {
+    load(Preconditions.checkNotNull(file, "file should not be null"));
+  }
+  
   /**
    * Build a vocabulary from a corpus of documents. To be versatile, this method does not attempt to
    * remove stop words, diacritical marks or even lowercase tokens.
