@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @CheckReturnValue
-final class Stack {
+final public class Stack {
 
   private final List<AbstractStack> stacks_;
 
