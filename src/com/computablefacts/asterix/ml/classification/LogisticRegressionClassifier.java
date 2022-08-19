@@ -17,6 +17,11 @@ final public class LogisticRegressionClassifier implements AbstractBinaryClassif
   }
 
   @Override
+  public boolean isTrained() {
+    return classifier_ != null;
+  }
+
+  @Override
   public int predict(FeatureVector vector) {
 
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
