@@ -14,8 +14,8 @@ public abstract class AbstractModel implements AbstractStack {
 
   private final String label_;
   private final ConfusionMatrix confusionMatrix_ = new ConfusionMatrix();
-  private FeatureVector actuals_;
-  private FeatureVector predictions_;
+  protected FeatureVector actuals_;
+  protected FeatureVector predictions_;
 
   public AbstractModel(String label) {
 
