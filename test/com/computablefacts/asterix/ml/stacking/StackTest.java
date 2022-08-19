@@ -44,6 +44,8 @@ public class StackTest {
     Stack stack = new Stack(Lists.newArrayList(isDivisibleByTwo, isDivisibleByFive));
 
     Assert.assertEquals("(IsDivisibleByTwo AND IsDivisibleByFive)", stack.toString());
+    Assert.assertEquals(1.0, stack.confusionMatrix().matthewsCorrelationCoefficient(), 0.0);
+    Assert.assertEquals(1.0, stack.confusionMatrix().f1Score(), 0.0);
 
     for (int i = 100; i < 1000; i++) {
       Assert.assertEquals(i % 10 == 0 ? OK : KO, stack.predict(vector(i)));
@@ -89,6 +91,8 @@ public class StackTest {
 
     Assert.assertEquals("((IsDivisibleByTwo AND IsDivisibleByFive) OR IsDivisibleByThree)",
         stack.toString());
+    Assert.assertEquals(1.0, stack.confusionMatrix().matthewsCorrelationCoefficient(), 0.0);
+    Assert.assertEquals(1.0, stack.confusionMatrix().f1Score(), 0.0);
 
     for (int i = 100; i < 1000; i++) {
       Assert.assertEquals(i % 3 == 0 || i % 10 == 0 ? OK : KO, stack.predict(vector(i)));

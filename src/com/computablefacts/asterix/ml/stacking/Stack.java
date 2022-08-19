@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.ml.stacking;
 
+import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -44,6 +45,10 @@ final public class Stack {
     return stacks_.get(0).toString();
   }
 
+  public ConfusionMatrix confusionMatrix() {
+    return stacks_.get(0).confusionMatrix();
+  }
+  
   public int predict(FeatureVector vector) {
     return stacks_.get(0).predict(vector);
   }
