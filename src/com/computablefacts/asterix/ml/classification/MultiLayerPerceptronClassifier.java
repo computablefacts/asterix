@@ -31,6 +31,11 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
   }
 
   @Override
+  public boolean isTrained() {
+    return classifier_ != null;
+  }
+
+  @Override
   public int predict(FeatureVector vector) {
     return classifier_.predict(vector.denseArray());
   }

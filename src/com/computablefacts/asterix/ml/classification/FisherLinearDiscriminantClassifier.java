@@ -16,6 +16,11 @@ final public class FisherLinearDiscriminantClassifier implements AbstractBinaryC
   }
 
   @Override
+  public boolean isTrained() {
+    return classifier_ != null;
+  }
+
+  @Override
   public int predict(FeatureVector vector) {
 
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
