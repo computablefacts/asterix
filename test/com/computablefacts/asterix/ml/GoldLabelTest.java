@@ -122,7 +122,7 @@ public class GoldLabelTest {
   public void testLoadingAnUnknownFileThrowsAnException() {
 
     File file = new File("/tmp/gls.jsonl.gz");
-    View<GoldLabel> gls = GoldLabel.load(file, null);
+    View<GoldLabel> gls = GoldLabel.load(file);
   }
 
   @Test
@@ -134,7 +134,7 @@ public class GoldLabelTest {
 
     Assert.assertTrue(GoldLabel.save(file, View.of(gls)));
 
-    List<GoldLabel> allGls = GoldLabel.load(file, null).toList();
+    List<GoldLabel> allGls = GoldLabel.load(file).toList();
 
     Assert.assertEquals(gls, allGls);
 

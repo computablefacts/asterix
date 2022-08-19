@@ -91,7 +91,7 @@ final public class TextCategorizer {
       ConfusionMatrix confusionMatrix = new ConfusionMatrix();
 
       View<GoldLabel> sample = View.of(
-          GoldLabel.load(file, null).filter(gl -> !label.equals(gl.label())).sample(5000));
+          GoldLabel.load(file).filter(gl -> !label.equals(gl.label())).sample(5000));
 
       GoldLabel.load(file, label).concat(sample).displayProgress(5000).forEachRemaining(gl -> {
 

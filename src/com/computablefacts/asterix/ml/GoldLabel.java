@@ -191,7 +191,21 @@ public final class GoldLabel {
   }
 
   /**
-   * Load gold labels from a gzipped JSONL file.
+   * Load all gold labels from a gzipped JSONL file.
+   *
+   * @param file the input file.
+   * @return a set of gold labels.
+   */
+  public static View<GoldLabel> load(File file) {
+
+    Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkArgument(file.exists(), "file file does not exist : %s", file);
+
+    return load(file, null);
+  }
+
+  /**
+   * Load a given set of gold labels from a gzipped JSONL file.
    *
    * @param file the input file.
    * @param label the specific gold labels to load. If {@code label} is set to {@code null}, all
