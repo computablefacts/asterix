@@ -202,6 +202,11 @@ final public class Model extends AbstractStack {
       stopwatch.stop();
       System.out.printf("Dataset assembled in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
 
+      if (dataset.getKey().size() < 10) {
+        System.out.println("ERROR: dataset size has less than 10 entries.");
+        continue;
+      }
+
       List<Model> models = new ArrayList<>();
 
       for (String classifier : classifiers) {
