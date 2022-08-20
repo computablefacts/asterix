@@ -35,6 +35,10 @@ final public class Stack {
       newStackz.add(stack);
     }
 
+    newStackz.addAll(stacks.stream()
+        .filter(stack -> Double.isFinite(stack.confusionMatrix().matthewsCorrelationCoefficient()))
+        .collect(Collectors.toList()));
+
     stacks_ = newStackz.stream().sorted(Comparator.comparingDouble(
             (AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient())
         .reversed()).limit(5).collect(Collectors.toList());
@@ -48,7 +52,7 @@ final public class Stack {
   public ConfusionMatrix confusionMatrix() {
     return stacks_.get(0).confusionMatrix();
   }
-  
+
   public int predict(FeatureVector vector) {
     return stacks_.get(0).predict(vector);
   }

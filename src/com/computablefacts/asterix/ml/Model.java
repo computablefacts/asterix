@@ -22,6 +22,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
@@ -204,6 +206,14 @@ final public class Model extends AbstractStack {
 
       if (dataset.getKey().size() < 10) {
         System.out.println("ERROR: dataset size has less than 10 entries.");
+        continue;
+      }
+
+      Multiset<Integer> count = HashMultiset.create(dataset.getValue());
+
+      if (count.count(OK) < 5 || count.count(KO) < 5) {
+        System.out.println(
+            "ERROR: dataset must contain at least 5 positive and 5 negative entries.");
         continue;
       }
 

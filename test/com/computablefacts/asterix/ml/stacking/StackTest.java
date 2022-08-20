@@ -117,6 +117,11 @@ public class StackTest {
     }
 
     @Override
+    public String toString() {
+      return "IsDivisibleByFive";
+    }
+
+    @Override
     public int predict(FeatureVector vector) {
       return classifier_.predict(vector);
     }
@@ -135,6 +140,11 @@ public class StackTest {
     }
 
     @Override
+    public String toString() {
+      return "IsDivisibleByThree";
+    }
+
+    @Override
     public int predict(FeatureVector vector) {
       return classifier_.predict(vector);
     }
@@ -150,6 +160,11 @@ public class StackTest {
     private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
 
     public IsDivisibleByTwo() {
+    }
+
+    @Override
+    public String toString() {
+      return "IsDivisibleByTwo";
     }
 
     @Override
