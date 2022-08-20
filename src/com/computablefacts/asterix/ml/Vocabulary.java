@@ -1,11 +1,11 @@
 package com.computablefacts.asterix.ml;
 
+import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.asterix.Document;
 import com.computablefacts.asterix.Generated;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
-import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.codecs.StringCodec;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
@@ -23,11 +23,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import com.google.re2j.Pattern;
 import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +42,6 @@ final public class Vocabulary {
   private final Multiset<String> tf_ = HashMultiset.create(); // normalized term -> term frequency
   private final Multiset<String> df_ = HashMultiset.create(); // normalized term -> document frequency
   private final BiMap<String, Integer> idx_ = HashBiMap.create(); // one-hot encoding
-  private final Map<String, Set<String>> forms_ = new HashMap<>(); // normalized term -> raw terms
   private int nbTermsSeen_ = 0;
   private int nbDocsSeen_ = 0;
   private boolean isFrozen_ = false;
@@ -57,7 +52,7 @@ final public class Vocabulary {
   public Vocabulary(File file) {
     load(Preconditions.checkNotNull(file, "file should not be null"));
   }
-  
+
   /**
    * Build a vocabulary from a corpus of documents. To be versatile, this method does not attempt to
    * remove stop words, diacritical marks or even lowercase tokens.
@@ -251,13 +246,13 @@ final public class Vocabulary {
     }
     Vocabulary v = (Vocabulary) obj;
     return Objects.equals(tf_, v.tf_) && Objects.equals(df_, v.df_) && Objects.equals(idx_, v.idx_)
-        && Objects.equals(forms_, v.forms_) && nbTermsSeen_ == v.nbTermsSeen_
-        && nbDocsSeen_ == v.nbDocsSeen_ && isFrozen_ == v.isFrozen_;
+        && nbTermsSeen_ == v.nbTermsSeen_ && nbDocsSeen_ == v.nbDocsSeen_
+        && isFrozen_ == v.isFrozen_;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tf_, df_, idx_, forms_, nbTermsSeen_, nbDocsSeen_, isFrozen_);
+    return Objects.hash(tf_, df_, idx_, nbTermsSeen_, nbDocsSeen_, isFrozen_);
   }
 
   /**
@@ -267,7 +262,6 @@ final public class Vocabulary {
     tf_.clear();
     df_.clear();
     idx_.clear();
-    forms_.clear();
     isFrozen_ = false;
   }
 
@@ -461,11 +455,10 @@ final public class Vocabulary {
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    View.of(idx_.keySet()).map(
-        term -> idx_.get(term) + "\t" + term + "\t" + tf_.count(term) + "\t" + df_.count(term)
-            + "\t" + JsonCodec.asString(forms_.getOrDefault(term, new HashSet<>()))).prepend(
-        String.format("# %d %d\nidx\tnormalized_term\ttf\tdf\traw_terms", nbTermsSeen_,
-            nbDocsSeen_)).toFile(Function.identity(), file, false, true);
+    View.of(idx_.keySet())
+        .map(term -> idx_.get(term) + "\t" + term + "\t" + tf_.count(term) + "\t" + df_.count(term))
+        .prepend(String.format("# %d %d\nidx\tnormalized_term\ttf\tdf", nbTermsSeen_, nbDocsSeen_))
+        .toFile(Function.identity(), file, false, true);
   }
 
   /**
@@ -496,12 +489,10 @@ final public class Vocabulary {
           String term = columns.get(1);
           int tf = Integer.parseInt(columns.get(2), 10);
           int df = Integer.parseInt(columns.get(3), 10);
-          Collection<?> forms = JsonCodec.asCollectionOfUnknownType(columns.get(4));
 
           tf_.add(term, tf);
           df_.add(term, df);
           idx_.put(term, idx);
-          forms_.put(term, Sets.newHashSet((Collection<String>) forms));
         });
   }
 
@@ -530,7 +521,6 @@ final public class Vocabulary {
         vocabulary.idx_.put(term, newIdx++);
         vocabulary.tf_.add(term, tf_.count(term));
         vocabulary.df_.add(term, df_.count(term));
-        vocabulary.forms_.put(term, forms_.get(term));
       }
     }
 
@@ -542,15 +532,13 @@ final public class Vocabulary {
     idx_.putAll(vocabulary.idx_);
     tf_.addAll(vocabulary.tf_);
     df_.addAll(vocabulary.df_);
-    forms_.putAll(vocabulary.forms_);
   }
 
   private void fill(View<List<String>> docs) {
 
     Preconditions.checkNotNull(docs, "docs should not be null");
 
-    Set<String> normalizedTermsSeen = new HashSet<>();
-
+    BloomFilter<String> bloomFilter = new BloomFilter<>(0.01, 1_000_000_000);
     docs.map(HashMultiset::create).forEachRemaining(terms -> {
 
       nbDocsSeen_ += 1;
@@ -560,20 +548,14 @@ final public class Vocabulary {
 
         String normalizedTerm = normalize(term.getElement());
         int termCount = term.getCount();
-
-        if (!forms_.containsKey(normalizedTerm)) {
-          forms_.put(normalizedTerm, new HashSet<>());
-        }
-
-        forms_.get(normalizedTerm).add(term.getElement());
         nbTermsSeen_ += termCount;
 
-        if (normalizedTermsSeen.contains(normalizedTerm)) {
+        if (bloomFilter.contains(normalizedTerm)) {
           tf_.add(normalizedTerm, termCount);
           df_.add(normalizedTerm);
         } else {
 
-          normalizedTermsSeen.add(normalizedTerm);
+          bloomFilter.add(normalizedTerm);
           tf_.add(tokenUnk_);
 
           if (!unkAlreadySeen.getAndSet(true)) {
@@ -599,19 +581,11 @@ final public class Vocabulary {
         .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && freq.getCount() < minDocFreq);
     df_.entrySet()
         .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && freq.getCount() > maxDocFreq);
-    forms_.entrySet().removeIf(
-        freq -> !tokenUnk_.equals(freq.getKey()) && (!tf_.contains(freq.getKey()) || !df_.contains(
-            freq.getKey())));
-    df_.entrySet().removeIf(
-        freq -> !tokenUnk_.equals(freq.getElement()) && !forms_.containsKey(freq.getElement()));
-    tf_.entrySet().removeIf(
-        freq -> !tokenUnk_.equals(freq.getElement()) && !forms_.containsKey(freq.getElement()));
+    tf_.entrySet()
+        .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && !df_.contains(freq.getElement()));
 
-    Preconditions.checkState(!forms_.containsKey(tokenUnk_));
     Preconditions.checkState(tf_.contains(tokenUnk_));
     Preconditions.checkState(df_.contains(tokenUnk_));
-    Preconditions.checkState(tf_.elementSet().size() == forms_.keySet().size() + 1);
-    Preconditions.checkState(df_.elementSet().size() == forms_.keySet().size() + 1);
 
     @Var Stream<Entry<String>> stream = tf_.entrySet().stream()
         .filter(e -> !tokenUnk_.equals(e.getElement())).sorted(

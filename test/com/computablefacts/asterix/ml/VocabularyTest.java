@@ -317,16 +317,15 @@ public class VocabularyTest {
     List<String> lines = IO.readLines(vocabDeompressed);
 
     Assert.assertEquals(1002, lines.size());
-    Assert.assertTrue(lines.get(0).matches("# \\d+ \\d+"));
-    Assert.assertEquals("idx\tnormalized_term\ttf\tdf\traw_terms", lines.get(1));
-    Assert.assertTrue(lines.get(2).matches("0\t<UNK>\t\\d+\t\\d+\t\\[.*\\]"));
+    Assert.assertTrue(lines.get(0).matches("^# \\d+ \\d+$"));
+    Assert.assertEquals("idx\tnormalized_term\ttf\tdf", lines.get(1));
+    Assert.assertTrue(lines.get(2).matches("^0\t<UNK>\t\\d+\t\\d+$"));
 
     for (int i = 3; i < lines.size(); i++) {
 
       String line = lines.get(i);
 
-      Assert.assertTrue(
-          line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+\t\\[.*\\]"));
+      Assert.assertTrue(line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+$"));
     }
   }
 
@@ -363,16 +362,15 @@ public class VocabularyTest {
     List<String> lines = IO.readLines(vocabDeompressed);
 
     Assert.assertEquals(1002, lines.size());
-    Assert.assertTrue(lines.get(0).matches("# \\d+ \\d+"));
-    Assert.assertEquals("idx\tnormalized_term\ttf\tdf\traw_terms", lines.get(1));
-    Assert.assertTrue(lines.get(2).matches("0\t<UNK>\t\\d+\t\\d+\t\\[.*\\]"));
+    Assert.assertTrue(lines.get(0).matches("^# \\d+ \\d+$"));
+    Assert.assertEquals("idx\tnormalized_term\ttf\tdf", lines.get(1));
+    Assert.assertTrue(lines.get(2).matches("^0\t<UNK>\t\\d+\t\\d+$"));
 
     for (int i = 3; i < lines.size(); i++) {
 
       String line = lines.get(i);
 
-      Assert.assertTrue(
-          line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+\t\\[.*\\]"));
+      Assert.assertTrue(line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+$"));
     }
   }
 
