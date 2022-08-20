@@ -109,10 +109,10 @@ final public class Model extends AbstractStack {
     File ftrigrams = new File(
         String.format("%svocabulary-trigrams.tsv.gz", goldLabels.getParent() + File.separator));
 
-    boolean exists = funigrams.exists() && fbigrams.exists() /*&& ftrigrams.exists() */;
+    boolean exists = funigrams.exists() /* && fbigrams.exists() && ftrigrams.exists() */;
 
     Preconditions.checkState(
-        exists || (!funigrams.exists() && !fbigrams.exists() /* && !ftrigrams.exists() */));
+        exists || (!funigrams.exists() /* && !fbigrams.exists() && !ftrigrams.exists() */));
 
     if (exists) {
       unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
