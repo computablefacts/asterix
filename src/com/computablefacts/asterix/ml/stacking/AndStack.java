@@ -3,16 +3,13 @@ package com.computablefacts.asterix.ml.stacking;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
-import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 
 @CheckReturnValue
-final public class AndStack implements AbstractStack {
+final public class AndStack extends AbstractStack {
 
-  private final FeatureVector predictions_;
-  private final ConfusionMatrix confusionMatrix_ = new ConfusionMatrix();
   private final AbstractStack leftStack_;
   private final AbstractStack rightStack_;
 
@@ -52,16 +49,6 @@ final public class AndStack implements AbstractStack {
   @Override
   public FeatureVector actuals() {
     return leftStack_.actuals();
-  }
-
-  @Override
-  public FeatureVector predictions() {
-    return predictions_;
-  }
-
-  @Override
-  public ConfusionMatrix confusionMatrix() {
-    return confusionMatrix_;
   }
 
   @Override

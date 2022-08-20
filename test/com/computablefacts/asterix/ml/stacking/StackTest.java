@@ -109,12 +109,11 @@ public class StackTest {
   }
 
   @CheckReturnValue
-  private static class IsDivisibleByFive extends AbstractModel {
+  private static class IsDivisibleByFive extends AbstractStack {
 
     private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
 
     public IsDivisibleByFive() {
-      super("IsDivisibleByFive");
     }
 
     @Override
@@ -128,12 +127,11 @@ public class StackTest {
   }
 
   @CheckReturnValue
-  private static class IsDivisibleByThree extends AbstractModel {
+  private static class IsDivisibleByThree extends AbstractStack {
 
     private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
 
     public IsDivisibleByThree() {
-      super("IsDivisibleByThree");
     }
 
     @Override
@@ -147,12 +145,11 @@ public class StackTest {
   }
 
   @CheckReturnValue
-  private static class IsDivisibleByTwo extends AbstractModel {
+  private static class IsDivisibleByTwo extends AbstractStack {
 
     private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
 
     public IsDivisibleByTwo() {
-      super("IsDivisibleByTwo");
     }
 
     @Override

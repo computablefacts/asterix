@@ -15,7 +15,6 @@ import com.computablefacts.asterix.ml.classification.KNearestNeighborClassifier;
 import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifier;
 import com.computablefacts.asterix.ml.classification.MultiLayerPerceptronClassifier;
 import com.computablefacts.asterix.ml.classification.SvmClassifier;
-import com.computablefacts.asterix.ml.stacking.AbstractModel;
 import com.computablefacts.asterix.ml.stacking.AbstractStack;
 import com.computablefacts.asterix.ml.stacking.Stack;
 import com.google.common.annotations.Beta;
@@ -47,15 +46,16 @@ import java.util.stream.Collectors;
  * A named binary classifier.
  */
 @CheckReturnValue
-final public class Model extends AbstractModel {
+final public class Model extends AbstractStack {
 
+  private final String label_;
   private Function<String, String> normalizer_;
   private Function<String, SpanSequence> tokenizer_;
   private List<Function<SpanSequence, FeatureVector>> vectorizers_;
   private AbstractBinaryClassifier classifier_;
 
-  public Model(String name) {
-    super(name);
+  public Model(String label) {
+    label_ = Preconditions.checkNotNull(label, "label should not be null");
   }
 
   /**
@@ -107,10 +107,10 @@ final public class Model extends AbstractModel {
     File ftrigrams = new File(
         String.format("%svocabulary-trigrams.tsv.gz", goldLabels.getParent() + File.separator));
 
-    boolean exists = funigrams.exists() /* && fbigrams.exists() && ftrigrams.exists() */;
+    boolean exists = funigrams.exists() && fbigrams.exists() /*&& ftrigrams.exists() */;
 
     Preconditions.checkState(
-        exists || (!funigrams.exists() /* && !fbigrams.exists() && !ftrigrams.exists() */));
+        exists || (!funigrams.exists() && !fbigrams.exists() /* && !ftrigrams.exists() */));
 
     if (exists) {
       unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
@@ -122,7 +122,7 @@ final public class Model extends AbstractModel {
       Stopwatch stopwatch = Stopwatch.createStarted();
 
       List<String> sample = Document.of(documents, true).map(doc -> (String) doc.text())
-          .displayProgress(10_000).sample(20_000);
+          .displayProgress(10_000).sample(30_000);
 
       stopwatch.stop();
       System.out.printf("Documents sampled in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
@@ -135,7 +135,7 @@ final public class Model extends AbstractModel {
             spans -> View.of(spans)
                 .filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
                 .map(Span::text).overlappingWindowWithStrictLength(length)
-                .map(tks -> Joiner.on('_').join(tks)).toList()).displayProgress(5000);
+                .map(tks -> Joiner.on('_').join(tks)).toList()).displayProgress(10_000);
 
         if (length == 1 && !funigrams.exists()) {
 
@@ -176,9 +176,9 @@ final public class Model extends AbstractModel {
         }
       }
 
-      unigrams = new Vocabulary(funigrams);
-      bigrams = new Vocabulary(fbigrams);
-      trigrams = new Vocabulary(ftrigrams);
+      unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
+      bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
+      trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
     }
 
     // Train/test model
@@ -188,7 +188,7 @@ final public class Model extends AbstractModel {
 
       System.out.println(
           "================================================================================");
-      System.out.printf("== Label is %s\n", label);
+      System.out.printf("== %s\n", label);
       System.out.println(
           "================================================================================");
 
@@ -332,6 +332,8 @@ final public class Model extends AbstractModel {
       System.out.println(stack.confusionMatrix());
       System.out.printf("Ensemble model built in %d seconds.\n",
           stopwatch.elapsed(TimeUnit.SECONDS));
+
+      // TODO : save ensemble model
     }
   }
 
@@ -364,6 +366,11 @@ final public class Model extends AbstractModel {
             "java.lang.**", "java.util.**", "smile.classification.**"});
 
     return xStream;
+  }
+
+  @Override
+  public String toString() {
+    return label_;
   }
 
   @Override
@@ -414,7 +421,7 @@ final public class Model extends AbstractModel {
     Preconditions.checkState(classifier_.supportsIncrementalTraining(),
         "classifier does not support incremental training");
 
-    View.of(texts).zip(View.of(categories)).mapInParallel(500, e -> {
+    View.of(texts).zip(View.of(categories)).map(e -> {
 
       FeatureVector vector = featurizer.apply(e.getKey());
       int category = e.getValue();
