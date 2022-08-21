@@ -1,23 +1,23 @@
 package com.computablefacts.asterix.console;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.errorprone.annotations.Var;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.errorprone.annotations.CheckReturnValue;
-import com.google.errorprone.annotations.Var;
-
 /**
- * Based on @{link
- * https://itsallbinary.com/java-printing-to-console-in-table-format-simple-code-with-flexible-width-left-align-header-separator-line/}
+ * Based on
+ * https://itsallbinary.com/java-printing-to-console-in-table-format-simple-code-with-flexible-width-left-align-header-separator-line/
  */
 @CheckReturnValue
 final public class AsciiTable {
 
-  private AsciiTable() {}
+  private AsciiTable() {
+  }
 
   public static String format(String[][] table, boolean hasHeader) {
     return format(table, hasHeader, false, 30);
@@ -37,10 +37,8 @@ final public class AsciiTable {
     for (int i = 0; i < table.length; i++) {
 
       String[] row = table[i];
-      @Var
-      boolean needExtraRow = false;
-      @Var
-      int splitRow = 0;
+      @Var boolean needExtraRow = false;
+      @Var int splitRow = 0;
 
       do {
 
