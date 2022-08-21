@@ -76,9 +76,11 @@ public final class FactAndDocument {
     System.out.printf("Merged dataset is %s\n", dataset);
     System.out.println("Merging facts and documents...");
 
-    if (!save(dataset, merge(facts, documents, null).displayProgress(5000))) {
-      System.out.println("An error occurred.");
-      return;
+    if (!dataset.exists()) {
+      if (!save(dataset, merge(facts, documents, null).displayProgress(5000))) {
+        System.out.println("An error occurred.");
+        return;
+      }
     }
 
     System.out.println("Facts and documents merged.");
@@ -93,7 +95,7 @@ public final class FactAndDocument {
       View<GoldLabel> view =
           (fad.isAccepted() || fad.isRejected()) && !Strings.isNullOrEmpty(fad.matchedPage())
               ? View.of(fad.pageAsGoldLabel()) : View.of();
-      return fad.isAccepted() ? view.concat(View.of(fad.syntheticPagesAsGoldLabels())) : view;
+      return view; // fad.isAccepted() ? view.concat(View.of(fad.syntheticPagesAsGoldLabels())) : view;
     }).displayProgress(5000))) {
       System.out.println("Gold labels exported.");
     } else {
