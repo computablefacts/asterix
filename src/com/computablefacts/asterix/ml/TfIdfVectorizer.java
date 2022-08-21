@@ -17,18 +17,20 @@ final public class TfIdfVectorizer implements Function<SpanSequence, FeatureVect
 
   private final LoadingCache<String, String> cache_;
   private final Vocabulary vocabulary_;
+  private final boolean normalize_;
   private List<Integer> indices_;
 
-  public TfIdfVectorizer(Vocabulary vocabulary) {
-    this(vocabulary, 10000);
+  public TfIdfVectorizer(Vocabulary vocabulary, boolean normalize) {
+    this(vocabulary, normalize, 10000);
   }
 
-  public TfIdfVectorizer(Vocabulary vocabulary, int maxCacheSize) {
+  public TfIdfVectorizer(Vocabulary vocabulary, boolean normalize, int maxCacheSize) {
 
     Preconditions.checkNotNull(vocabulary, "vocabulary should not be null");
     Preconditions.checkArgument(maxCacheSize > 0, "maxCacheSize must be > 0");
 
     vocabulary_ = vocabulary;
+    normalize_ = normalize;
     cache_ = CacheBuilder.newBuilder().maximumSize(maxCacheSize)
         .build(new CacheLoader<String, String>() {
           @Override
@@ -57,7 +59,7 @@ final public class TfIdfVectorizer implements Function<SpanSequence, FeatureVect
         vector.set(i, vocabulary_.tfIdf(idx, counts.count(vocabulary_.term(idx))));
       }
     } else {
-      
+
       vector = new FeatureVector(indices_.size());
       @Var int i = 0;
 
@@ -65,8 +67,9 @@ final public class TfIdfVectorizer implements Function<SpanSequence, FeatureVect
         vector.set(i++, vocabulary_.tfIdf(idx, counts.count(vocabulary_.term(idx))));
       }
     }
-
-    vector.normalizeUsingEuclideanNorm();
+    if (normalize_) {
+      vector.normalizeUsingEuclideanNorm();
+    }
     return vector;
   }
 

@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TfIdfVectorizerTest {
+public class CountVectorizerTest {
 
   @Test
   public void testVectorize() {
@@ -17,7 +17,7 @@ public class TfIdfVectorizerTest {
         .map(spans -> View.of(spans).map(Span::text).toList());
 
     Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
-    TfIdfVectorizer vectorizer = new TfIdfVectorizer(vocabulary, true);
+    CountVectorizer vectorizer = new CountVectorizer(vocabulary, true);
 
     View.of(sentences()).map(normalizer).map(new TextTokenizer()).map(vectorizer)
         .forEachRemaining(vector -> Assert.assertEquals(vocabulary.size() - 1, vector.length()));
@@ -31,7 +31,7 @@ public class TfIdfVectorizerTest {
         .map(spans -> View.of(spans).map(Span::text).toList());
 
     Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
-    TfIdfVectorizer vectorizer = new TfIdfVectorizer(vocabulary, true);
+    CountVectorizer vectorizer = new CountVectorizer(vocabulary, true);
     vectorizer.subsetOfVocabularyConsidered(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
 
     View.of(sentences()).map(normalizer).map(new TextTokenizer()).map(vectorizer)
