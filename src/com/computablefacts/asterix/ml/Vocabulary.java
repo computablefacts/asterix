@@ -23,6 +23,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import com.google.re2j.Pattern;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -538,7 +539,7 @@ final public class Vocabulary {
 
     Preconditions.checkNotNull(docs, "docs should not be null");
 
-    BloomFilter<String> bloomFilter = new BloomFilter<>(0.01, 1_000_000_000);
+    TermsSeen termsSeen = new TermsSeen(20_000);
     docs.map(HashMultiset::create).forEachRemaining(terms -> {
 
       nbDocsSeen_ += 1;
@@ -550,12 +551,12 @@ final public class Vocabulary {
         int termCount = term.getCount();
         nbTermsSeen_ += termCount;
 
-        if (bloomFilter.contains(normalizedTerm)) {
+        if (termsSeen.contains(normalizedTerm)) {
           tf_.add(normalizedTerm, termCount);
           df_.add(normalizedTerm);
         } else {
 
-          bloomFilter.add(normalizedTerm);
+          termsSeen.add(normalizedTerm);
           tf_.add(tokenUnk_);
 
           if (!unkAlreadySeen.getAndSet(true)) {
@@ -601,5 +602,48 @@ final public class Vocabulary {
         idx_.put(token.getElement(), idx_.size());
       }
     });
+  }
+
+  private static final class TermsSeen {
+
+    private final int threshold_;
+    private Set<String> set_ = null;
+    private BloomFilter<String> bloomFilter_ = null;
+
+    public TermsSeen(int threshold) {
+
+      Preconditions.checkArgument(threshold > 0, "threshold must be > 0");
+
+      threshold_ = threshold;
+    }
+
+    boolean contains(String term) {
+
+      Preconditions.checkNotNull(term, "term must not be null");
+
+      return (set_ != null || bloomFilter_ != null) && (bloomFilter_ != null
+          ? bloomFilter_.contains(term) : set_.contains(term));
+    }
+
+    void add(String term) {
+
+      Preconditions.checkNotNull(term, "term must not be null");
+      Preconditions.checkState(
+          (set_ == null && bloomFilter_ == null) || set_ != null || bloomFilter_ != null);
+
+      if (bloomFilter_ != null) {
+        bloomFilter_.add(term);
+      } else {
+        if (set_ == null) {
+          set_ = new HashSet<>();
+        }
+        set_.add(term);
+        if (set_.size() > threshold_) {
+          bloomFilter_ = new BloomFilter<>(0.01, 1_000_000_000);
+          set_.forEach(bloomFilter_::add);
+          set_ = null;
+        }
+      }
+    }
   }
 }
