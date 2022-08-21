@@ -24,6 +24,7 @@ final public class SvmClassifier implements AbstractBinaryClassifier {
   @Override
   public int predict(FeatureVector vector) {
 
+    Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
     return classifier_.predict(vector.denseArray()) == -1 ? KO : OK;

@@ -37,6 +37,9 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
 
   @Override
   public int predict(FeatureVector vector) {
+    
+    Preconditions.checkNotNull(vector, "vector should not be null");
+
     return classifier_.predict(vector.denseArray());
   }
 
