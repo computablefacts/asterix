@@ -9,11 +9,15 @@ import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier;
+import com.computablefacts.asterix.ml.classification.AdaBoostClassifier;
+import com.computablefacts.asterix.ml.classification.DecisionTreeClassifier;
 import com.computablefacts.asterix.ml.classification.DiscreteNaiveBayesClassifier;
 import com.computablefacts.asterix.ml.classification.FisherLinearDiscriminantClassifier;
+import com.computablefacts.asterix.ml.classification.GradientBoostedTreesClassifier;
 import com.computablefacts.asterix.ml.classification.KNearestNeighborClassifier;
 import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifier;
 import com.computablefacts.asterix.ml.classification.MultiLayerPerceptronClassifier;
+import com.computablefacts.asterix.ml.classification.RandomForestClassifier;
 import com.computablefacts.asterix.ml.classification.SvmClassifier;
 import com.computablefacts.asterix.ml.stacking.AbstractStack;
 import com.computablefacts.asterix.ml.stacking.Stack;
@@ -120,21 +124,12 @@ final public class Model extends AbstractStack {
       trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
     } else {
 
-      System.out.println("Sampling documents...");
-      Stopwatch stopwatch = Stopwatch.createStarted();
-
-      List<String> sample = Document.of(documents, true).map(doc -> (String) doc.text())
-          .displayProgress(10_000).sample(30_000);
-
-      stopwatch.stop();
-      System.out.printf("Documents sampled in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-
       for (int i = 0; i < 3; i++) {
 
         int length = i + 1;
 
-        View<List<String>> tokens = View.of(sample).map(normalizer).map(tokenizer).map(
-            spans -> View.of(spans)
+        View<List<String>> tokens = Document.of(documents, true).map(doc -> (String) doc.text())
+            .map(normalizer).map(tokenizer).map(spans -> View.of(spans)
                 .filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
                 .map(Span::text).overlappingWindowWithStrictLength(length)
                 .map(tks -> Joiner.on('_').join(tks)).toList()).displayProgress(10_000);
@@ -142,7 +137,7 @@ final public class Model extends AbstractStack {
         if (length == 1 && !funigrams.exists()) {
 
           System.out.println("Building vocabulary for unigrams...");
-          stopwatch.reset().start();
+          Stopwatch stopwatch = Stopwatch.createStarted();
 
           unigrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
           unigrams.save(funigrams);
@@ -154,7 +149,7 @@ final public class Model extends AbstractStack {
         } else if (length == 2 && !fbigrams.exists()) {
 
           System.out.println("Building vocabulary for bigrams...");
-          stopwatch.reset().start();
+          Stopwatch stopwatch = Stopwatch.createStarted();
 
           bigrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
           bigrams.save(fbigrams);
@@ -166,7 +161,7 @@ final public class Model extends AbstractStack {
         } else if (length == 3 && !ftrigrams.exists()) {
 
           System.out.println("Building vocabulary for trigrams...");
-          stopwatch.reset().start();
+          Stopwatch stopwatch = Stopwatch.createStarted();
 
           trigrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
           trigrams.save(ftrigrams);
@@ -217,6 +212,9 @@ final public class Model extends AbstractStack {
         continue;
       }
 
+      System.out.printf("The number of POSITIVE entries is %d.\n", count.count(OK));
+      System.out.printf("The number of NEGATIVE entries is %d.\n", count.count(KO));
+
       List<Model> models = new ArrayList<>();
 
       for (String classifier : classifiers) {
@@ -226,14 +224,37 @@ final public class Model extends AbstractStack {
         model.tokenizer_ = tokenizer;
         model.vectorizers_ = new ArrayList<>();
 
+        Function<FeatureVector, FeatureVector> BinaryVectorizer = vector -> {
+          FeatureVector newVector = new FeatureVector(vector.length());
+          for (int i : vector.nonZeroEntries()) {
+            newVector.set(i, 1);
+          }
+          return newVector;
+        };
+
         if (unigrams != null) {
-          model.vectorizers_.add(new TfIdfVectorizer(unigrams));
+          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
+              || "ab".equals(classifier)) {
+            model.vectorizers_.add(new CountVectorizer(unigrams, false).andThen(BinaryVectorizer));
+          } else {
+            model.vectorizers_.add(new TfIdfVectorizer(unigrams, true));
+          }
         }
         if (bigrams != null) {
-          model.vectorizers_.add(new TfIdfVectorizer(bigrams));
+          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
+              || "ab".equals(classifier)) {
+            model.vectorizers_.add(new CountVectorizer(bigrams, false).andThen(BinaryVectorizer));
+          } else {
+            model.vectorizers_.add(new TfIdfVectorizer(bigrams, true));
+          }
         }
         if (trigrams != null) {
-          model.vectorizers_.add(new TfIdfVectorizer(trigrams));
+          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
+              || "ab".equals(classifier)) {
+            model.vectorizers_.add(new CountVectorizer(trigrams, false).andThen(BinaryVectorizer));
+          } else {
+            model.vectorizers_.add(new TfIdfVectorizer(trigrams, true));
+          }
         }
 
         if ("dnb".equals(classifier)) {
@@ -246,6 +267,14 @@ final public class Model extends AbstractStack {
           model.classifier_ = new MultiLayerPerceptronClassifier();
         } else if ("svm".equals(classifier)) {
           model.classifier_ = new SvmClassifier();
+        } else if ("rf".equals(classifier)) {
+          model.classifier_ = new RandomForestClassifier();
+        } else if ("dt".equals(classifier)) {
+          model.classifier_ = new DecisionTreeClassifier();
+        } else if ("gbt".equals(classifier)) {
+          model.classifier_ = new GradientBoostedTreesClassifier();
+        } else if ("ab".equals(classifier)) {
+          model.classifier_ = new AdaBoostClassifier();
         } else {
           model.classifier_ = new LogisticRegressionClassifier();
         }
