@@ -36,7 +36,7 @@ final public class GradientBoostedTreesClassifier implements AbstractBinaryClass
     vectors[0] = new int[newVector.length() + 1];
 
     for (int i : newVector.nonZeroEntries()) {
-      vectors[0][i + 1] = 1;
+      vectors[0][i + 1] = (int) vector.get(i);
     }
 
     DataFrame df = DataFrame.of(vectors);
@@ -62,7 +62,7 @@ final public class GradientBoostedTreesClassifier implements AbstractBinaryClass
       vects[i][0] = actuals[i]; // V1
 
       for (int j : vector.nonZeroEntries()) {
-        vects[i][j + 1] = 1;
+        vects[i][j + 1] = (int) vector.get(j);
       }
     }
 
