@@ -1,6 +1,7 @@
 package com.computablefacts.asterix.ml;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Assert;
@@ -107,12 +108,12 @@ public class FeatureVectorTest {
   }
 
   @Test
-  public void testGetZeroes() {
+  public void testGetNonZeroEntries() {
 
     double[] array = new double[]{1.0, 0.0, 3.0, 0.0, 5.0};
     FeatureVector vector = new FeatureVector(array);
 
-    Assert.assertEquals(Lists.newArrayList(1, 3), vector.zeroes());
+    Assert.assertEquals(Sets.newHashSet(0, 2, 4), vector.nonZeroEntries());
   }
 
   @Test

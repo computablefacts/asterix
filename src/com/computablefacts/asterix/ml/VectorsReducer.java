@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +17,7 @@ import java.util.function.Function;
 @CheckReturnValue
 final public class VectorsReducer implements Function<List<FeatureVector>, List<FeatureVector>> {
 
-  private Set<Integer> indices_ = null;
+  private List<Integer> commonNonZeroEntries_ = null;
 
   public VectorsReducer() {
   }
@@ -26,15 +27,18 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
 
     Preconditions.checkNotNull(vectors, "vectors should not be null");
 
-    if (indices_ == null) {
+    if (commonNonZeroEntries_ == null) {
 
-      indices_ = new HashSet<>(vectors.get(0).zeroes());
+      Set<Integer> commonNonZeroEntries = new HashSet<>(vectors.get(0).nonZeroEntries());
 
       for (int i = 1; i < vectors.size(); i++) {
-        indices_.retainAll(vectors.get(i).zeroes());
+        commonNonZeroEntries.addAll(vectors.get(i).nonZeroEntries());
       }
+
+      commonNonZeroEntries_ = new ArrayList<>(commonNonZeroEntries);
+      Collections.sort(commonNonZeroEntries_);
     }
-    if (indices_.isEmpty()) {
+    if (commonNonZeroEntries_.isEmpty()) {
       return vectors;
     }
 
@@ -43,12 +47,10 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
     for (FeatureVector vector : vectors) {
 
       @Var int k = 0;
-      FeatureVector newVector = new FeatureVector(vector.length() - indices_.size());
+      FeatureVector newVector = new FeatureVector(commonNonZeroEntries_.size());
 
-      for (int i = 0; i < vector.length(); i++) {
-        if (!indices_.contains(i)) {
-          newVector.set(k++, vector.get(i));
-        }
+      for (int i : commonNonZeroEntries_) {
+        newVector.set(k++, vector.get(i));
       }
       newVectors.add(newVector);
     }

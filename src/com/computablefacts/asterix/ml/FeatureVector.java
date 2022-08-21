@@ -2,12 +2,13 @@ package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.Generated;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CheckReturnValue;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import smile.util.SparseArray;
 
 @CheckReturnValue
@@ -106,16 +107,8 @@ final public class FeatureVector {
     }
   }
 
-  public List<Integer> zeroes() {
-
-    List<Integer> zeroes = new ArrayList<>();
-
-    for (int i = 0; i < length_; i++) {
-      if (!nonZeroEntries_.containsKey(i)) {
-        zeroes.add(i);
-      }
-    }
-    return zeroes;
+  public Set<Integer> nonZeroEntries() {
+    return ImmutableSet.copyOf(nonZeroEntries_.keySet());
   }
 
   public void normalizeUsingEuclideanNorm() {
