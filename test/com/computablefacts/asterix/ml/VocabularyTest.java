@@ -13,6 +13,7 @@ import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class VocabularyTest {
@@ -284,6 +285,7 @@ public class VocabularyTest {
     Assert.assertEquals(10, vocabulary.size());
   }
 
+  @Ignore
   @Test
   public void testCallCommandLineForUnigrams() throws Exception {
 
@@ -329,6 +331,7 @@ public class VocabularyTest {
     }
   }
 
+  @Ignore
   @Test
   public void testCallCommandLineForBigrams() throws Exception {
 
