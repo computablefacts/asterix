@@ -32,6 +32,8 @@ public abstract class AbstractBinaryClassifierTest {
     AbstractBinaryClassifier classifier = classifier();
     classifier.train(train, actuals);
 
+    Assert.assertTrue(classifier.isTrained());
+
     for (int i = 100; i < 1000; i++) {
       //System.out.println(
       //  "[CLASSIFY] i=" + i + ", expected=" + (i % 2 == 0 ? EVEN : ODD) + ", actual="
@@ -53,6 +55,8 @@ public abstract class AbstractBinaryClassifierTest {
 
     AbstractBinaryClassifier classifier = classifier();
     classifier.train(train, actuals);
+
+    Assert.assertTrue(classifier.isTrained());
 
     if (classifier.supportsIncrementalTraining()) {
 
