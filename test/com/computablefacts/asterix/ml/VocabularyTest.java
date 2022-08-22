@@ -285,7 +285,6 @@ public class VocabularyTest {
     Assert.assertEquals(10, vocabulary.size());
   }
 
-  @Ignore
   @Test
   public void testCallCommandLineForUnigrams() throws Exception {
 
@@ -331,7 +330,6 @@ public class VocabularyTest {
     }
   }
 
-  @Ignore
   @Test
   public void testCallCommandLineForBigrams() throws Exception {
 
