@@ -13,7 +13,6 @@ import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class VocabularyTest {
@@ -338,13 +337,20 @@ public class VocabularyTest {
     }
   }
 
-  @Ignore
   @Test
   public void testCallCommandLineForBigrams() throws Exception {
 
     String path = Files.createTempDirectory("").toFile().getAbsolutePath();
+
+    System.out.println(path + " -> created");
+
     File file = new File(path + File.separator + "papers.jsonl.gz");
+
+    System.out.println(file + " -> exists? " + (file.exists() ? "yes" : "no"));
+
     DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, false, true);
+
+    System.out.println(file + " -> loaded? " + (file.exists() ? "yes" : "no"));
 
     int ngramLength = 2;
 
