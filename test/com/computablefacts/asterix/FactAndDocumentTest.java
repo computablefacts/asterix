@@ -148,11 +148,12 @@ public class FactAndDocumentTest {
     Assert.assertEquals(335,
         FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
 
-    List<GoldLabel> gls = GoldLabel.load(new File(path + File.separator + "gold_labels.jsonl.gz")).toList();
+    List<GoldLabel> gls = GoldLabel.load(new File(path + File.separator + "gold_labels.jsonl.gz"))
+        .toList();
 
-    Assert.assertEquals(39 + 335, gls.size());
+    Assert.assertEquals(39 /* + 335 */, gls.size());
     Assert.assertEquals(39, gls.stream().filter(GoldLabel::isTruePositive).count());
-    Assert.assertEquals(335, gls.stream().filter(GoldLabel::isTrueNegative).count());
+    Assert.assertEquals(0 /* 335 */, gls.stream().filter(GoldLabel::isTrueNegative).count());
     Assert.assertEquals(0, gls.stream().filter(GoldLabel::isFalsePositive).count());
     Assert.assertEquals(0, gls.stream().filter(GoldLabel::isFalseNegative).count());
   }
