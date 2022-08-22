@@ -107,6 +107,7 @@ final public class Model extends AbstractStack {
     @Var Vocabulary unigrams = null;
     @Var Vocabulary bigrams = null;
     @Var Vocabulary trigrams = null;
+    @Var Vocabulary quadgrams = null;
 
     File funigrams = new File(
         String.format("%svocabulary-unigrams.tsv.gz", goldLabels.getParent() + File.separator));
@@ -114,19 +115,18 @@ final public class Model extends AbstractStack {
         String.format("%svocabulary-bigrams.tsv.gz", goldLabels.getParent() + File.separator));
     File ftrigrams = new File(
         String.format("%svocabulary-trigrams.tsv.gz", goldLabels.getParent() + File.separator));
+    File fquadgrams = new File(
+        String.format("%svocabulary-quadgrams.tsv.gz", goldLabels.getParent() + File.separator));
 
-    boolean exists = funigrams.exists() /* && fbigrams.exists() && ftrigrams.exists() */;
-
-    Preconditions.checkState(
-        exists || (!funigrams.exists() /* && !fbigrams.exists() && !ftrigrams.exists() */));
+    boolean exists = funigrams.exists() /* && fbigrams.exists() && ftrigrams.exists() && fquadgrams.exists() */;
 
     if (exists) {
       unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
       bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
       trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
+      quadgrams = fquadgrams.exists() ? new Vocabulary(fquadgrams) : null;
     } else {
-
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 4; i++) {
 
         int length = i + 1;
 
@@ -172,12 +172,25 @@ final public class Model extends AbstractStack {
           stopwatch.stop();
           System.out.printf("Vocabulary for trigrams built in %d seconds.\n",
               stopwatch.elapsed(TimeUnit.SECONDS));
+        } else if (length == 4 && !fquadgrams.exists()) {
+
+          System.out.println("Building vocabulary for quadgrams...");
+          Stopwatch stopwatch = Stopwatch.createStarted();
+
+          quadgrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
+          quadgrams.save(fquadgrams);
+          quadgrams = null;
+
+          stopwatch.stop();
+          System.out.printf("Vocabulary for quadgrams built in %d seconds.\n",
+              stopwatch.elapsed(TimeUnit.SECONDS));
         }
       }
 
       unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
       bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
       trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
+      quadgrams = fquadgrams.exists() ? new Vocabulary(fquadgrams) : null;
     }
 
     // Train/test model
@@ -251,7 +264,15 @@ final public class Model extends AbstractStack {
             model.vectorizers_.add(new TfIdfVectorizer(trigrams, true));
           }
         }
-
+        if (quadgrams != null) {
+          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
+              || "ab".equals(classifier)) {
+            model.vectorizers_.add(new ExistentialVectorizer(quadgrams, false));
+          } else {
+            model.vectorizers_.add(new TfIdfVectorizer(quadgrams, true));
+          }
+        }
+        
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
         } else if ("fld".equals(classifier)) {
