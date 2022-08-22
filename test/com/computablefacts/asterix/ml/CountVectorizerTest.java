@@ -19,8 +19,23 @@ public class CountVectorizerTest {
     Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
     CountVectorizer vectorizer = new CountVectorizer(vocabulary, true);
 
-    View.of(sentences()).map(normalizer).map(new TextTokenizer()).map(vectorizer)
-        .forEachRemaining(vector -> Assert.assertEquals(vocabulary.size() - 1, vector.length()));
+    List<FeatureVector> vectors = View.of(sentences()).map(normalizer).map(new TextTokenizer())
+        .map(vectorizer).toList();
+
+    Assert.assertEquals(vocabulary.size() - 1, vectors.get(0).length());
+    Assert.assertEquals(
+        "[0.0, 0.0, 0.0, 0.37796447300922725, 0.0, 0.0, 0.37796447300922725, 0.37796447300922725, 0.37796447300922725, 0.0, 0.37796447300922725, 0.37796447300922725, 0.0, 0.37796447300922725]",
+        vectors.get(0).toString());
+
+    Assert.assertEquals(vocabulary.size() - 1, vectors.get(1).length());
+    Assert.assertEquals(
+        "[0.41702882811414954, 0.0, 0.41702882811414954, 0.0, 0.0, 0.41702882811414954, 0.0, 0.20851441405707477, 0.20851441405707477, 0.0, 0.0, 0.20851441405707477, 0.41702882811414954, 0.41702882811414954]",
+        vectors.get(1).toString());
+
+    Assert.assertEquals(vocabulary.size() - 1, vectors.get(2).length());
+    Assert.assertEquals(
+        "[0.0, 0.3651483716701107, 0.0, 0.18257418583505536, 0.3651483716701107, 0.0, 0.18257418583505536, 0.0, 0.18257418583505536, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536, 0.3651483716701107, 0.18257418583505536]",
+        vectors.get(2).toString());
   }
 
   @Test
@@ -34,8 +49,22 @@ public class CountVectorizerTest {
     CountVectorizer vectorizer = new CountVectorizer(vocabulary, true);
     vectorizer.subsetOfVocabularyConsidered(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
 
-    View.of(sentences()).map(normalizer).map(new TextTokenizer()).map(vectorizer)
-        .forEachRemaining(vector -> Assert.assertEquals(10, vector.length()));
+    List<FeatureVector> vectors = View.of(sentences()).map(normalizer).map(new TextTokenizer())
+        .map(vectorizer).toList();
+
+    Assert.assertEquals(10, vectors.get(0).length());
+    Assert.assertEquals("[0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5, 0.0]",
+        vectors.get(0).toString());
+
+    Assert.assertEquals(10, vectors.get(1).length());
+    Assert.assertEquals(
+        "[0.5345224838248487, 0.0, 0.5345224838248487, 0.0, 0.0, 0.5345224838248487, 0.0, 0.26726124191242434, 0.26726124191242434, 0.0]",
+        vectors.get(1).toString());
+
+    Assert.assertEquals(10, vectors.get(2).length());
+    Assert.assertEquals(
+        "[0.0, 0.4472135954999579, 0.0, 0.22360679774997896, 0.4472135954999579, 0.0, 0.22360679774997896, 0.0, 0.22360679774997896, 0.6708203932499368]",
+        vectors.get(2).toString());
   }
 
   private List<String> sentences() {
