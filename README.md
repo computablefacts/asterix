@@ -84,7 +84,7 @@ Nona contains a few helpers to perform text mining/NLP related tasks :
     - [AsciiProgressBar](#asciiprogressbar)
     - [AsciiTable](#asciitable)
 - Algorithms
-  - [DocSetLabeler](#docsetlabeler)
+    - [DocSetLabeler](#docsetlabeler)
 
 ### Span
 
@@ -274,7 +274,7 @@ System.out.println(AsciiTable.format(table, false));
 
 ### DocSetLabeler
 
-A highly customizable implementation of the [DocSetLabeler](src/com/computablefacts/asterix/DocSetLabeler.java)
+A highly customizable implementation of the [DocSetLabeler](src/com/computablefacts/asterix/ml/AbstractDocSetLabeler.java)
 [algorithm](https://arxiv.org/abs/1409.7591) :
 
 > An algorithm capable of generating expressive thematic labels for any subset of
