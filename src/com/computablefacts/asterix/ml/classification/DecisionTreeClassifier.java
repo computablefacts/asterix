@@ -1,9 +1,7 @@
 package com.computablefacts.asterix.ml.classification;
 
 import com.computablefacts.asterix.ml.FeatureVector;
-import com.computablefacts.asterix.ml.VectorsReducer;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
@@ -14,7 +12,6 @@ import smile.data.formula.Formula;
 @CheckReturnValue
 final public class DecisionTreeClassifier implements AbstractBinaryClassifier {
 
-  private final VectorsReducer reducer_ = new VectorsReducer();
   private DecisionTree tree_ = null;
 
   public DecisionTreeClassifier() {
@@ -31,11 +28,10 @@ final public class DecisionTreeClassifier implements AbstractBinaryClassifier {
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(tree_ != null, "classifier should be trained first");
 
-    FeatureVector newVector = reducer_.apply(Lists.newArrayList(vector)).get(0);
-    int[][] vectors = new int[1][newVector.length() + 1];
-    vectors[0] = new int[newVector.length() + 1];
+    int[][] vectors = new int[1][vector.length() + 1];
+    vectors[0] = new int[vector.length() + 1];
 
-    for (int i : newVector.nonZeroEntries()) {
+    for (int i : vector.nonZeroEntries()) {
       vectors[0][i + 1] = (int) vector.get(i);
     }
 
@@ -52,12 +48,11 @@ final public class DecisionTreeClassifier implements AbstractBinaryClassifier {
         "mismatch between the number of vectors and the number of actuals");
     Preconditions.checkState(tree_ == null, "classifier has already been trained");
 
-    List<FeatureVector> newVectors = reducer_.apply(vectors);
-    int[][] vects = new int[newVectors.size()][newVectors.get(0).length() + 1];
+    int[][] vects = new int[vectors.size()][vectors.get(0).length() + 1];
 
-    for (int i = 0; i < newVectors.size(); i++) {
+    for (int i = 0; i < vectors.size(); i++) {
 
-      FeatureVector vector = newVectors.get(i);
+      FeatureVector vector = vectors.get(i);
       vects[i] = new int[vector.length() + 1];
       vects[i][0] = actuals[i]; // V1
 

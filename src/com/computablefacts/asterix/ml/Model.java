@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -58,6 +59,7 @@ final public class Model extends AbstractStack {
   private Function<String, String> normalizer_;
   private Function<String, SpanSequence> tokenizer_;
   private List<Function<SpanSequence, FeatureVector>> vectorizers_;
+  private VectorsReducer reducer_;
   private AbstractBinaryClassifier classifier_;
 
   public Model(String label) {
@@ -223,6 +225,7 @@ final public class Model extends AbstractStack {
         model.normalizer_ = normalizer;
         model.tokenizer_ = tokenizer;
         model.vectorizers_ = new ArrayList<>();
+        model.reducer_ = new VectorsReducer();
 
         if (unigrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
@@ -411,7 +414,8 @@ final public class Model extends AbstractStack {
 
   @Override
   public int predict(FeatureVector vector) {
-    return classifier_.predict(vector);
+    return classifier_.predict(
+        reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0));
   }
 
   private Function<String, FeatureVector> featurizer() {
@@ -450,7 +454,7 @@ final public class Model extends AbstractStack {
       List<FeatureVector> vectors = texts.stream().map(featurizer).collect(Collectors.toList());
       int[] actuals = categories.stream().mapToInt(x -> x).toArray();
 
-      classifier_.train(vectors, actuals);
+      classifier_.train(reducer_ == null ? vectors : reducer_.apply(vectors), actuals);
       return;
     }
 
@@ -462,7 +466,8 @@ final public class Model extends AbstractStack {
       FeatureVector vector = featurizer.apply(e.getKey());
       int category = e.getValue();
 
-      return new SimpleImmutableEntry<>(vector, category);
+      return new SimpleImmutableEntry<>(
+          reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0), category);
     }).forEachRemaining(e -> classifier_.update(e.getKey(), e.getValue()));
   }
 
@@ -488,7 +493,8 @@ final public class Model extends AbstractStack {
           "invalid class: should be either 1 (in class) or 0 (not in class)");
 
       FeatureVector vector = featurizer.apply(text);
-      int prediction = classifier_.predict(vector);
+      int prediction = classifier_.predict(
+          reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0));
 
       if (actual == OK) {
         if (prediction == OK) {
