@@ -414,8 +414,7 @@ final public class Model extends AbstractStack {
 
   @Override
   public int predict(FeatureVector vector) {
-    return classifier_.predict(
-        reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0));
+    return classifier_.predict(reduce(vector));
   }
 
   private Function<String, FeatureVector> featurizer() {
@@ -437,6 +436,14 @@ final public class Model extends AbstractStack {
     };
   }
 
+  private FeatureVector reduce(FeatureVector vector) {
+    return reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0);
+  }
+
+  private List<FeatureVector> reduce(List<FeatureVector> vectors) {
+    return reducer_ == null ? vectors : reducer_.apply(vectors);
+  }
+
   private void train(List<String> texts, List<Integer> categories) {
 
     Preconditions.checkNotNull(texts, "texts should not be null");
@@ -454,7 +461,7 @@ final public class Model extends AbstractStack {
       List<FeatureVector> vectors = texts.stream().map(featurizer).collect(Collectors.toList());
       int[] actuals = categories.stream().mapToInt(x -> x).toArray();
 
-      classifier_.train(reducer_ == null ? vectors : reducer_.apply(vectors), actuals);
+      classifier_.train(reduce(vectors), actuals);
       return;
     }
 
@@ -466,8 +473,7 @@ final public class Model extends AbstractStack {
       FeatureVector vector = featurizer.apply(e.getKey());
       int category = e.getValue();
 
-      return new SimpleImmutableEntry<>(
-          reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0), category);
+      return new SimpleImmutableEntry<>(reduce(vector), category);
     }).forEachRemaining(e -> classifier_.update(e.getKey(), e.getValue()));
   }
 
@@ -493,8 +499,7 @@ final public class Model extends AbstractStack {
           "invalid class: should be either 1 (in class) or 0 (not in class)");
 
       FeatureVector vector = featurizer.apply(text);
-      int prediction = classifier_.predict(
-          reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0));
+      int prediction = classifier_.predict(reduce(vector));
 
       if (actual == OK) {
         if (prediction == OK) {
