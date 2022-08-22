@@ -224,18 +224,10 @@ final public class Model extends AbstractStack {
         model.tokenizer_ = tokenizer;
         model.vectorizers_ = new ArrayList<>();
 
-        Function<FeatureVector, FeatureVector> BinaryVectorizer = vector -> {
-          FeatureVector newVector = new FeatureVector(vector.length());
-          for (int i : vector.nonZeroEntries()) {
-            newVector.set(i, 1);
-          }
-          return newVector;
-        };
-
         if (unigrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
               || "ab".equals(classifier)) {
-            model.vectorizers_.add(new CountVectorizer(unigrams, false).andThen(BinaryVectorizer));
+            model.vectorizers_.add(new ExistentialVectorizer(unigrams, false));
           } else {
             model.vectorizers_.add(new TfIdfVectorizer(unigrams, true));
           }
@@ -243,7 +235,7 @@ final public class Model extends AbstractStack {
         if (bigrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
               || "ab".equals(classifier)) {
-            model.vectorizers_.add(new CountVectorizer(bigrams, false).andThen(BinaryVectorizer));
+            model.vectorizers_.add(new ExistentialVectorizer(bigrams, false));
           } else {
             model.vectorizers_.add(new TfIdfVectorizer(bigrams, true));
           }
@@ -251,7 +243,7 @@ final public class Model extends AbstractStack {
         if (trigrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
               || "ab".equals(classifier)) {
-            model.vectorizers_.add(new CountVectorizer(trigrams, false).andThen(BinaryVectorizer));
+            model.vectorizers_.add(new ExistentialVectorizer(trigrams, false));
           } else {
             model.vectorizers_.add(new TfIdfVectorizer(trigrams, true));
           }
