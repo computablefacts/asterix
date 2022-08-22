@@ -297,14 +297,14 @@ public class VocabularyTest {
 
     File vocabCompressed = new File(
         String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
-    File vocabDeompressed = new File(
+    File vocabDecompressed = new File(
         String.format("%svocabulary-%d.tsv", file.getParent() + File.separator, ngramLength));
 
     if (vocabCompressed.exists()) {
       Assert.assertTrue(vocabCompressed.delete());
     }
-    if (vocabDeompressed.exists()) {
-      Assert.assertTrue(vocabDeompressed.delete());
+    if (vocabDecompressed.exists()) {
+      Assert.assertTrue(vocabDecompressed.delete());
     }
 
     String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000",
@@ -312,11 +312,11 @@ public class VocabularyTest {
     Vocabulary.main(args);
 
     Assert.assertTrue(vocabCompressed.exists());
-    Assert.assertFalse(vocabDeompressed.exists());
-    Assert.assertTrue(IO.gunzip(vocabCompressed, vocabDeompressed));
-    Assert.assertTrue(vocabDeompressed.exists());
+    Assert.assertFalse(vocabDecompressed.exists());
+    Assert.assertTrue(IO.gunzip(vocabCompressed, vocabDecompressed));
+    Assert.assertTrue(vocabDecompressed.exists());
 
-    List<String> lines = IO.readLines(vocabDeompressed);
+    List<String> lines = IO.readLines(vocabDecompressed);
 
     Assert.assertEquals(1002, lines.size());
     Assert.assertTrue(lines.get(0).matches("^# \\d+ \\d+$"));
@@ -343,14 +343,14 @@ public class VocabularyTest {
 
     File vocabCompressed = new File(
         String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
-    File vocabDeompressed = new File(
+    File vocabDecompressed = new File(
         String.format("%svocabulary-%d.tsv", file.getParent() + File.separator, ngramLength));
 
     if (vocabCompressed.exists()) {
       Assert.assertTrue(vocabCompressed.delete());
     }
-    if (vocabDeompressed.exists()) {
-      Assert.assertTrue(vocabDeompressed.delete());
+    if (vocabDecompressed.exists()) {
+      Assert.assertTrue(vocabDecompressed.delete());
     }
 
     String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000",
@@ -358,11 +358,11 @@ public class VocabularyTest {
     Vocabulary.main(args);
 
     Assert.assertTrue(vocabCompressed.exists());
-    Assert.assertFalse(vocabDeompressed.exists());
-    Assert.assertTrue(IO.gunzip(vocabCompressed, vocabDeompressed));
-    Assert.assertTrue(vocabDeompressed.exists());
+    Assert.assertFalse(vocabDecompressed.exists());
+    Assert.assertTrue(IO.gunzip(vocabCompressed, vocabDecompressed));
+    Assert.assertTrue(vocabDecompressed.exists());
 
-    List<String> lines = IO.readLines(vocabDeompressed);
+    List<String> lines = IO.readLines(vocabDecompressed);
 
     Assert.assertEquals(1002, lines.size());
     Assert.assertTrue(lines.get(0).matches("^# \\d+ \\d+$"));
