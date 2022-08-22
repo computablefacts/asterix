@@ -1,9 +1,11 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.Generated;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,15 @@ final public class FeatureVector {
     for (int i = 0; i < vector.size(); i++) {
       set(i, vector.get(i));
     }
+  }
+
+  @Override
+  public String toString() {
+    List<String> array = new ArrayList<>();
+    for (int i = 0; i < length_; i++) {
+      array.add(Double.toString(get(i)));
+    }
+    return "[" + Joiner.on(", ").join(array) + "]";
   }
 
   @Override

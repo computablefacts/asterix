@@ -22,6 +22,7 @@ public class FeatureVectorTest {
 
     Assert.assertEquals(10, vector.length());
     Assert.assertTrue(vector.isEmpty());
+    Assert.assertEquals("[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]", vector.toString());
   }
 
   @Test
@@ -36,6 +37,7 @@ public class FeatureVectorTest {
     Assert.assertEquals(3.0, vector.get(2), 0.0);
     Assert.assertEquals(0.0, vector.get(3), 0.0);
     Assert.assertEquals(5.0, vector.get(4), 0.0);
+    Assert.assertEquals("[1.0, 0.0, 3.0, 0.0, 5.0]", vector.toString());
   }
 
   @Test
@@ -50,6 +52,7 @@ public class FeatureVectorTest {
     Assert.assertEquals(3.0, vector.get(2), 0.0);
     Assert.assertEquals(0.0, vector.get(3), 0.0);
     Assert.assertEquals(5.0, vector.get(4), 0.0);
+    Assert.assertEquals("[1.0, 0.0, 3.0, 0.0, 5.0]", vector.toString());
   }
 
   @Test
