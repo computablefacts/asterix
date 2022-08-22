@@ -372,11 +372,18 @@ final public class Model extends AbstractStack {
       System.out.printf("Ensemble model built in %d seconds.\n",
           stopwatch.elapsed(TimeUnit.SECONDS));
 
-      // TODO : save ensemble model
+      // Save ensemble model
+      System.out.println("Saving ensemble model...");
+
+      save(new File(
+          String.format("%sensemble-model-%s.xml.gz", goldLabels.getParent() + File.separator,
+              label)), stack);
+
+      System.out.println("Ensemble model saved.");
     }
   }
 
-  public static void save(File file, Model model) {
+  public static <T> void save(File file, T model) {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkNotNull(model, "model should not be null");
@@ -386,11 +393,11 @@ final public class Model extends AbstractStack {
   }
 
   @SuppressWarnings("unchecked")
-  public static Model load(File file) {
+  public static <T> T load(File file) {
 
     Preconditions.checkNotNull(file, "file should not be null");
 
-    return (Model) xStream().fromXML(String.join("\n", View.of(file, true).toList()));
+    return (T) xStream().fromXML(String.join("\n", View.of(file, true).toList()));
   }
 
   private static XStream xStream() {
