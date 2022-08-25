@@ -770,49 +770,6 @@ public class ViewTest {
   }
 
   @Test
-  public void testBufferizeWithCapacity() {
-
-    View<String> view = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    List<String> list = view.bufferize(3).toList();
-
-    Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d", "e"), list);
-  }
-
-  @Test
-  public void testBufferizeWithoutCapacity() {
-
-    View<String> view = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    List<String> list = view.bufferize(0).toList();
-
-    Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d", "e"), list);
-  }
-
-  @Test
-  public void testBufferizeViewWithNullElement() {
-
-    View<String> view = View.of(Lists.newArrayList("a", "b", null, "d", "e"));
-    List<String> list = view.bufferize(3).toList();
-
-    Assert.assertEquals(Lists.newArrayList("a", "b", null, "d", "e"), list);
-  }
-
-  @Test
-  public void testBufferizeView() {
-
-    View<Integer> view = View.iterate(1, x -> x + 1);
-    List<Integer> list = view.bufferize(3).map(x -> {
-      try {
-        Thread.sleep(500);
-      } catch (InterruptedException e) {
-        // FALL THROUGH
-      }
-      return x;
-    }).take(10).toList();
-
-    Assert.assertEquals(10, list.size());
-  }
-
-  @Test
   public void testForEachRemainingWithoutBreaker() {
 
     List<String> result = new ArrayList<>();

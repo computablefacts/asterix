@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -40,7 +38,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -57,10 +54,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   private static final Logger logger_ = LoggerFactory.getLogger(View.class);
   private static final View<?> EMPTY_VIEW = new View<>(Collections.emptyIterator());
-  private static final Object END_MARKER = new Object();
-  private static final Object NULL_MARKER = new Object();
-  private static final ExecutorService defaultExecutor_ = Executors.newCachedThreadPool();
-
   protected final Iterator<T> iterator_;
 
   protected View(Iterator<T> iterator) {
@@ -1314,105 +1307,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    */
   public View<ImmutableList<T>> nonOverlappingWindowWithStrictLength(int length) {
     return new View<>(new SlidingWindowIterator<>(this, length, false, true));
-  }
-
-  /**
-   * Preload the next {@code capacity} view elements.
-   *
-   * @param capacity the maximum number of element to preload.
-   * @return a new {@link View}.
-   */
-  @Deprecated
-  public View<T> bufferize(int capacity) {
-    return bufferize(capacity, defaultExecutor_);
-  }
-
-  /**
-   * Preload the next {@code capacity} view elements.
-   *
-   * @param capacity the maximum number of element to preload.
-   * @param executorService the executor in charge of preloading the next element.
-   * @return a new {@link View}.
-   */
-  @Deprecated
-  public View<T> bufferize(int capacity, ExecutorService executorService) {
-
-    Preconditions.checkNotNull(executorService, "executorService should not be null");
-
-    if (capacity <= 0) {
-      return this;
-    }
-
-    // Temporary storage for an element we fetched but could not fit in the queue
-    AtomicReference<T> overflow = new AtomicReference<>();
-    BlockingQueue<T> queue = new ArrayBlockingQueue<>(capacity);
-    View<T> self = this;
-    Runnable inserter = new Runnable() {
-
-      @SuppressWarnings("unchecked")
-      public void run() {
-
-        @Var T next = (T) END_MARKER;
-
-        if (self.hasNext()) {
-
-          next = self.next();
-
-          // ArrayBlockingQueue does not allow nulls
-          if (next == null) {
-            next = (T) NULL_MARKER;
-          }
-        }
-        if (queue.offer(next)) {
-
-          // Keep buffering elements as long as we can
-          if (next != END_MARKER) {
-            executorService.submit(this);
-          }
-        } else {
-
-          // Save the element
-          // This also signals to the iterator that the inserter thread is blocked
-          overflow.lazySet(next);
-        }
-      }
-    };
-
-    // Fetch the first element. The inserter will resubmit itself as necessary to fetch more
-    // elements.
-    executorService.submit(inserter);
-
-    return new View<>(new AbstractIterator<T>() {
-
-      @Override
-      protected T computeNext() {
-        try {
-
-          T next = queue.take();
-          T overflowElem = overflow.getAndSet(null);
-
-          if (overflowElem != null) {
-
-            // There is now a space in the queue
-            queue.put(overflowElem);
-
-            // Awaken the inserter thread
-            executorService.submit(inserter);
-          }
-          if (next == END_MARKER) {
-            return endOfData();
-          }
-          if (next == NULL_MARKER) {
-            return null;
-          }
-          return next;
-        } catch (InterruptedException e) {
-          logger_.error(LogFormatter.create().message(e).formatError());
-          Thread.currentThread().interrupt();
-          return endOfData();
-        }
-      }
-    });
   }
 
   public static class Breaker {
