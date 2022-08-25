@@ -8,7 +8,6 @@ import smile.math.blas.EVDJob;
 import smile.math.blas.LAPACK;
 import smile.math.blas.Layout;
 
-@Ignore("Disabled during TravisCI issue investigation")
 public class MklTest {
 
   @Test
