@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.junit.Assert;
 import org.junit.Test;
@@ -1110,5 +1111,49 @@ public class ViewTest {
 
     Assert.assertEquals(1, sample.size());
     Assert.assertTrue(1 <= sample.get(0) && sample.get(0) <= 5);
+  }
+
+  @Test
+  public void testDispatchIfTrueOnly() {
+
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Function<Integer, Optional<Integer>> ifTrue = Optional::of;
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, null)
+        .toList();
+
+    Assert.assertEquals(2, list.size());
+    Assert.assertEquals(2, (long) list.get(0));
+    Assert.assertEquals(4, (long) list.get(1));
+  }
+
+  @Test
+  public void testDispatchIfFalseOnly() {
+
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Function<Integer, Optional<Integer>> ifFalse = Optional::of;
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, null, ifFalse)
+        .toList();
+
+    Assert.assertEquals(3, list.size());
+    Assert.assertEquals(1, (long) list.get(0));
+    Assert.assertEquals(3, (long) list.get(1));
+    Assert.assertEquals(5, (long) list.get(2));
+  }
+
+  @Test
+  public void testDispatchIfTrueAndIfFalse() {
+
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Function<Integer, Optional<Integer>> ifTrue = Optional::of;
+    Function<Integer, Optional<Integer>> ifFalse = Optional::of;
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, ifFalse)
+        .toList();
+
+    Assert.assertEquals(5, list.size());
+    Assert.assertEquals(1, (long) list.get(0));
+    Assert.assertEquals(2, (long) list.get(1));
+    Assert.assertEquals(3, (long) list.get(2));
+    Assert.assertEquals(4, (long) list.get(3));
+    Assert.assertEquals(5, (long) list.get(4));
   }
 }

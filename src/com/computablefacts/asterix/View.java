@@ -846,6 +846,32 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Returns a view where all the elements have been processed according to the predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @param ifTrue the function to apply if the predicate is satisfied. If this parameter is null or
+   * the {@link Optional} returned is `empty`, all the elements that satisfies the predicate will be
+   * dropped.
+   * @param ifFalse the function to apply if the predicate is not satisfied. If this parameter is
+   * null or the {@link Optional} returned is `empty`, all the elements that does not satisfy the
+   * predicate will be dropped.
+   * @param <U>
+   * @return a new {@link View}.
+   */
+  public <U> View<U> dispatch(Predicate<? super T> predicate,
+      Function<? super T, Optional<U>> ifTrue, Function<? super T, Optional<U>> ifFalse) {
+
+    Preconditions.checkNotNull(predicate, "predicate should not be null");
+
+    return map(element -> {
+      if (predicate.test(element)) {
+        return ifTrue == null ? Optional.<U>empty() : ifTrue.apply(element);
+      }
+      return ifFalse == null ? Optional.<U>empty() : ifFalse.apply(element);
+    }).filter(Optional::isPresent).map(Optional::get);
+  }
+
+  /**
    * Returns a view consisting of the results of applying the given function to the elements of this
    * view.
    *
