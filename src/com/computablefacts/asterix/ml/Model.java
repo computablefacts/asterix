@@ -92,7 +92,7 @@ final public class Model extends AbstractStack {
     System.out.printf("Documents stored in %s.\n", documents);
     System.out.printf("Gold labels stored in %s.\n", goldLabels);
     System.out.printf("Labels to consider are [%s].\n", Joiner.on(", ").join(labels));
-    System.out.printf("Classifier to consider are [%s].\n", Joiner.on(", ").join(classifiers));
+    System.out.printf("Classifiers to consider are [%s].\n", Joiner.on(", ").join(classifiers));
 
     TextNormalizer normalizer = new TextNormalizer();
     TextTokenizer tokenizer = new TextTokenizer();
