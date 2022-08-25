@@ -13,10 +13,8 @@ import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("Disabled during TravisCI issue investigation")
 public class VocabularyTest {
 
   @Test

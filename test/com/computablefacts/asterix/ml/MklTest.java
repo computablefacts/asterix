@@ -8,6 +8,7 @@ import smile.math.blas.EVDJob;
 import smile.math.blas.LAPACK;
 import smile.math.blas.Layout;
 
+@Ignore("Disable because TravisCI randomly crashes when running these tests.")
 public class MklTest {
 
   @Test
