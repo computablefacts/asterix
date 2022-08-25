@@ -1,12 +1,14 @@
 package com.computablefacts.asterix.ml;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import smile.math.blas.BLAS;
 import smile.math.blas.EVDJob;
 import smile.math.blas.LAPACK;
 import smile.math.blas.Layout;
 
+@Ignore("Disabled during TravisCI issue investigation")
 public class MklTest {
 
   @Test
