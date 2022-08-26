@@ -34,7 +34,7 @@ public class VocabularyTest {
   @Test
   public void testVocabulary() {
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -72,8 +72,8 @@ public class VocabularyTest {
   @Test
   public void testPartialAsPercentageVsFullVocabulary() {
 
-    Vocabulary sample = partialVocabularyAsPercentage();
-    Vocabulary full = fullVocabulary();
+    Vocabulary sample = vocabularyFilteredByPercentages();
+    Vocabulary full = vocabulary();
 
     for (int i = 0; i < sample.size(); i++) {
       Assert.assertEquals(sample.term(i), full.term(i));
@@ -87,8 +87,8 @@ public class VocabularyTest {
   @Test
   public void testPartialAsNumberVsFullVocabulary() {
 
-    Vocabulary sample = partialVocabularyAsNumber();
-    Vocabulary full = fullVocabulary();
+    Vocabulary sample = vocabularyFilteredByValues();
+    Vocabulary full = vocabulary();
 
     for (int i = 0; i < sample.size(); i++) {
       Assert.assertEquals(sample.term(i), full.term(i));
@@ -102,7 +102,7 @@ public class VocabularyTest {
   @Test
   public void testTermFrequency() {
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -122,7 +122,7 @@ public class VocabularyTest {
   @Test
   public void testDocumentFrequency() {
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -142,7 +142,7 @@ public class VocabularyTest {
   @Test
   public void testNormalizedTermFrequency() {
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -162,7 +162,7 @@ public class VocabularyTest {
   @Test
   public void testNormalizedDocumentFrequency() {
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -182,7 +182,7 @@ public class VocabularyTest {
   @Test
   public void testInverseDocumentFrequency() {
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -202,7 +202,7 @@ public class VocabularyTest {
   @Test
   public void testTfIdf() {
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
 
     Assert.assertEquals(10, vocabulary.size());
 
@@ -225,7 +225,7 @@ public class VocabularyTest {
     String path = java.nio.file.Files.createTempDirectory("test-").toFile().getPath();
     File file = new File(path + File.separator + "vocab.tsv.gz");
 
-    Vocabulary vocabulary = partialVocabularyAsPercentage();
+    Vocabulary vocabulary = vocabularyFilteredByPercentages();
     vocabulary.save(file);
 
     Assert.assertEquals(10, vocabulary.size());
@@ -275,13 +275,26 @@ public class VocabularyTest {
   @Test
   public void testReduce() {
 
-    Vocabulary vocabulary = fullVocabulary();
+    Vocabulary vocabulary = vocabulary();
 
-    Assert.assertEquals(15, vocabulary.size());
+    Assert.assertEquals(14, vocabulary.size());
 
-    vocabulary.reduce(Sets.newHashSet(10, 11, 12, 13, 14, 15));
+    vocabulary.reduce(Sets.newHashSet(10, 11, 12, 13, 14));
 
     Assert.assertEquals(10, vocabulary.size());
+  }
+
+  @Test
+  public void testGetTerms() {
+
+    Vocabulary vocabulary = vocabulary();
+
+    Assert.assertEquals(14, vocabulary.terms().size());
+    Assert.assertEquals(14, Sets.intersection(
+        Sets.newHashSet("<UNK>", "[-]", "[aA][dD][dD][rR][eE][sS][sS]", "[iI][nN]",
+            "[mM][oO][sS][tT]", "[pP][oO][pP][uU][lL][aA][rR]", "[wW][iI][tT][hH]",
+            "[yY][aA][hH][oO][oO]", "[’]", "[,]", "[aA][sS]", "[tT][oO]", "[aA][nN][dD]",
+            "[tT][hH][eE]"), vocabulary.terms()).size());
   }
 
   @Test
@@ -374,19 +387,19 @@ public class VocabularyTest {
     }
   }
 
-  private Vocabulary partialVocabularyAsNumber() {
+  private Vocabulary vocabularyFilteredByValues() {
     View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
         .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens, 0, 3, 10);
   }
 
-  private Vocabulary partialVocabularyAsPercentage() {
+  private Vocabulary vocabularyFilteredByPercentages() {
     View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
         .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens, 0.01, 1.0, 10);
   }
 
-  private Vocabulary fullVocabulary() {
+  private Vocabulary vocabulary() {
     View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
         .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens);

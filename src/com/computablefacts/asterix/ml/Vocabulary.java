@@ -16,6 +16,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
 import com.google.common.collect.Sets;
@@ -264,6 +265,15 @@ final public class Vocabulary {
     df_.clear();
     idx_.clear();
     isFrozen_ = false;
+  }
+
+  /**
+   * Returns all the terms in the current vocabulary.
+   *
+   * @return the terms.
+   */
+  public Set<String> terms() {
+    return ImmutableSet.copyOf(idx_.keySet());
   }
 
   /**
@@ -578,15 +588,17 @@ final public class Vocabulary {
     isFrozen_ = true;
     idx_.put(tokenUnk_, idxUnk_);
 
-    df_.entrySet()
-        .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && freq.getCount() < minDocFreq);
-    df_.entrySet()
-        .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && freq.getCount() > maxDocFreq);
+    Pattern pattern = Pattern.compile("^(\\[.*\\])+$");
+
+    df_.entrySet().removeIf(
+        freq -> !tokenUnk_.equals(freq.getElement()) && (freq.getCount() < minDocFreq
+            || freq.getCount() > maxDocFreq || !pattern.matches(freq.getElement())));
     tf_.entrySet()
         .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && !df_.contains(freq.getElement()));
 
     Preconditions.checkState(tf_.contains(tokenUnk_));
     Preconditions.checkState(df_.contains(tokenUnk_));
+    Preconditions.checkState(df_.elementSet().size() == tf_.elementSet().size());
 
     @Var Stream<Entry<String>> stream = tf_.entrySet().stream()
         .filter(e -> !tokenUnk_.equals(e.getElement())).sorted(

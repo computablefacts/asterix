@@ -59,6 +59,7 @@ final public class Model extends AbstractStack {
   private Function<String, String> normalizer_;
   private Function<String, SpanSequence> tokenizer_;
   private List<Function<SpanSequence, FeatureVector>> vectorizers_;
+  private List<Function<FeatureVector, FeatureVector>> normalizers_;
   private VectorsReducer reducer_;
   private AbstractBinaryClassifier classifier_;
 
@@ -238,41 +239,50 @@ final public class Model extends AbstractStack {
         model.normalizer_ = normalizer;
         model.tokenizer_ = tokenizer;
         model.vectorizers_ = new ArrayList<>();
+        model.normalizers_ = new ArrayList<>();
         model.reducer_ = new VectorsReducer();
 
         if (unigrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
               || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(unigrams, false));
+            model.vectorizers_.add(new ExistentialVectorizer(unigrams));
+            model.normalizers_.add(Function.identity());
           } else {
-            model.vectorizers_.add(new TfIdfVectorizer(unigrams, true));
+            model.vectorizers_.add(new TfIdfVectorizer(unigrams));
+            model.normalizers_.add(new EuclideanNormNormalizer());
           }
         }
         if (bigrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
               || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(bigrams, false));
+            model.vectorizers_.add(new ExistentialVectorizer(bigrams));
+            model.normalizers_.add(Function.identity());
           } else {
-            model.vectorizers_.add(new TfIdfVectorizer(bigrams, true));
+            model.vectorizers_.add(new TfIdfVectorizer(bigrams));
+            model.normalizers_.add(new EuclideanNormNormalizer());
           }
         }
         if (trigrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
               || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(trigrams, false));
+            model.vectorizers_.add(new ExistentialVectorizer(trigrams));
+            model.normalizers_.add(Function.identity());
           } else {
-            model.vectorizers_.add(new TfIdfVectorizer(trigrams, true));
+            model.vectorizers_.add(new TfIdfVectorizer(trigrams));
+            model.normalizers_.add(new EuclideanNormNormalizer());
           }
         }
         if (quadgrams != null) {
           if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
               || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(quadgrams, false));
+            model.vectorizers_.add(new ExistentialVectorizer(quadgrams));
+            model.normalizers_.add(Function.identity());
           } else {
-            model.vectorizers_.add(new TfIdfVectorizer(quadgrams, true));
+            model.vectorizers_.add(new TfIdfVectorizer(quadgrams));
+            model.normalizers_.add(new EuclideanNormNormalizer());
           }
         }
-        
+
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
         } else if ("fld".equals(classifier)) {
@@ -450,6 +460,9 @@ final public class Model extends AbstractStack {
     Preconditions.checkState(normalizer_ != null, "missing normalizer");
     Preconditions.checkState(tokenizer_ != null, "missing tokenizer");
     Preconditions.checkState(vectorizers_ != null, "missing vectorizer");
+    Preconditions.checkState(normalizers_ != null, "missing normalizer");
+    Preconditions.checkState(vectorizers_.size() == normalizers_.size(),
+        "mismatch between the number of vectorizers and normalizers");
 
     VectorsMerger merger = new VectorsMerger();
     return (text) -> {
@@ -457,8 +470,12 @@ final public class Model extends AbstractStack {
       SpanSequence spans = tokenizer_.apply(normalizer_.apply(text));
       List<FeatureVector> vectors = new ArrayList<>(vectorizers_.size());
 
-      for (Function<SpanSequence, FeatureVector> vectorizer : vectorizers_) {
-        vectors.add(vectorizer.apply(spans));
+      for (int i = 0; i < vectorizers_.size(); i++) {
+
+        Function<SpanSequence, FeatureVector> vectorizer = vectorizers_.get(i);
+        Function<FeatureVector, FeatureVector> normalizer = normalizers_.get(i);
+
+        vectors.add(normalizer.apply(vectorizer.apply(spans)));
       }
       return merger.apply(vectors);
     };

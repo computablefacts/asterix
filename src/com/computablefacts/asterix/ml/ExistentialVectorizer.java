@@ -8,8 +8,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CheckReturnValue;
-import com.google.errorprone.annotations.Var;
-import java.util.List;
 import java.util.function.Function;
 
 @CheckReturnValue
@@ -17,20 +15,17 @@ final public class ExistentialVectorizer implements Function<SpanSequence, Featu
 
   private final LoadingCache<String, String> cache_;
   private final Vocabulary vocabulary_;
-  private final boolean normalize_;
-  private List<Integer> indices_;
 
-  public ExistentialVectorizer(Vocabulary vocabulary, boolean normalize) {
-    this(vocabulary, normalize, 10000);
+  public ExistentialVectorizer(Vocabulary vocabulary) {
+    this(vocabulary, 10000);
   }
 
-  public ExistentialVectorizer(Vocabulary vocabulary, boolean normalize, int maxCacheSize) {
+  public ExistentialVectorizer(Vocabulary vocabulary, int maxCacheSize) {
 
     Preconditions.checkNotNull(vocabulary, "vocabulary should not be null");
     Preconditions.checkArgument(maxCacheSize > 0, "maxCacheSize must be > 0");
 
     vocabulary_ = vocabulary;
-    normalize_ = normalize;
     cache_ = CacheBuilder.newBuilder().maximumSize(maxCacheSize)
         .build(new CacheLoader<String, String>() {
           @Override
@@ -48,36 +43,14 @@ final public class ExistentialVectorizer implements Function<SpanSequence, Featu
     Multiset<String> counts = HashMultiset.create();
     spans.forEach(span -> counts.add(cache_.getUnchecked(span.text())));
 
-    FeatureVector vector;
+    FeatureVector vector = new FeatureVector(vocabulary_.size() - 1 /* ignore UNK */);
 
-    if (indices_ == null) {
-
-      vector = new FeatureVector(vocabulary_.size() - 1 /* ignore UNK */);
-
-      for (int i = 0; i < vocabulary_.size() - 1 /* ignore UNK */; i++) {
-        int idx = i + 1;
-        if (counts.count(vocabulary_.term(idx)) > 0) {
-          vector.set(i, 1);
-        }
+    for (int i = 0; i < vocabulary_.size() - 1 /* ignore UNK */; i++) {
+      int idx = i + 1;
+      if (counts.count(vocabulary_.term(idx)) > 0) {
+        vector.set(i, 1);
       }
-    } else {
-
-      vector = new FeatureVector(indices_.size());
-      @Var int i = 0;
-
-      for (int idx : indices_) {
-        if (counts.count(vocabulary_.term(idx)) > 0) {
-          vector.set(i++, 1);
-        }
-      }
-    }
-    if (normalize_) {
-      vector.normalizeUsingEuclideanNorm();
     }
     return vector;
-  }
-
-  public void subsetOfVocabularyConsidered(List<Integer> indices) {
-    indices_ = indices;
   }
 }

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @CheckReturnValue
 final public class Stack {
 
-  private final List<AbstractStack> stacks_;
+  private final Optional<AbstractStack> stack_;
 
   public Stack(List<AbstractStack> stacks) {
 
@@ -39,22 +39,30 @@ final public class Stack {
         .filter(stack -> Double.isFinite(stack.confusionMatrix().matthewsCorrelationCoefficient()))
         .collect(Collectors.toList()));
 
-    stacks_ = newStackz.stream().sorted(Comparator.comparingDouble(
-            (AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient())
-        .reversed()).limit(5).collect(Collectors.toList());
+    stack_ = newStackz.stream().max(Comparator.comparingDouble(
+        (AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient()));
   }
 
   @Override
   public String toString() {
-    return stacks_.get(0).toString();
+
+    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+
+    return stack_.get().toString();
   }
 
   public ConfusionMatrix confusionMatrix() {
-    return stacks_.get(0).confusionMatrix();
+
+    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+
+    return stack_.get().confusionMatrix();
   }
 
   public int predict(FeatureVector vector) {
-    return stacks_.get(0).predict(vector);
+
+    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+
+    return stack_.get().predict(vector);
   }
 
   private AbstractStack merge(eStackType stackType, AbstractStack leftNode,

@@ -1,20 +1,19 @@
 package com.computablefacts.asterix;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
-
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @CheckReturnValue
 final public class WildcardMatcher {
 
-  private WildcardMatcher() {}
+  private WildcardMatcher() {
+  }
 
   /**
    * Compute the minimum number of literals contained in a given pattern.
@@ -29,8 +28,7 @@ final public class WildcardMatcher {
       return 0;
     }
 
-    @Var
-    int nbLiterals = 0;
+    @Var int nbLiterals = 0;
 
     for (int i = 0; i < pattern.length(); i++) {
       if (pattern.charAt(i) != '*') {
@@ -201,49 +199,45 @@ final public class WildcardMatcher {
    * @return Compacted pattern.
    */
   public static @NotNull String compact(String pattern) {
-    return Preconditions.checkNotNull(pattern, "pattern should not be null").replaceAll("(\\*)\\1+",
-        "*");
+    return Preconditions.checkNotNull(pattern, "pattern should not be null")
+        .replaceAll("(\\*)\\1+", "*");
   }
 
   /**
    * Based on @{link https://research.swtch.com/glob}.
    *
-   * @param name where to search.
+   * @param text where to search.
    * @param pattern what to search.
-   * @return true iif pattern has been matched in name. False otherwise. This method is case
-   *         insensitive.
+   * @return true iif pattern has been matched in text. False otherwise. This method is case
+   * insensitive.
    */
-  public static boolean match(String name, String pattern) {
-    return match(name, pattern, null);
+  public static boolean match(String text, String pattern) {
+    return match(text, pattern, null);
   }
 
   /**
    * Based on @{link https://research.swtch.com/glob}.
    *
-   * @param name where to search.
+   * @param text where to search.
    * @param pattern what to search.
    * @param match the matched string (optional).
-   * @return true iif pattern has been matched in name. False otherwise. This method is case
-   *         insensitive.
+   * @return true iif pattern has been matched in text. False otherwise. This method is case
+   * insensitive.
    */
-  public static boolean match(String name, String pattern, StringBuilder match) {
+  public static boolean match(String text, String pattern, StringBuilder match) {
 
     String newPattern = pattern == null ? null : compact(pattern);
-    int lenName = name == null ? 0 : name.length();
+    int lenName = text == null ? 0 : text.length();
     int lenPattern = newPattern == null ? 0 : newPattern.length();
 
     if (lenName == 0) {
       return (lenPattern == 0);
     }
 
-    @Var
-    int px = 0;
-    @Var
-    int nx = 0;
-    @Var
-    int nextPx = 0;
-    @Var
-    int nextNx = 0;
+    @Var int px = 0;
+    @Var int nx = 0;
+    @Var int nextPx = 0;
+    @Var int nextNx = 0;
 
     while (px < lenPattern || nx < lenName) {
       if (match != null) {
@@ -255,7 +249,7 @@ final public class WildcardMatcher {
             match.setLength(nx);
           }
           if (nx < lenName) {
-            match.append(name.charAt(nx));
+            match.append(text.charAt(nx));
           }
         }
       }
@@ -278,7 +272,7 @@ final public class WildcardMatcher {
             // fall through
           }
           default: { // ordinary character
-            if (nx < lenName && Character.toLowerCase(name.charAt(nx)) == c) {
+            if (nx < lenName && Character.toLowerCase(text.charAt(nx)) == c) {
               px++;
               nx++;
               continue;
@@ -299,7 +293,7 @@ final public class WildcardMatcher {
       return false;
     }
 
-    // Matched all of pattern to all of name. Success.
+    // Matched all of pattern to all of text. Success.
     return true;
   }
 }

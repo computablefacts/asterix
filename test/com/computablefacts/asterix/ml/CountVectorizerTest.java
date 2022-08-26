@@ -17,53 +17,24 @@ public class CountVectorizerTest {
         .map(spans -> View.of(spans).map(Span::text).toList());
 
     Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
-    CountVectorizer vectorizer = new CountVectorizer(vocabulary, true);
+    CountVectorizer vectorizer = new CountVectorizer(vocabulary);
 
     List<FeatureVector> vectors = View.of(sentences()).map(normalizer).map(new TextTokenizer())
         .map(vectorizer).toList();
 
-    Assert.assertEquals(vocabulary.size() - 1, vectors.get(0).length());
+    Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(0).length());
     Assert.assertEquals(
-        "[0.0, 0.0, 0.0, 0.37796447300922725, 0.0, 0.0, 0.37796447300922725, 0.37796447300922725, 0.37796447300922725, 0.0, 0.37796447300922725, 0.37796447300922725, 0.0, 0.37796447300922725]",
+        "[0.0, 0.0, 0.0, 0.07142857142857142, 0.0, 0.0, 0.07142857142857142, 0.07142857142857142, 0.07142857142857142, 0.0, 0.07142857142857142, 0.0, 0.07142857142857142]",
         vectors.get(0).toString());
 
-    Assert.assertEquals(vocabulary.size() - 1, vectors.get(1).length());
+    Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(1).length());
     Assert.assertEquals(
-        "[0.41702882811414954, 0.0, 0.41702882811414954, 0.0, 0.0, 0.41702882811414954, 0.0, 0.20851441405707477, 0.20851441405707477, 0.0, 0.0, 0.20851441405707477, 0.41702882811414954, 0.41702882811414954]",
+        "[0.07142857142857142, 0.0, 0.07142857142857142, 0.0, 0.0, 0.07142857142857142, 0.0, 0.03571428571428571, 0.03571428571428571, 0.0, 0.0, 0.07142857142857142, 0.07142857142857142]",
         vectors.get(1).toString());
 
-    Assert.assertEquals(vocabulary.size() - 1, vectors.get(2).length());
+    Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(2).length());
     Assert.assertEquals(
-        "[0.0, 0.3651483716701107, 0.0, 0.18257418583505536, 0.3651483716701107, 0.0, 0.18257418583505536, 0.0, 0.18257418583505536, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536, 0.3651483716701107, 0.18257418583505536]",
-        vectors.get(2).toString());
-  }
-
-  @Test
-  public void testVectorizeOnSubsetOfVocabulary() {
-
-    TextNormalizer normalizer = new TextNormalizer(true);
-    View<List<String>> tokens = View.of(sentences()).map(normalizer).map(new TextTokenizer())
-        .map(spans -> View.of(spans).map(Span::text).toList());
-
-    Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
-    CountVectorizer vectorizer = new CountVectorizer(vocabulary, true);
-    vectorizer.subsetOfVocabularyConsidered(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-
-    List<FeatureVector> vectors = View.of(sentences()).map(normalizer).map(new TextTokenizer())
-        .map(vectorizer).toList();
-
-    Assert.assertEquals(10, vectors.get(0).length());
-    Assert.assertEquals("[0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5, 0.0]",
-        vectors.get(0).toString());
-
-    Assert.assertEquals(10, vectors.get(1).length());
-    Assert.assertEquals(
-        "[0.5345224838248487, 0.0, 0.5345224838248487, 0.0, 0.0, 0.5345224838248487, 0.0, 0.26726124191242434, 0.26726124191242434, 0.0]",
-        vectors.get(1).toString());
-
-    Assert.assertEquals(10, vectors.get(2).length());
-    Assert.assertEquals(
-        "[0.0, 0.4472135954999579, 0.0, 0.22360679774997896, 0.4472135954999579, 0.0, 0.22360679774997896, 0.0, 0.22360679774997896, 0.6708203932499368]",
+        "[0.0, 0.045454545454545456, 0.0, 0.022727272727272728, 0.045454545454545456, 0.0, 0.022727272727272728, 0.0, 0.022727272727272728, 0.06818181818181818, 0.045454545454545456, 0.045454545454545456, 0.022727272727272728]",
         vectors.get(2).toString());
   }
 
