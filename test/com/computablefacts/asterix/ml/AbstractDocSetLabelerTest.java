@@ -1,5 +1,7 @@
 package com.computablefacts.asterix.ml;
 
+import static com.computablefacts.asterix.ml.AbstractDocSetLabeler.counts;
+
 import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,8 +84,12 @@ public class AbstractDocSetLabelerTest {
     neg.put("29", Sets.newHashSet("yes"));
     neg.put("30", Sets.newHashSet("no"));
 
-    double informationGainYes = AbstractDocSetLabeler.informationGain("yes", pos, neg);
-    double informationGainNo = AbstractDocSetLabeler.informationGain("no", pos, neg);
+    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+
+    double informationGainYes = AbstractDocSetLabeler.informationGain(pos.size(),
+        counts.get("yes").getKey(), neg.size(), counts.get("yes").getValue());
+    double informationGainNo = AbstractDocSetLabeler.informationGain(pos.size(),
+        counts.get("no").getKey(), neg.size(), counts.get("no").getValue());
 
     Assert.assertEquals(0.38121, informationGainYes, 0.00001);
     Assert.assertEquals(0.38121, informationGainNo, 0.00001);
@@ -126,8 +132,12 @@ public class AbstractDocSetLabelerTest {
     neg.put("29", Sets.newHashSet("yes"));
     neg.put("30", Sets.newHashSet("no"));
 
-    double intrinsicValueYes = AbstractDocSetLabeler.intrinsicValue("yes", pos, neg);
-    double intrinsicValueNo = AbstractDocSetLabeler.intrinsicValue("no", pos, neg);
+    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+
+    double intrinsicValueYes = AbstractDocSetLabeler.intrinsicValue(pos.size(),
+        counts.get("yes").getKey(), neg.size(), counts.get("yes").getValue());
+    double intrinsicValueNo = AbstractDocSetLabeler.intrinsicValue(pos.size(),
+        counts.get("no").getKey(), neg.size(), counts.get("no").getValue());
 
     Assert.assertEquals(0.48367, intrinsicValueYes, 0.00001);
     Assert.assertEquals(0.51311, intrinsicValueNo, 0.00001);
@@ -170,10 +180,12 @@ public class AbstractDocSetLabelerTest {
     neg.put("29", Sets.newHashSet("yes"));
     neg.put("30", Sets.newHashSet("no"));
 
-    double informationGainRatioYes =
-        AbstractDocSetLabeler.informationGainRatio("yes", pos, neg, Sets.newHashSet("yes", "no"));
-    double informationGainRatioNo =
-        AbstractDocSetLabeler.informationGainRatio("no", pos, neg, Sets.newHashSet("yes", "no"));
+    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+
+    double informationGainRatioYes = AbstractDocSetLabeler.informationGainRatio("yes",
+        Sets.newHashSet("yes", "no"), counts, pos.size(), neg.size());
+    double informationGainRatioNo = AbstractDocSetLabeler.informationGainRatio("no",
+        Sets.newHashSet("yes", "no"), counts, pos.size(), neg.size());
 
     Assert.assertEquals(0.38244, informationGainRatioYes, 0.00001);
     Assert.assertEquals(0.38244, informationGainRatioNo, 0.00001);
@@ -204,14 +216,20 @@ public class AbstractDocSetLabelerTest {
     neg.put("13", Sets.newHashSet("rainy", "mild", "high", "false"));
     neg.put("14", Sets.newHashSet("sunny", "mild", "high", "true"));
 
-    double informationGainHumidityHigh = AbstractDocSetLabeler.informationGain("high", pos, neg);
-    double informationGainHumidityNormal = AbstractDocSetLabeler.informationGain("normal", pos, neg);
+    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+
+    double informationGainHumidityHigh = AbstractDocSetLabeler.informationGain(pos.size(),
+        counts.get("high").getKey(), neg.size(), counts.get("high").getValue());
+    double informationGainHumidityNormal = AbstractDocSetLabeler.informationGain(pos.size(),
+        counts.get("normal").getKey(), neg.size(), counts.get("normal").getValue());
 
     Assert.assertEquals(0.15183, informationGainHumidityHigh, 0.00001);
     Assert.assertEquals(0.15183, informationGainHumidityNormal, 0.00001);
 
-    double informationGainWindyTrue = AbstractDocSetLabeler.informationGain("true", pos, neg);
-    double informationGainWindyFalse = AbstractDocSetLabeler.informationGain("false", pos, neg);
+    double informationGainWindyTrue = AbstractDocSetLabeler.informationGain(pos.size(),
+        counts.get("true").getKey(), neg.size(), counts.get("true").getValue());
+    double informationGainWindyFalse = AbstractDocSetLabeler.informationGain(pos.size(),
+        counts.get("false").getKey(), neg.size(), counts.get("false").getValue());
 
     Assert.assertEquals(0.04812, informationGainWindyTrue, 0.00001);
     Assert.assertEquals(0.04812, informationGainWindyFalse, 0.00001);
@@ -238,14 +256,20 @@ public class AbstractDocSetLabelerTest {
     neg.put("13", Sets.newHashSet("rainy", "mild", "high", "false"));
     neg.put("14", Sets.newHashSet("sunny", "mild", "high", "true"));
 
-    double intrinsicValueHumidityHigh = AbstractDocSetLabeler.intrinsicValue("high", pos, neg);
-    double intrinsicValueHumidityNormal = AbstractDocSetLabeler.intrinsicValue("normal", pos, neg);
+    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+
+    double intrinsicValueHumidityHigh = AbstractDocSetLabeler.intrinsicValue(pos.size(),
+        counts.get("high").getKey(), neg.size(), counts.get("high").getValue());
+    double intrinsicValueHumidityNormal = AbstractDocSetLabeler.intrinsicValue(pos.size(),
+        counts.get("normal").getKey(), neg.size(), counts.get("normal").getValue());
 
     Assert.assertEquals(0.5, intrinsicValueHumidityHigh, 0.00001);
     Assert.assertEquals(0.5, intrinsicValueHumidityNormal, 0.00001);
 
-    double intrinsicValueWindyTrue = AbstractDocSetLabeler.intrinsicValue("true", pos, neg);
-    double intrinsicValueWindyFalse = AbstractDocSetLabeler.intrinsicValue("false", pos, neg);
+    double intrinsicValueWindyTrue = AbstractDocSetLabeler.intrinsicValue(pos.size(),
+        counts.get("true").getKey(), neg.size(), counts.get("true").getValue());
+    double intrinsicValueWindyFalse = AbstractDocSetLabeler.intrinsicValue(pos.size(),
+        counts.get("false").getKey(), neg.size(), counts.get("false").getValue());
 
     Assert.assertEquals(0.52388, intrinsicValueWindyTrue, 0.00001);
     Assert.assertEquals(0.46134, intrinsicValueWindyFalse, 0.00001);
@@ -272,18 +296,20 @@ public class AbstractDocSetLabelerTest {
     neg.put("13", Sets.newHashSet("rainy", "mild", "high", "false"));
     neg.put("14", Sets.newHashSet("sunny", "mild", "high", "true"));
 
-    double informationGainRatioHumidityHigh =
-        AbstractDocSetLabeler.informationGainRatio("high", pos, neg, Sets.newHashSet("high", "normal"));
-    double informationGainRatioHumidityNormal =
-        AbstractDocSetLabeler.informationGainRatio("normal", pos, neg, Sets.newHashSet("high", "normal"));
+    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+
+    double informationGainRatioHumidityHigh = AbstractDocSetLabeler.informationGainRatio("high",
+        Sets.newHashSet("high", "normal"), counts, pos.size(), neg.size());
+    double informationGainRatioHumidityNormal = AbstractDocSetLabeler.informationGainRatio("normal",
+        Sets.newHashSet("high", "normal"), counts, pos.size(), neg.size());
 
     Assert.assertEquals(0.15183, informationGainRatioHumidityHigh, 0.00001);
     Assert.assertEquals(0.15183, informationGainRatioHumidityNormal, 0.00001);
 
-    double informationGainRatioWindyTrue =
-        AbstractDocSetLabeler.informationGainRatio("true", pos, neg, Sets.newHashSet("true", "false"));
-    double informationGainRatioWindyFalse =
-        AbstractDocSetLabeler.informationGainRatio("false", pos, neg, Sets.newHashSet("true", "false"));
+    double informationGainRatioWindyTrue = AbstractDocSetLabeler.informationGainRatio("true",
+        Sets.newHashSet("true", "false"), counts, pos.size(), neg.size());
+    double informationGainRatioWindyFalse = AbstractDocSetLabeler.informationGainRatio("false",
+        Sets.newHashSet("true", "false"), counts, pos.size(), neg.size());
 
     Assert.assertEquals(0.04884, informationGainRatioWindyTrue, 0.00001);
     Assert.assertEquals(0.04884, informationGainRatioWindyFalse, 0.00001);
