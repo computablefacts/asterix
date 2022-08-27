@@ -507,44 +507,6 @@ final public class Vocabulary {
         });
   }
 
-  /**
-   * Remove terms from the vocabulary and reindex it.
-   *
-   * @param idxsToRemove the terms to remove.
-   */
-  public void reduce(Set<Integer> idxsToRemove) {
-
-    Preconditions.checkNotNull(idxsToRemove, "idxsToRemove should not be null");
-    Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
-
-    Vocabulary vocabulary = new Vocabulary();
-    vocabulary.nbTermsSeen_ = nbTermsSeen_;
-    vocabulary.nbDocsSeen_ = nbDocsSeen_;
-
-    @Var int newIdx = 0;
-    List<Integer> idxs = idx_.values().stream().sorted().collect(Collectors.toList());
-
-    for (int idx : idxs) {
-      if (!idxsToRemove.contains(idx)) {
-
-        String term = term(idx);
-
-        vocabulary.idx_.put(term, newIdx++);
-        vocabulary.tf_.add(term, tf_.count(term));
-        vocabulary.df_.add(term, df_.count(term));
-      }
-    }
-
-    clear();
-
-    isFrozen_ = true;
-    nbTermsSeen_ = vocabulary.nbTermsSeen_;
-    nbDocsSeen_ = vocabulary.nbDocsSeen_;
-    idx_.putAll(vocabulary.idx_);
-    tf_.addAll(vocabulary.tf_);
-    df_.addAll(vocabulary.df_);
-  }
-
   private void fill(View<List<String>> docs) {
 
     Preconditions.checkNotNull(docs, "docs should not be null");

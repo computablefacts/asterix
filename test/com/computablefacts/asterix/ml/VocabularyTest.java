@@ -273,18 +273,6 @@ public class VocabularyTest {
   }
 
   @Test
-  public void testReduce() {
-
-    Vocabulary vocabulary = vocabulary();
-
-    Assert.assertEquals(14, vocabulary.size());
-
-    vocabulary.reduce(Sets.newHashSet(10, 11, 12, 13, 14));
-
-    Assert.assertEquals(10, vocabulary.size());
-  }
-
-  @Test
   public void testGetTerms() {
 
     Vocabulary vocabulary = vocabulary();
