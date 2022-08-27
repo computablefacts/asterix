@@ -2,9 +2,6 @@ package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.SpanSequence;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -13,7 +10,6 @@ import java.util.function.Function;
 @CheckReturnValue
 final public class CountVectorizer implements Function<SpanSequence, FeatureVector> {
 
-  private final LoadingCache<String, String> cache_;
   private final Vocabulary vocabulary_;
 
   public CountVectorizer(Vocabulary vocabulary) {
@@ -26,13 +22,6 @@ final public class CountVectorizer implements Function<SpanSequence, FeatureVect
     Preconditions.checkArgument(maxCacheSize > 0, "maxCacheSize must be > 0");
 
     vocabulary_ = vocabulary;
-    cache_ = CacheBuilder.newBuilder().maximumSize(maxCacheSize)
-        .build(new CacheLoader<String, String>() {
-          @Override
-          public String load(String term) {
-            return Vocabulary.normalize(term);
-          }
-        });
   }
 
   @Override
@@ -41,11 +30,11 @@ final public class CountVectorizer implements Function<SpanSequence, FeatureVect
     Preconditions.checkNotNull(spans, "spans should not be null");
 
     Multiset<String> counts = HashMultiset.create();
-    spans.forEach(span -> counts.add(cache_.getUnchecked(span.text())));
+    spans.forEach(span -> counts.add(span.text()));
 
-    FeatureVector vector = new FeatureVector(vocabulary_.size() - 1 /* ignore UNK */);
+    FeatureVector vector = new FeatureVector(vocabulary_.size() - 1 /* UNK */);
 
-    for (int i = 0; i < vocabulary_.size() - 1 /* ignore UNK */; i++) {
+    for (int i = 0; i < vocabulary_.size() - 1 /* UNK */; i++) {
       int idx = i + 1;
       vector.set(i, counts.count(vocabulary_.term(idx)) / (double) counts.size());
     }

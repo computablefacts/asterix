@@ -13,23 +13,28 @@ public class ExistentialVectorizerTest {
   public void testVectorize() {
 
     TextNormalizer normalizer = new TextNormalizer(true);
-    View<List<String>> tokens = View.of(sentences()).map(normalizer).map(new TextTokenizer())
+    TextTokenizer tokenizer = new TextTokenizer();
+
+    View<List<String>> tokens = View.of(sentences()).map(normalizer.andThen(tokenizer))
         .map(spans -> View.of(spans).map(Span::text).toList());
 
     Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
     ExistentialVectorizer vectorizer = new ExistentialVectorizer(vocabulary);
 
-    List<FeatureVector> vectors = View.of(sentences()).map(normalizer).map(new TextTokenizer())
-        .map(vectorizer).toList();
+    List<FeatureVector> vectors = View.of(sentences())
+        .map(normalizer.andThen(tokenizer).andThen(vectorizer)).toList();
 
     Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(0).length());
-    Assert.assertEquals("[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0]", vectors.get(0).toString());
+    Assert.assertEquals("[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0]",
+        vectors.get(0).toString());
 
     Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(1).length());
-    Assert.assertEquals("[1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]", vectors.get(1).toString());
+    Assert.assertEquals("[1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]",
+        vectors.get(1).toString());
 
     Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(2).length());
-    Assert.assertEquals("[0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]", vectors.get(2).toString());
+    Assert.assertEquals("[0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]",
+        vectors.get(2).toString());
   }
 
   private List<String> sentences() {

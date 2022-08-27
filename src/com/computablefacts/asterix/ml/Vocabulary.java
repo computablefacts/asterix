@@ -6,7 +6,6 @@ import com.computablefacts.asterix.Generated;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
-import com.computablefacts.asterix.codecs.StringCodec;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -20,7 +19,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
-import com.google.re2j.Pattern;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -189,54 +187,6 @@ final public class Vocabulary {
     return vocabulary;
   }
 
-  public static String normalize(String term) {
-
-    Preconditions.checkNotNull(term, "term should not be null");
-
-    String lowercase = term.toLowerCase();
-    String uppercase = term.toUpperCase();
-    String normalizedLowercase = StringCodec.removeDiacriticalMarks(lowercase);
-    String normalizedUppercase = StringCodec.removeDiacriticalMarks(uppercase);
-
-    if (term.length() != lowercase.length() || term.length() != uppercase.length()
-        || term.length() != normalizedLowercase.length()
-        || term.length() != normalizedUppercase.length()) {
-
-      // For example, the lowercase character 'ß' is mapped to 'SS' in uppercase...
-      return Pattern.quote(term);
-    }
-    if (!term.equals(Pattern.quote(term))) {
-
-      // For example, the characters '[' or ']' must be escaped
-      return Pattern.quote(term);
-    }
-
-    StringBuilder pattern = new StringBuilder(term.length());
-
-    for (int k = 0; k < term.length(); k++) {
-
-      char charLowerCase = lowercase.charAt(k);
-      char charUpperCase = uppercase.charAt(k);
-      char charNormalizedLowerCase = normalizedLowercase.charAt(k);
-      char charNormalizedUpperCase = normalizedUppercase.charAt(k);
-
-      pattern.append('[');
-      pattern.append(charLowerCase);
-      if (charLowerCase != charUpperCase) {
-        pattern.append(charUpperCase);
-      }
-      if (charLowerCase != charNormalizedLowerCase && charUpperCase != charNormalizedLowerCase) {
-        pattern.append(charNormalizedLowerCase);
-      }
-      if (charLowerCase != charNormalizedUpperCase && charUpperCase != charNormalizedUpperCase
-          && charNormalizedLowerCase != charNormalizedUpperCase) {
-        pattern.append(charNormalizedUpperCase);
-      }
-      pattern.append(']');
-    }
-    return pattern.toString();
-  }
-
   @Override
   public boolean equals(Object obj) {
     if (obj == this) {
@@ -298,7 +248,7 @@ final public class Vocabulary {
     Preconditions.checkNotNull(term, "term should not be null");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return idx_.getOrDefault(normalize(term), idxUnk_);
+    return idx_.getOrDefault(term, idxUnk_);
   }
 
   /**
@@ -519,24 +469,24 @@ final public class Vocabulary {
 
       terms.entrySet().forEach(term -> {
 
-        String normalizedTerm = normalize(term.getElement());
+        String termValue = term.getElement();
         int termCount = term.getCount();
         nbTermsSeen_ += termCount;
 
-        if (termsSeen.contains(normalizedTerm)) {
-          tf_.put(normalizedTerm, tf_.getOrDefault(normalizedTerm, 0) + termCount);
-          df_.put(normalizedTerm, df_.getOrDefault(normalizedTerm, 0) + 1);
+        if (termsSeen.contains(termValue)) {
+          tf_.put(termValue, tf_.getOrDefault(termValue, 0) + termCount);
+          df_.put(termValue, df_.getOrDefault(termValue, 0) + 1);
         } else {
 
-          termsSeen.add(normalizedTerm);
+          termsSeen.add(termValue);
           tf_.put(tokenUnk_, tf_.getOrDefault(tokenUnk_, 0) + 1);
 
           if (!unkAlreadySeen.getAndSet(true)) {
             df_.put(tokenUnk_, df_.getOrDefault(tokenUnk_, 0) + 1);
           }
           if (termCount > 1) {
-            tf_.put(normalizedTerm, tf_.getOrDefault(normalizedTerm, 0) + termCount - 1);
-            df_.put(normalizedTerm, df_.getOrDefault(normalizedTerm, 0) + 1);
+            tf_.put(termValue, tf_.getOrDefault(termValue, 0) + termCount - 1);
+            df_.put(termValue, df_.getOrDefault(termValue, 0) + 1);
           }
         }
       });
@@ -550,11 +500,9 @@ final public class Vocabulary {
     isFrozen_ = true;
     idx_.put(tokenUnk_, idxUnk_);
 
-    Pattern pattern = Pattern.compile("^(\\[.*\\])+$");
-
     df_.entrySet().removeIf(
         freq -> !tokenUnk_.equals(freq.getKey()) && (freq.getValue() < minDocFreq
-            || freq.getValue() > maxDocFreq || !pattern.matches(freq.getKey())));
+            || freq.getValue() > maxDocFreq));
     tf_.entrySet()
         .removeIf(freq -> !tokenUnk_.equals(freq.getKey()) && !df_.containsKey(freq.getKey()));
 

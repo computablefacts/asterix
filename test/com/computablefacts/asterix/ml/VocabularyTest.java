@@ -23,14 +23,15 @@ public class VocabularyTest {
         .suppress(Warning.NONFINAL_FIELDS).verify();
   }
 
-  @Test
-  public void testNormalize() {
-    Assert.assertEquals("[vV][éÉeE][hH][iI][cC][uU][lL][eE]", Vocabulary.normalize("véhicule"));
-    Assert.assertEquals("[nN][äÄaA][hH][eE]", Vocabulary.normalize("Nähe"));
-    Assert.assertEquals("\\[OK\\]", Vocabulary.normalize("[OK]"));
-    Assert.assertEquals("Straße", Vocabulary.normalize("Straße"));
-  }
-
+  /*
+    @Test
+    public void testNormalize() {
+      Assert.assertEquals("[vV][éÉeE][hH][iI][cC][uU][lL][eE]", Vocabulary.normalize("véhicule"));
+      Assert.assertEquals("[nN][äÄaA][hH][eE]", Vocabulary.normalize("Nähe"));
+      Assert.assertEquals("\\[OK\\]", Vocabulary.normalize("[OK]"));
+      Assert.assertEquals("Straße", Vocabulary.normalize("Straße"));
+    }
+  */
   @Test
   public void testVocabulary() {
 
@@ -41,31 +42,31 @@ public class VocabularyTest {
     Assert.assertEquals("<UNK>", vocabulary.term(0));
     Assert.assertEquals(0, vocabulary.index("<UNK>"));
 
-    Assert.assertEquals("[-]", vocabulary.term(1));
+    Assert.assertEquals("-", vocabulary.term(1));
     Assert.assertEquals(1, vocabulary.index("-"));
 
-    Assert.assertEquals("[aA][dD][dD][rR][eE][sS][sS]", vocabulary.term(2));
+    Assert.assertEquals("address", vocabulary.term(2));
     Assert.assertEquals(2, vocabulary.index("address"));
 
-    Assert.assertEquals("[iI][nN]", vocabulary.term(3));
+    Assert.assertEquals("in", vocabulary.term(3));
     Assert.assertEquals(3, vocabulary.index("in"));
 
-    Assert.assertEquals("[mM][oO][sS][tT]", vocabulary.term(4));
+    Assert.assertEquals("most", vocabulary.term(4));
     Assert.assertEquals(4, vocabulary.index("most"));
 
-    Assert.assertEquals("[pP][oO][pP][uU][lL][aA][rR]", vocabulary.term(5));
+    Assert.assertEquals("popular", vocabulary.term(5));
     Assert.assertEquals(5, vocabulary.index("popular"));
 
-    Assert.assertEquals("[wW][iI][tT][hH]", vocabulary.term(6));
+    Assert.assertEquals("with", vocabulary.term(6));
     Assert.assertEquals(6, vocabulary.index("with"));
 
-    Assert.assertEquals("[yY][aA][hH][oO][oO]", vocabulary.term(7));
+    Assert.assertEquals("yahoo", vocabulary.term(7));
     Assert.assertEquals(7, vocabulary.index("yahoo"));
 
-    Assert.assertEquals("[’]", vocabulary.term(8));
+    Assert.assertEquals("’", vocabulary.term(8));
     Assert.assertEquals(8, vocabulary.index("’"));
 
-    Assert.assertEquals("[,]", vocabulary.term(9));
+    Assert.assertEquals(",", vocabulary.term(9));
     Assert.assertEquals(9, vocabulary.index(","));
   }
 
@@ -233,10 +234,10 @@ public class VocabularyTest {
     Assert.assertEquals("<UNK>", vocabulary.term(0));
     Assert.assertEquals(0, vocabulary.index("<UNK>"));
 
-    Assert.assertEquals("[-]", vocabulary.term(1));
+    Assert.assertEquals("-", vocabulary.term(1));
     Assert.assertEquals(1, vocabulary.index("-"));
 
-    Assert.assertEquals("[aA][dD][dD][rR][eE][sS][sS]", vocabulary.term(2));
+    Assert.assertEquals("address", vocabulary.term(2));
     Assert.assertEquals(2, vocabulary.index("address"));
 
     Assert.assertEquals(0.7441860465116279, vocabulary.ntf(0), 0.000001);
@@ -256,10 +257,10 @@ public class VocabularyTest {
     Assert.assertEquals("<UNK>", vocabulary.term(0));
     Assert.assertEquals(0, vocabulary.index("<UNK>"));
 
-    Assert.assertEquals("[-]", vocabulary.term(1));
+    Assert.assertEquals("-", vocabulary.term(1));
     Assert.assertEquals(1, vocabulary.index("-"));
 
-    Assert.assertEquals("[aA][dD][dD][rR][eE][sS][sS]", vocabulary.term(2));
+    Assert.assertEquals("address", vocabulary.term(2));
     Assert.assertEquals(2, vocabulary.index("address"));
 
     Assert.assertEquals(0.7441860465116279, vocabulary.ntf(0), 0.000001);
@@ -277,12 +278,10 @@ public class VocabularyTest {
 
     Vocabulary vocabulary = vocabulary();
 
-    Assert.assertEquals(14, vocabulary.terms().size());
-    Assert.assertEquals(14, Sets.intersection(
-        Sets.newHashSet("<UNK>", "[-]", "[aA][dD][dD][rR][eE][sS][sS]", "[iI][nN]",
-            "[mM][oO][sS][tT]", "[pP][oO][pP][uU][lL][aA][rR]", "[wW][iI][tT][hH]",
-            "[yY][aA][hH][oO][oO]", "[’]", "[,]", "[aA][sS]", "[tT][oO]", "[aA][nN][dD]",
-            "[tT][hH][eE]"), vocabulary.terms()).size());
+    Assert.assertEquals(15, vocabulary.terms().size());
+    Assert.assertEquals(15, Sets.intersection(
+        Sets.newHashSet("<UNK>", "-", "address", "in", "most", "popular", "with", "yahoo", ".", "’",
+            ",", "as", "to", "and", "the"), vocabulary.terms()).size());
   }
 
   @Test
