@@ -17,21 +17,20 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multiset.Entry;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import com.google.re2j.Pattern;
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -41,8 +40,8 @@ final public class Vocabulary {
 
   private final String tokenUnk_ = "<UNK>";
   private final int idxUnk_ = 0;
-  private final Multiset<String> tf_ = HashMultiset.create(); // normalized term -> term frequency
-  private final Multiset<String> df_ = HashMultiset.create(); // normalized term -> document frequency
+  private final Map<String, Integer> tf_ = new HashMap<>(); // normalized term -> term frequency
+  private final Map<String, Integer> df_ = new HashMap<>(); // normalized term -> document frequency
   private final BiMap<String, Integer> idx_ = HashBiMap.create(); // one-hot encoding
   private int nbTermsSeen_ = 0;
   private int nbDocsSeen_ = 0;
@@ -327,7 +326,7 @@ final public class Vocabulary {
     Preconditions.checkNotNull(term, "term should not be null");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return tf_.count(term(index(term)));
+    return tf_.get(term(index(term)));
   }
 
   /**
@@ -340,7 +339,7 @@ final public class Vocabulary {
 
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return tf_.count(term(index));
+    return tf_.get(term(index));
   }
 
   /**
@@ -354,7 +353,7 @@ final public class Vocabulary {
     Preconditions.checkNotNull(term, "term should not be null");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return df_.count(term(index(term)));
+    return df_.get(term(index(term)));
   }
 
   /**
@@ -368,7 +367,7 @@ final public class Vocabulary {
     Preconditions.checkArgument(index >= 0, "index must be >= 0");
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    return df_.count(term(index));
+    return df_.get(term(index));
   }
 
   /**
@@ -466,8 +465,9 @@ final public class Vocabulary {
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    View.of(idx_.keySet())
-        .map(term -> idx_.get(term) + "\t" + term + "\t" + tf_.count(term) + "\t" + df_.count(term))
+    View.of(idx_.keySet()).map(
+            term -> idx_.get(term) + "\t" + term + "\t" + tf_.getOrDefault(term, 0) + "\t"
+                + df_.getOrDefault(term, 0))
         .prepend(String.format("# %d %d\nidx\tnormalized_term\ttf\tdf", nbTermsSeen_, nbDocsSeen_))
         .toFile(Function.identity(), file, false, true);
   }
@@ -501,8 +501,8 @@ final public class Vocabulary {
           int tf = Integer.parseInt(columns.get(2), 10);
           int df = Integer.parseInt(columns.get(3), 10);
 
-          tf_.add(term, tf);
-          df_.add(term, df);
+          tf_.put(term, tf_.getOrDefault(term, 0) + tf);
+          df_.put(term, df_.getOrDefault(term, 0) + df);
           idx_.put(term, idx);
         });
   }
@@ -524,19 +524,19 @@ final public class Vocabulary {
         nbTermsSeen_ += termCount;
 
         if (termsSeen.contains(normalizedTerm)) {
-          tf_.add(normalizedTerm, termCount);
-          df_.add(normalizedTerm);
+          tf_.put(normalizedTerm, tf_.getOrDefault(normalizedTerm, 0) + termCount);
+          df_.put(normalizedTerm, df_.getOrDefault(normalizedTerm, 0) + 1);
         } else {
 
           termsSeen.add(normalizedTerm);
-          tf_.add(tokenUnk_);
+          tf_.put(tokenUnk_, tf_.getOrDefault(tokenUnk_, 0) + 1);
 
           if (!unkAlreadySeen.getAndSet(true)) {
-            df_.add(tokenUnk_);
+            df_.put(tokenUnk_, df_.getOrDefault(tokenUnk_, 0) + 1);
           }
           if (termCount > 1) {
-            tf_.add(normalizedTerm, termCount - 1);
-            df_.add(normalizedTerm);
+            tf_.put(normalizedTerm, tf_.getOrDefault(normalizedTerm, 0) + termCount - 1);
+            df_.put(normalizedTerm, df_.getOrDefault(normalizedTerm, 0) + 1);
           }
         }
       });
@@ -553,27 +553,27 @@ final public class Vocabulary {
     Pattern pattern = Pattern.compile("^(\\[.*\\])+$");
 
     df_.entrySet().removeIf(
-        freq -> !tokenUnk_.equals(freq.getElement()) && (freq.getCount() < minDocFreq
-            || freq.getCount() > maxDocFreq || !pattern.matches(freq.getElement())));
+        freq -> !tokenUnk_.equals(freq.getKey()) && (freq.getValue() < minDocFreq
+            || freq.getValue() > maxDocFreq || !pattern.matches(freq.getKey())));
     tf_.entrySet()
-        .removeIf(freq -> !tokenUnk_.equals(freq.getElement()) && !df_.contains(freq.getElement()));
+        .removeIf(freq -> !tokenUnk_.equals(freq.getKey()) && !df_.containsKey(freq.getKey()));
 
-    Preconditions.checkState(tf_.contains(tokenUnk_));
-    Preconditions.checkState(df_.contains(tokenUnk_));
-    Preconditions.checkState(df_.elementSet().size() == tf_.elementSet().size());
+    Preconditions.checkState(tf_.containsKey(tokenUnk_));
+    Preconditions.checkState(df_.containsKey(tokenUnk_));
+    Preconditions.checkState(df_.entrySet().size() == tf_.entrySet().size());
 
-    @Var Stream<Entry<String>> stream = tf_.entrySet().stream()
-        .filter(e -> !tokenUnk_.equals(e.getElement())).sorted(
-            (e1, e2) -> ComparisonChain.start().compare(e1.getCount(), e2.getCount())
-                .compare(e1.getElement(), e2.getElement()).result());
+    @Var Stream<Map.Entry<String, Integer>> stream = tf_.entrySet().stream()
+        .filter(e -> !tokenUnk_.equals(e.getKey())).sorted(
+            (e1, e2) -> ComparisonChain.start().compare(e1.getValue(), e2.getValue())
+                .compare(e1.getKey(), e2.getKey()).result());
 
     if (maxVocabSize > 0) {
       stream = stream.limit(maxVocabSize - 1 /* UNK */);
     }
 
     stream.forEach(token -> {
-      if (!idx_.containsKey(token.getElement())) {
-        idx_.put(token.getElement(), idx_.size());
+      if (!idx_.containsKey(token.getKey())) {
+        idx_.put(token.getKey(), idx_.size());
       }
     });
   }
