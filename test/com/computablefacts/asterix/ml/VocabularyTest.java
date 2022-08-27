@@ -294,9 +294,9 @@ public class VocabularyTest {
     int ngramLength = 1;
 
     File vocabCompressed = new File(
-        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+        String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator, ngramLength));
     File vocabDecompressed = new File(
-        String.format("%svocabulary-%d.tsv", file.getParent() + File.separator, ngramLength));
+        String.format("%svocabulary-%dgrams.tsv", file.getParent() + File.separator, ngramLength));
 
     if (vocabCompressed.exists()) {
       Assert.assertTrue(vocabCompressed.delete());
@@ -339,9 +339,9 @@ public class VocabularyTest {
     int ngramLength = 2;
 
     File vocabCompressed = new File(
-        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+        String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator, ngramLength));
     File vocabDecompressed = new File(
-        String.format("%svocabulary-%d.tsv", file.getParent() + File.separator, ngramLength));
+        String.format("%svocabulary-%dgrams.tsv", file.getParent() + File.separator, ngramLength));
 
     if (vocabCompressed.exists()) {
       Assert.assertTrue(vocabCompressed.delete());
