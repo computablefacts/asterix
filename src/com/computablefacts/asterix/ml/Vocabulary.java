@@ -2,10 +2,9 @@ package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.asterix.Document;
-import com.computablefacts.asterix.Generated;
 import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
+import com.computablefacts.asterix.console.Observations;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -29,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -65,7 +65,6 @@ final public class Vocabulary {
    * </ul>
    */
   @Beta
-  @Generated
   public static void main(String[] args) {
 
     File file = new File(args[0]);
@@ -74,50 +73,43 @@ final public class Vocabulary {
     int maxVocabSize = Integer.parseInt(args[3], 10);
     Set<String> includeTags = Sets.newHashSet(
         Splitter.on(',').trimResults().omitEmptyStrings().split(args[4]));
-    int ngramLength = Integer.parseInt(args[5], 10);
+    int ngramsLength = Integer.parseInt(args[5], 10);
 
     Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
         "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
     Preconditions.checkArgument(minDocFreq <= maxDocFreq && maxDocFreq <= 1.0,
-        "minDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
+        "maxDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
     Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be = -1 or > 0");
     Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
-    Preconditions.checkArgument(ngramLength > 0, "ngramLength must be > 0");
+    Preconditions.checkArgument(ngramsLength > 0, "ngramLength must be > 0");
 
-    Vocabulary vocabulary;
-    File vocab = new File(
-        String.format("%svocabulary-%d.tsv.gz", file.getParent() + File.separator, ngramLength));
+    try (Observations observations = new Observations(
+        new File(String.format("%sobservations.txt", file.getParent() + File.separator)))) {
 
-    System.out.printf("Dataset is %s\n", file);
-    System.out.printf("NGrams length is %d\n", ngramLength);
-    System.out.printf("Min. document freq. is %.01f%% of all documents\n", minDocFreq * 100);
-    System.out.printf("Max. document freq. is %.01f%% of all documents\n", maxDocFreq * 100);
-    System.out.printf("Max. vocab size is %d\n", maxVocabSize);
-    System.out.printf("Included tags are %s\n", includeTags);
-    System.out.println("Building vocabulary...");
+      observations.add(String.format("Dataset is %s.", file));
+      observations.add(String.format("NGrams length is %d.", ngramsLength));
+      observations.add(
+          String.format("Min. document freq. is %.01f%% of all documents.", minDocFreq * 100));
+      observations.add(
+          String.format("Max. document freq. is %.01f%% of all documents.", maxDocFreq * 100));
+      observations.add(String.format("Max. vocab size is %d.", maxVocabSize));
+      observations.add(String.format("Included tags are %s.", includeTags));
+      observations.add("Building vocabulary...");
 
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    View<SpanSequence> documents = Document.of(file, true).displayProgress(5000)
-        .map(doc -> (String) doc.text()).map(new TextTokenizer());
-    View<List<String>> ngrams;
+      Stopwatch stopwatch = Stopwatch.createStarted();
+      View<List<String>> tokens = Document.of(file, true)
+          .map(doc -> tokenizer(includeTags, ngramsLength).apply((String) doc.text()))
+          .displayProgress(10_000);
+      Vocabulary vocabulary = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
+      vocabulary.save(new File(
+          String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator,
+              ngramsLength)));
+      stopwatch.stop();
 
-    if (ngramLength == 1) {
-      ngrams = documents.map(
-          seq -> View.of(seq).filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
-              .map(Span::text).toList());
-    } else {
-      ngrams = documents.map(
-          seq -> View.of(seq).filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
-              .map(Span::text).overlappingWindowWithStrictLength(ngramLength)
-              .map(tks -> Joiner.on('_').join(tks)).toList());
+      observations.add(
+          String.format("Vocabulary built in %d seconds.", stopwatch.elapsed(TimeUnit.SECONDS)));
+      observations.add(String.format("Vocabulary size is %d.", vocabulary.size()));
     }
-
-    vocabulary = Vocabulary.of(ngrams, minDocFreq, maxDocFreq, maxVocabSize);
-    vocabulary.save(vocab);
-    stopwatch.stop();
-
-    System.out.printf("Vocabulary built in %d seconds\n", stopwatch.elapsed(TimeUnit.SECONDS));
-    System.out.printf("Vocabulary size is %d\n", vocabulary.size());
   }
 
   /**
@@ -171,7 +163,6 @@ final public class Vocabulary {
   public static Vocabulary of(View<List<String>> docs, double minDocFreq, double maxDocFreq,
       int maxVocabSize) {
 
-    Preconditions.checkNotNull(docs, "docs should not be null");
     Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
         "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
     Preconditions.checkArgument(minDocFreq <= maxDocFreq && maxDocFreq <= 1.0,
@@ -185,6 +176,31 @@ final public class Vocabulary {
         (int) (maxDocFreq * vocabulary.nbDocsSeen_), maxVocabSize);
 
     return vocabulary;
+  }
+
+  /**
+   * A pipeline that maps a single text to a list of tokens.
+   *
+   * @param tagsToKeep the types of tokens to keep: WORD, PUNCTUATION, etc.
+   * @param length the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.
+   * @return the tokenized text.
+   */
+  static Function<String, List<String>> tokenizer(Set<String> tagsToKeep, int length) {
+
+    Preconditions.checkArgument(length >= 1, "length must be >= 1");
+
+    TextNormalizer normalizer = new TextNormalizer(true);
+    TextTokenizer tokenizer = new TextTokenizer();
+    Predicate<Span> filter = span -> tagsToKeep == null || !Sets.intersection(tagsToKeep,
+        span.tags()).isEmpty();
+
+    if (length == 1) {
+      return text -> normalizer.andThen(tokenizer)
+          .andThen(seq -> View.of(seq).filter(filter).map(Span::text).toList()).apply(text);
+    }
+    return text -> normalizer.andThen(tokenizer).andThen(
+        seq -> View.of(seq).filter(filter).map(Span::text).overlappingWindowWithStrictLength(length)
+            .map(tks -> Joiner.on('_').join(tks)).toList()).apply(text);
   }
 
   @Override
