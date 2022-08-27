@@ -1,11 +1,14 @@
 package com.computablefacts.asterix;
 
-import java.util.*;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Based on @{link https://boyter.org/2013/04/building-a-search-result-extract-generator-in-php/}
@@ -13,7 +16,8 @@ import com.google.errorprone.annotations.Var;
 @CheckReturnValue
 final public class SnippetExtractor {
 
-  private SnippetExtractor() {}
+  private SnippetExtractor() {
+  }
 
   /**
    * 1/6 ratio on prevCount tends to work pretty well and puts the terms in the middle of the
@@ -55,14 +59,11 @@ final public class SnippetExtractor {
 
     List<Span> locations = wordsLocations(Sets.newHashSet(words), text);
 
-    @Var
-    int startPos = locations == null || locations.isEmpty() ? 0
+    @Var int startPos = locations == null || locations.isEmpty() ? 0
         : snippetLocation(locations, relLength, prevCount);
 
-    @Var
-    int begin = startPos;
-    @Var
-    int end = Math.min(textLength, startPos + relLength);
+    @Var int begin = startPos;
+    @Var int end = Math.min(textLength, startPos + relLength);
 
     // If we are going to snip too much...
     if ((begin + relLength) > textLength) {
@@ -90,8 +91,8 @@ final public class SnippetExtractor {
     }
 
     // If we trimmed from the begin/end add ellipsis
-    return (begin > 0 ? indicator : "") + text.substring(begin, end)
-        + (end < textLength ? indicator : "");
+    return (begin > 0 ? indicator : "") + text.substring(begin, end) + (end < textLength ? indicator
+        : "");
   }
 
   /**
@@ -111,11 +112,17 @@ final public class SnippetExtractor {
     for (String word : words) {
 
       int length = word.length();
-      @Var
-      int loc = text.indexOf(word);
+      @Var int loc = text.indexOf(word);
 
       while (loc >= 0) {
-        locations.add(new Span(text, loc, loc + length));
+
+        Span span = new Span(text, loc, loc + length);
+        int c = loc == 0 ? 0 : text.charAt(loc - 1);
+
+        if (loc == 0 || !Character.isLetterOrDigit(c)) {
+          locations.add(span);
+        }
+
         loc = text.indexOf(word, loc + length);
       }
     }
@@ -137,29 +144,25 @@ final public class SnippetExtractor {
     Preconditions.checkNotNull(locations, "locations is null");
     Preconditions.checkArgument(!locations.isEmpty(), "locations is empty");
 
-    @Var
-    int bestLocation = 0;
-    @Var
-    int bestDiff = 0;
-    @Var
-    int nbDistinctWords = 0;
+    @Var int bestLocation = 0;
+    @Var int bestDiff = 0;
+    @Var int nbDistinctWords = 0;
 
     for (int i = 0; i < locations.size(); i++) {
 
-      @Var
-      int endPos = locations.get(i).begin() + locations.get(i).text().length();
+      @Var int endPos = locations.get(i).begin() + locations.get(i).text().length();
       int beginPos = locations.get(i).begin();
       Set<String> words = new HashSet<>();
       words.add(locations.get(i).text());
 
-      for (int j = i + 1; j < locations.size()
-          && (locations.get(j).begin() - beginPos) < relLength; j++) {
+      for (int j = i + 1; j < locations.size() && (locations.get(j).begin() - beginPos) < relLength;
+          j++) {
         endPos = locations.get(j).begin() + locations.get(j).text().length();
         words.add(locations.get(j).text());
       }
 
-      if (words.size() > nbDistinctWords /* maximize the number of distinct words */
-          || (words.size() == nbDistinctWords
+      if (words.size() > nbDistinctWords /* maximize the number of distinct words */ || (
+          words.size() == nbDistinctWords
               && endPos - beginPos < bestDiff) /* minimize the window size */) {
         bestLocation = beginPos;
         bestDiff = endPos - beginPos;
