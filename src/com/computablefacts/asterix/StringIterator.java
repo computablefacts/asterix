@@ -1,16 +1,15 @@
 package com.computablefacts.asterix;
 
-import java.util.Iterator;
-
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.util.Iterator;
 
 /**
  * Java implementation of Jonathan Wood's "Text Parsing Helper Class".
  *
  * @see <a href="http://www.blackbeltcoder.com/Articles/strings/a-text-parsing-helper-class">Text
- *      Parsing Helper Class</a>
+ * Parsing Helper Class</a>
  */
 @CheckReturnValue
 final public class StringIterator implements Iterator<Character> {
@@ -32,7 +31,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character as a unicode code point.
    * @return true if c is a space character.
    */
-  @Generated
   public static boolean isWhitespace(int c) {
     return Character.isWhitespace(c) || Character.isSpaceChar(c);
   }
@@ -43,10 +41,9 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a punctuation character.
    */
-  @Generated
   public static boolean isPunctuation(char c) {
-    return isInRange(c, '!', '/') || isInRange(c, ':', '@') || isInRange(c, '[', '`')
-        || isInRange(c, '{', '~');
+    return isInRange(c, '!', '/') || isInRange(c, ':', '@') || isInRange(c, '[', '`') || isInRange(
+        c, '{', '~');
   }
 
   /**
@@ -77,7 +74,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a currency symbol.
    */
-  @Generated
   public static boolean isCurrency(char c) {
     return (c == '$') || isInRange(c, '\u00A2', '\u00A5') || isInRange(c, '\u20A0', '\u20CF');
   }
@@ -88,10 +84,9 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is an arrow symbol.
    */
-  @Generated
   public static boolean isArrow(char c) {
-    return isInRange(c, '\u2190', '\u21FF') || isInRange(c, '\u27F0', '\u27FF')
-        || isInRange(c, '\u2900', '\u297F');
+    return isInRange(c, '\u2190', '\u21FF') || isInRange(c, '\u27F0', '\u27FF') || isInRange(c,
+        '\u2900', '\u297F');
   }
 
   /**
@@ -100,7 +95,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is an hyphen.
    */
-  @Generated
   public static boolean isHyphen(char c) {
     return c == '-' || isInRange(c, '\u2010', '\u2014');
   }
@@ -122,7 +116,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a list mark.
    */
-  @Generated
   public static boolean isListMark(char c) {
     return c == '-' || c == '\uF0F0' || c == '\u2022' || c == '\u2023' || c == '\u203B'
         || c == '\u2043';
@@ -134,7 +127,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a final mark.
    */
-  @Generated
   public static boolean isTerminalMark(char c) {
     return c == '.' || c == '?' || c == '!' || c == '\u203C' || isInRange(c, '\u2047', '\u2049');
   }
@@ -145,7 +137,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a separator.
    */
-  @Generated
   public static boolean isSeparatorMark(char c) {
     return c == ',' || c == ';' || c == ':' || c == '|' || c == '/' || c == '\\';
   }
@@ -156,7 +147,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a quotation mark.
    */
-  @Generated
   public static boolean isQuotationMark(char c) {
     return isSingleQuotationMark(c) || isDoubleQuotationMark(c);
   }
@@ -167,7 +157,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a single quotation mark.
    */
-  @Generated
   public static boolean isSingleQuotationMark(char c) {
     return c == '\'' || c == '`' || isInRange(c, '\u2018', '\u201B');
   }
@@ -178,7 +167,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a double quotation mark.
    */
-  @Generated
   public static boolean isDoubleQuotationMark(char c) {
     return c == '"' || c == '«' || c == '»' || isInRange(c, '\u201C', '\u201F');
   }
@@ -189,7 +177,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a bracket.
    */
-  @Generated
   public static boolean isBracket(char c) {
     return isLeftBracket(c) || isRightBracket(c);
   }
@@ -200,7 +187,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a left bracket.
    */
-  @Generated
   public static boolean isLeftBracket(char c) {
     return c == '(' || c == '{' || c == '[' || c == '<';
   }
@@ -211,7 +197,6 @@ final public class StringIterator implements Iterator<Character> {
    * @param c character.
    * @return true iif c is a right bracket.
    */
-  @Generated
   public static boolean isRightBracket(char c) {
     return c == ')' || c == '}' || c == ']' || c == '>';
   }
@@ -397,8 +382,7 @@ final public class StringIterator implements Iterator<Character> {
    */
   public void moveToEndOfLine() {
 
-    @Var
-    char c = peek();
+    @Var char c = peek();
 
     while (c != LF && c != CR && !isEndOfText()) {
       moveAhead();

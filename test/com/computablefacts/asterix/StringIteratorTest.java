@@ -1,6 +1,8 @@
 package com.computablefacts.asterix;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -147,7 +149,7 @@ public class StringIteratorTest {
   @Test
   public void testMoveToOneChar() {
 
-    char[] chars = new char[] {'<', '>'};
+    char[] chars = new char[]{'<', '>'};
     String string = "this is a <a href=\"https://www.google.com\">hyperlink</a>!";
     StringIterator iterator = new StringIterator(string);
 
@@ -182,7 +184,7 @@ public class StringIteratorTest {
   @Test
   public void testMoveTo() {
 
-    char[] chars = new char[] {'<', '>'};
+    char[] chars = new char[]{'<', '>'};
     String string = "this is a <a href=\"https://www.google.com\">hyperlink</a>!";
     StringIterator iterator = new StringIterator(string);
 
@@ -205,7 +207,7 @@ public class StringIteratorTest {
   @Test
   public void testMovePast() {
 
-    char[] chars = new char[] {'<', '>'};
+    char[] chars = new char[]{'<', '>'};
     String string = "this is a <a href=\"https://www.google.com\">hyperlink</a>!";
     StringIterator iterator = new StringIterator(string);
 
@@ -266,6 +268,14 @@ public class StringIteratorTest {
     assertEquals('h', iterator.peek());
     assertEquals(44, iterator.position());
     assertEquals(15, iterator.remaining());
+  }
+
+  @Test
+  public void testIsWhitespace() {
+    assertTrue(StringIterator.isWhitespace(' '));
+    assertTrue(StringIterator.isWhitespace('\n'));
+    assertTrue(StringIterator.isWhitespace('\t'));
+    assertTrue(StringIterator.isWhitespace('\u00a0'));
   }
 
   @Test
