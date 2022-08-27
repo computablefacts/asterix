@@ -169,10 +169,8 @@ public class BoxedTypeTest {
 
     Assert.assertEquals(BoxedType.create("9223372036854775807").hashCode(), bt1.hashCode());
     Assert.assertEquals(BoxedType.create(Long.MAX_VALUE).hashCode(), bt1.hashCode());
-    Assert.assertEquals(BoxedType.create(BigDecimal.valueOf(Long.MAX_VALUE)).hashCode(),
-        bt1.hashCode());
-    Assert.assertEquals(BoxedType.create(BigInteger.valueOf(Long.MAX_VALUE)).hashCode(),
-        bt1.hashCode());
+    Assert.assertEquals(BoxedType.create(BigDecimal.valueOf(Long.MAX_VALUE)).hashCode(), bt1.hashCode());
+    Assert.assertEquals(BoxedType.create(BigInteger.valueOf(Long.MAX_VALUE)).hashCode(), bt1.hashCode());
   }
 
   @Test
@@ -182,8 +180,7 @@ public class BoxedTypeTest {
 
     Assert.assertEquals(BoxedType.create("1.7976931348623157e+308").hashCode(), bt11.hashCode());
     Assert.assertEquals(BoxedType.create(Double.MAX_VALUE).hashCode(), bt11.hashCode());
-    Assert.assertEquals(BoxedType.create(BigDecimal.valueOf(Double.MAX_VALUE)).hashCode(),
-        bt11.hashCode());
+    Assert.assertEquals(BoxedType.create(BigDecimal.valueOf(Double.MAX_VALUE)).hashCode(), bt11.hashCode());
   }
 
   @Test
@@ -194,8 +191,7 @@ public class BoxedTypeTest {
     // Should be 3.4028235e+38 but is 3.4028234663852886E+38 due to rounding shenanigans
     Assert.assertEquals(BoxedType.create("3.4028234663852886E+38").hashCode(), bt11.hashCode());
     Assert.assertEquals(BoxedType.create(Float.MAX_VALUE).hashCode(), bt11.hashCode());
-    Assert.assertEquals(BoxedType.create(BigDecimal.valueOf(Float.MAX_VALUE)).hashCode(),
-        bt11.hashCode());
+    Assert.assertEquals(BoxedType.create(BigDecimal.valueOf(Float.MAX_VALUE)).hashCode(), bt11.hashCode());
   }
 
   @Test
@@ -341,9 +337,9 @@ public class BoxedTypeTest {
   @Test
   public void testBoxStringArray() {
 
-    BoxedType<?> bt1 = BoxedType.create(new String[] {"1", "2", "3", "4", "5", "6"});
-    BoxedType<?> bt2 = BoxedType.create(new String[] {"1", "2", "3", "4", "5", "6"});
-    BoxedType<?> bt3 = BoxedType.create(new String[] {"1", "2", "3"});
+    BoxedType<?> bt1 = BoxedType.create(new String[]{"1", "2", "3", "4", "5", "6"});
+    BoxedType<?> bt2 = BoxedType.create(new String[]{"1", "2", "3", "4", "5", "6"});
+    BoxedType<?> bt3 = BoxedType.create(new String[]{"1", "2", "3"});
 
     Assert.assertTrue(bt1.isCollection());
 
@@ -357,9 +353,9 @@ public class BoxedTypeTest {
   @Test
   public void testBoxIntArray() {
 
-    BoxedType<?> bt1 = BoxedType.create(new int[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt2 = BoxedType.create(new int[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt3 = BoxedType.create(new int[] {1, 2, 3});
+    BoxedType<?> bt1 = BoxedType.create(new int[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt2 = BoxedType.create(new int[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt3 = BoxedType.create(new int[]{1, 2, 3});
 
     Assert.assertTrue(bt1.isCollection());
 
@@ -373,9 +369,9 @@ public class BoxedTypeTest {
   @Test
   public void testBoxLongArray() {
 
-    BoxedType<?> bt1 = BoxedType.create(new long[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt2 = BoxedType.create(new long[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt3 = BoxedType.create(new long[] {1, 2, 3});
+    BoxedType<?> bt1 = BoxedType.create(new long[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt2 = BoxedType.create(new long[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt3 = BoxedType.create(new long[]{1, 2, 3});
 
     Assert.assertTrue(bt1.isCollection());
 
@@ -389,9 +385,9 @@ public class BoxedTypeTest {
   @Test
   public void testBoxFloatArray() {
 
-    BoxedType<?> bt1 = BoxedType.create(new float[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt2 = BoxedType.create(new float[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt3 = BoxedType.create(new float[] {1, 2, 3});
+    BoxedType<?> bt1 = BoxedType.create(new float[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt2 = BoxedType.create(new float[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt3 = BoxedType.create(new float[]{1, 2, 3});
 
     Assert.assertTrue(bt1.isCollection());
 
@@ -405,9 +401,9 @@ public class BoxedTypeTest {
   @Test
   public void testBoxDoubleArray() {
 
-    BoxedType<?> bt1 = BoxedType.create(new double[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt2 = BoxedType.create(new double[] {1, 2, 3, 4, 5, 6});
-    BoxedType<?> bt3 = BoxedType.create(new double[] {1, 2, 3});
+    BoxedType<?> bt1 = BoxedType.create(new double[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt2 = BoxedType.create(new double[]{1, 2, 3, 4, 5, 6});
+    BoxedType<?> bt3 = BoxedType.create(new double[]{1, 2, 3});
 
     Assert.assertTrue(bt1.isCollection());
 
@@ -421,9 +417,9 @@ public class BoxedTypeTest {
   @Test
   public void testBoxBooleanArray() {
 
-    BoxedType<?> bt1 = BoxedType.create(new boolean[] {true, false, true, false, true, false});
-    BoxedType<?> bt2 = BoxedType.create(new boolean[] {true, false, true, false, true, false});
-    BoxedType<?> bt3 = BoxedType.create(new boolean[] {true, false, true});
+    BoxedType<?> bt1 = BoxedType.create(new boolean[]{true, false, true, false, true, false});
+    BoxedType<?> bt2 = BoxedType.create(new boolean[]{true, false, true, false, true, false});
+    BoxedType<?> bt3 = BoxedType.create(new boolean[]{true, false, true});
 
     Assert.assertTrue(bt1.isCollection());
 
@@ -481,14 +477,10 @@ public class BoxedTypeTest {
   @Test
   public void testAsCollection() {
     Assert.assertEquals(Lists.newArrayList("string"), BoxedType.create("string").asCollection());
-    Assert.assertEquals(Lists.newArrayList(BigInteger.valueOf(1)),
-        BoxedType.create(1).asCollection());
-    Assert.assertEquals(Lists.newArrayList(BigInteger.valueOf(1L)),
-        BoxedType.create(1L).asCollection());
-    Assert.assertEquals(Lists.newArrayList(BigDecimal.valueOf(1.0f)),
-        BoxedType.create(1.0f).asCollection());
-    Assert.assertEquals(Lists.newArrayList(BigDecimal.valueOf(1.0d)),
-        BoxedType.create(1.0d).asCollection());
+    Assert.assertEquals(Lists.newArrayList(BigInteger.valueOf(1)), BoxedType.create(1).asCollection());
+    Assert.assertEquals(Lists.newArrayList(BigInteger.valueOf(1L)), BoxedType.create(1L).asCollection());
+    Assert.assertEquals(Lists.newArrayList(BigDecimal.valueOf(1.0f)), BoxedType.create(1.0f).asCollection());
+    Assert.assertEquals(Lists.newArrayList(BigDecimal.valueOf(1.0d)), BoxedType.create(1.0d).asCollection());
   }
 
   @Test

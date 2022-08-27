@@ -21,8 +21,7 @@ public class ExistentialVectorizerTest {
     Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
     ExistentialVectorizer vectorizer = new ExistentialVectorizer(vocabulary);
 
-    List<FeatureVector> vectors = View.of(sentences())
-        .map(normalizer.andThen(tokenizer).andThen(vectorizer)).toList();
+    List<FeatureVector> vectors = View.of(sentences()).map(normalizer.andThen(tokenizer).andThen(vectorizer)).toList();
 
     Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(0).length());
     Assert.assertEquals("[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0]",

@@ -12,8 +12,8 @@ import java.util.function.Function;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
- * Log messages to both the console and a file. Simultaneously, keep track of the elapsed time. This
- * class is not thread-safe.
+ * Log messages to both the console and a file. Simultaneously, keep track of the elapsed time. This class is not
+ * thread-safe.
  */
 @NotThreadSafe
 @CheckReturnValue

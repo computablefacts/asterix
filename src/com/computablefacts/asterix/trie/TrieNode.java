@@ -1,9 +1,8 @@
 package com.computablefacts.asterix.trie;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.google.errorprone.annotations.CheckReturnValue;
 
 @CheckReturnValue
 final public class TrieNode<T> {
@@ -11,7 +10,8 @@ final public class TrieNode<T> {
   final Map<T, TrieNode<T>> vocabulary_ = new HashMap<>();
   boolean isLeaf_ = false;
 
-  public TrieNode() {}
+  public TrieNode() {
+  }
 
   public boolean hasSiblings() {
     return !vocabulary_.isEmpty();

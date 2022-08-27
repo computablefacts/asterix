@@ -37,7 +37,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
 
   @Override
   public int predict(FeatureVector vector) {
-    
+
     Preconditions.checkNotNull(vector, "vector should not be null");
 
     return classifier_.predict(vector.denseArray());
@@ -58,8 +58,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
       newVectors[i] = vectors.get(i).denseArray();
     }
 
-    classifier_ = new MLP(newVectors[0].length, Layer.sigmoid(nbHiddenNeurons_),
-        Layer.mle(1, OutputFunction.SIGMOID));
+    classifier_ = new MLP(newVectors[0].length, Layer.sigmoid(nbHiddenNeurons_), Layer.mle(1, OutputFunction.SIGMOID));
     classifier_.setLearningRate(TimeFunction.linear(0.02, 10000, 0.01));
     classifier_.setMomentum(TimeFunction.constant(0.01));
 

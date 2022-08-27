@@ -2,11 +2,9 @@ package com.computablefacts.asterix;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Assert;
 import org.junit.Test;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class SpanTest {
 

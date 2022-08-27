@@ -1,19 +1,19 @@
 package com.computablefacts.asterix.console;
 
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.errorprone.annotations.Var;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.errorprone.annotations.CheckReturnValue;
-import com.google.errorprone.annotations.Var;
-
 @CheckReturnValue
 public abstract class ConsoleApp {
 
-  protected ConsoleApp() {}
+  protected ConsoleApp() {
+  }
 
   public static File getFileCommand(String[] args, String name, String defaultValue) {
     String filename = getStringCommand(args, name, defaultValue);
@@ -39,8 +39,7 @@ public abstract class ConsoleApp {
   }
 
   public static Integer getIntCommand(String[] args, String name, Integer defaultValue) {
-    String retVal =
-        getArg(args, name, defaultValue == null ? null : Integer.toString(defaultValue));
+    String retVal = getArg(args, name, defaultValue == null ? null : Integer.toString(defaultValue));
     if (retVal == null) {
       if (defaultValue == null) {
         return null;
@@ -62,8 +61,7 @@ public abstract class ConsoleApp {
   }
 
   public static Boolean getBooleanCommand(String[] args, String name, Boolean defaultValue) {
-    String retVal =
-        getArg(args, name, defaultValue == null ? null : Boolean.toString(defaultValue));
+    String retVal = getArg(args, name, defaultValue == null ? null : Boolean.toString(defaultValue));
     if (retVal == null) {
       if (defaultValue == null) {
         return null;
@@ -73,8 +71,7 @@ public abstract class ConsoleApp {
     return Boolean.parseBoolean(retVal);
   }
 
-  public static Map<String, String> getAttributesCommand(String[] args, String name,
-      String defaultValue) {
+  public static Map<String, String> getAttributesCommand(String[] args, String name, String defaultValue) {
     String retVal = getArg(args, name, defaultValue);
     if (retVal == null) {
       if (defaultValue == null) {
@@ -104,8 +101,7 @@ public abstract class ConsoleApp {
   }
 
   public static String getArg(String[] args, String name, String defaultValue) {
-    @Var
-    int argIdx = -1;
+    @Var int argIdx = -1;
     for (int idx = 0; idx < args.length; idx++) {
       if (("-" + name).equals(args[idx])) {
         argIdx = idx;

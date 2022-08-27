@@ -20,8 +20,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 
 /**
- * A {@link  Fingerprint} maps so called NGrams to their number of occurrences in the corresponding
- * text.
+ * A {@link  Fingerprint} maps so called NGrams to their number of occurrences in the corresponding text.
  */
 @CheckReturnValue
 final public class Fingerprint {
@@ -29,8 +28,7 @@ final public class Fingerprint {
   // The number of occurrences of each ngram
   private final Multiset<String> ngrams_ = HashMultiset.create();
   // NGrams sorted by the number of occurrences in the text which was used for creating the Fingerprint
-  private final NavigableSet<Multiset.Entry<String>> entries_ = new TreeSet<>(
-      new NGramEntryComparator());
+  private final NavigableSet<Multiset.Entry<String>> entries_ = new TreeSet<>(new NGramEntryComparator());
   private String category_ = "<UNK>";
 
   public Fingerprint() {
@@ -54,8 +52,8 @@ final public class Fingerprint {
       return false;
     }
     Fingerprint other = (Fingerprint) obj;
-    return Objects.equals(category_, other.category_) && Objects.equals(ngrams_, other.ngrams_)
-        && Objects.equals(entries_, other.entries_);
+    return Objects.equals(category_, other.category_) && Objects.equals(ngrams_, other.ngrams_) && Objects.equals(
+        entries_, other.entries_);
   }
 
   @Override
@@ -114,10 +112,9 @@ final public class Fingerprint {
    * Creates a {@link Fingerprint} object from the given input text.
    *
    * <strong>BE WARNED THAT</strong> good results are obtained by passing to this method a full
-   * text, together with numbers, punctuation and other text characters. So, if you have - say -
-   * HTML, just throw away tags, but leave the rest if you want to obtain precise results:
-   * punctuation comes in very handy at determining the language. At some extent, also upper/lower
-   * case letters could help.
+   * text, together with numbers, punctuation and other text characters. So, if you have - say - HTML, just throw away
+   * tags, but leave the rest if you want to obtain precise results: punctuation comes in very handy at determining the
+   * language. At some extent, also upper/lower case letters could help.
    *
    * @param text the text upon which the fingerprint should be built.
    */
@@ -181,8 +178,7 @@ final public class Fingerprint {
   }
 
   /**
-   * Find out the most likely categories, if any, by comparing the distance from each of the
-   * categories.
+   * Find out the most likely categories, if any, by comparing the distance from each of the categories.
    *
    * @param categories the list of possible categories.
    * @return the most likely categories.
@@ -233,9 +229,8 @@ final public class Fingerprint {
 
     public int compare(Multiset.Entry<String> e1, Multiset.Entry<String> e2) {
       if (e2.getCount() - e1.getCount() == 0) {
-        return (e1.getElement()).length() - (e2.getElement()).length() == 0
-            ? (e1.getElement()).compareTo(e2.getElement())
-            : (e1.getElement()).length() - (e2.getElement()).length();
+        return (e1.getElement()).length() - (e2.getElement()).length() == 0 ? (e1.getElement()).compareTo(
+            e2.getElement()) : (e1.getElement()).length() - (e2.getElement()).length();
       }
       return e2.getCount() - e1.getCount();
     }

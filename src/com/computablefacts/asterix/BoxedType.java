@@ -72,11 +72,9 @@ final public class BoxedType<T> {
   }
 
   public static BoxedType<?> create(Object value, boolean interpretStringInScientificNotation) {
-    return value == null ? NULL
-        : value instanceof BoxedType ? (BoxedType<?>) value
-            : value instanceof Boolean ? (Boolean) value ? TRUE : FALSE
-                : new BoxedType<>(
-                    StringCodec.defaultCoercer(value, interpretStringInScientificNotation));
+    return value == null ? NULL : value instanceof BoxedType ? (BoxedType<?>) value
+        : value instanceof Boolean ? (Boolean) value ? TRUE : FALSE
+            : new BoxedType<>(StringCodec.defaultCoercer(value, interpretStringInScientificNotation));
   }
 
   @Override
@@ -185,24 +183,19 @@ final public class BoxedType<T> {
 
   public BigInteger asBigInteger() {
     return isBigInteger() ? (BigInteger) value_
-        : isBigDecimal() && isInteger((BigDecimal) value_) ? ((BigDecimal) value_).toBigInteger()
-            : null;
+        : isBigDecimal() && isInteger((BigDecimal) value_) ? ((BigDecimal) value_).toBigInteger() : null;
   }
 
   public BigDecimal asBigDecimal() {
-    return isBigDecimal() ? (BigDecimal) value_
-        : isBigInteger() ? new BigDecimal((BigInteger) value_) : null;
+    return isBigDecimal() ? (BigDecimal) value_ : isBigInteger() ? new BigDecimal((BigInteger) value_) : null;
   }
 
   public String asString() {
-    String str = isEmpty() ? null
-        : isString() ? (String) value_
-            : isBoolean() ? Boolean.toString(asBool())
-                : isBigInteger() ? asBigInteger().toString(10)
-                    : isBigDecimal() ? asBigDecimal().stripTrailingZeros().toString()
-                        : isDate() ? DateTimeFormatter.ISO_INSTANT.format(asDate().toInstant())
-                            : isCollection() ? JsonCodec.asString(asCollection())
-                                : isMap() ? JsonCodec.asString(asMap()) : value_.toString();
+    String str = isEmpty() ? null : isString() ? (String) value_ : isBoolean() ? Boolean.toString(asBool())
+        : isBigInteger() ? asBigInteger().toString(10) : isBigDecimal() ? asBigDecimal().stripTrailingZeros().toString()
+            : isDate() ? DateTimeFormatter.ISO_INSTANT.format(asDate().toInstant())
+                : isCollection() ? JsonCodec.asString(asCollection())
+                    : isMap() ? JsonCodec.asString(asMap()) : value_.toString();
     if (str == null) {
       return null;
     }
@@ -230,12 +223,12 @@ final public class BoxedType<T> {
   }
 
   /**
-   * Compare two boxed types. This method returns an empty {@link Optional} if the types of the
-   * underlying values are not comparable to each others.
+   * Compare two boxed types. This method returns an empty {@link Optional} if the types of the underlying values are
+   * not comparable to each others.
    *
    * @param bt {@link BoxedType}
-   * @return returns an empty {@link Optional} if the underlying values cannot be compared. The
-   *         result of {@link Comparable#compareTo} otherwise.
+   * @return returns an empty {@link Optional} if the underlying values cannot be compared. The result of
+   * {@link Comparable#compareTo} otherwise.
    */
   public Optional<Integer> compareTo(@NotNull BoxedType<?> bt) {
     if (isEmpty() && bt.isEmpty()) {

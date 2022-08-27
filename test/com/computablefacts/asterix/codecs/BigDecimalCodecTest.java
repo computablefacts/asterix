@@ -1,7 +1,6 @@
 package com.computablefacts.asterix.codecs;
 
 import java.math.BigDecimal;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,14 +36,10 @@ public class BigDecimalCodecTest {
 
   @Test
   public void testDecodeAsBigDecimal() {
-    Assert.assertEquals(BigDecimal.valueOf(1234567890),
-        BigDecimalCodec.decodeAsBigDecimal("???2101234567890*"));
-    Assert.assertEquals(BigDecimal.valueOf(123.4567890),
-        BigDecimalCodec.decodeAsBigDecimal("??3123.456789*"));
-    Assert.assertEquals(BigDecimal.valueOf(-1234567890),
-        BigDecimalCodec.decodeAsBigDecimal("***7898765432109?"));
-    Assert.assertEquals(BigDecimal.valueOf(-123.4567890),
-        BigDecimalCodec.decodeAsBigDecimal("**6876:543210?"));
+    Assert.assertEquals(BigDecimal.valueOf(1234567890), BigDecimalCodec.decodeAsBigDecimal("???2101234567890*"));
+    Assert.assertEquals(BigDecimal.valueOf(123.4567890), BigDecimalCodec.decodeAsBigDecimal("??3123.456789*"));
+    Assert.assertEquals(BigDecimal.valueOf(-1234567890), BigDecimalCodec.decodeAsBigDecimal("***7898765432109?"));
+    Assert.assertEquals(BigDecimal.valueOf(-123.4567890), BigDecimalCodec.decodeAsBigDecimal("**6876:543210?"));
   }
 
   @Test
@@ -72,11 +67,9 @@ public class BigDecimalCodecTest {
 
   @Test
   public void testEncodeBigDecimal() {
-    Assert.assertEquals("???2101234567890*",
-        BigDecimalCodec.encode(BigDecimal.valueOf(1234567890)));
+    Assert.assertEquals("???2101234567890*", BigDecimalCodec.encode(BigDecimal.valueOf(1234567890)));
     Assert.assertEquals("??3123.456789*", BigDecimalCodec.encode(BigDecimal.valueOf(123.4567890)));
-    Assert.assertEquals("***7898765432109?",
-        BigDecimalCodec.encode(BigDecimal.valueOf(-1234567890)));
+    Assert.assertEquals("***7898765432109?", BigDecimalCodec.encode(BigDecimal.valueOf(-1234567890)));
     Assert.assertEquals("**6876:543210?", BigDecimalCodec.encode(BigDecimal.valueOf(-123.4567890)));
   }
 }

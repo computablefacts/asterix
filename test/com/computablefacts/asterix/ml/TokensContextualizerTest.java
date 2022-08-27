@@ -12,12 +12,8 @@ public class TokensContextualizerTest {
   @Test
   public void testContextualizeTokens() {
 
-    List<SpanSequence> sentences = View.of(sentences())
-        .map(new TextNormalizer(true))
-        .map(new TextTokenizer())
-        .filter(spans -> spans.size() > 2)
-        .map(new TokensContextualizer(5))
-        .toList();
+    List<SpanSequence> sentences = View.of(sentences()).map(new TextNormalizer(true)).map(new TextTokenizer())
+        .filter(spans -> spans.size() > 2).map(new TokensContextualizer(5)).toList();
 
     Assert.assertEquals(3, sentences.size());
 
@@ -25,12 +21,12 @@ public class TokensContextualizerTest {
     Assert.assertEquals(28, sentences.get(1).size());
     Assert.assertEquals(44, sentences.get(2).size());
 
-    Assert.assertTrue(sentences.get(0).stream()
-        .allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
-    Assert.assertTrue(sentences.get(1).stream()
-        .allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
-    Assert.assertTrue(sentences.get(2).stream()
-        .allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
+    Assert.assertTrue(
+        sentences.get(0).stream().allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
+    Assert.assertTrue(
+        sentences.get(1).stream().allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
+    Assert.assertTrue(
+        sentences.get(2).stream().allMatch(span -> span.hasFeature("CTX_BEFORE") && span.hasFeature("CTX_AFTER")));
   }
 
   private List<String> sentences() {

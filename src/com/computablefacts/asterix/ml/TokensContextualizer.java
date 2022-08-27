@@ -11,8 +11,8 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /**
- * Extract tokens with a distance from the central target token not exceeding the context window
- * size as the context tokens of the given center target token.
+ * Extract tokens with a distance from the central target token not exceeding the context window size as the context
+ * tokens of the given center target token.
  */
 @CheckReturnValue
 final public class TokensContextualizer implements Function<SpanSequence, SpanSequence> {
@@ -43,8 +43,8 @@ final public class TokensContextualizer implements Function<SpanSequence, SpanSe
       List<String> tokensBefore = new ArrayList<>();
       List<String> tokensAfter = new ArrayList<>();
 
-      IntStream.range(Math.max(0, i - windowSize), Math.min(spans.size(), i + 1 + windowSize))
-          .boxed().filter(idx -> idx != center).forEach(idx -> {
+      IntStream.range(Math.max(0, i - windowSize), Math.min(spans.size(), i + 1 + windowSize)).boxed()
+          .filter(idx -> idx != center).forEach(idx -> {
             if (idx < center) {
               tokensBefore.add(spans.span(idx).text());
             }

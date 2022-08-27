@@ -1,13 +1,5 @@
 package com.computablefacts.asterix.queries;
 
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.computablefacts.asterix.Generated;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.StringCodec;
@@ -16,10 +8,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Terminal (leaf) expression node class.
- *
+ * <p>
  * See http://www.blackbeltcoder.com/Articles/data/easy-full-text-search-queries for details.
  */
 @CheckReturnValue
@@ -39,17 +37,16 @@ final public class TerminalNode<T extends AbstractQueryEngine> extends AbstractN
 
   public static Optional<Map.Entry<Number, Number>> range(String value) {
 
-    List<String> range =
-        Splitter.on(QueryBuilder._TO_).trimResults().omitEmptyStrings().splitToList(value);
+    List<String> range = Splitter.on(QueryBuilder._TO_).trimResults().omitEmptyStrings().splitToList(value);
 
     if (range.size() == 2) {
 
       String min = range.get(0);
       String max = range.get(1);
 
-      boolean isValid = ("*".equals(min) && StringCodec.isNumber(max))
-          || ("*".equals(max) && StringCodec.isNumber(min))
-          || (StringCodec.isNumber(min) && StringCodec.isNumber(max));
+      boolean isValid =
+          ("*".equals(min) && StringCodec.isNumber(max)) || ("*".equals(max) && StringCodec.isNumber(min)) || (
+              StringCodec.isNumber(min) && StringCodec.isNumber(max));
 
       if (isValid) {
 
@@ -57,10 +54,8 @@ final public class TerminalNode<T extends AbstractQueryEngine> extends AbstractN
         String minTerm = "*".equals(min) ? null : min;
         String maxTerm = "*".equals(max) ? null : max;
 
-        Number minNumber =
-            minTerm == null ? null : (Number) StringCodec.defaultCoercer(minTerm, false);
-        Number maxNumber =
-            maxTerm == null ? null : (Number) StringCodec.defaultCoercer(maxTerm, false);
+        Number minNumber = minTerm == null ? null : (Number) StringCodec.defaultCoercer(minTerm, false);
+        Number maxNumber = maxTerm == null ? null : (Number) StringCodec.defaultCoercer(maxTerm, false);
 
         return Optional.of(new AbstractMap.SimpleImmutableEntry<>(minNumber, maxNumber));
       }
@@ -127,8 +122,7 @@ final public class TerminalNode<T extends AbstractQueryEngine> extends AbstractN
     Preconditions.checkNotNull(engine, "engine should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create().add("form", form_).add("key", key_)
-          .add("value", value_).formatDebug());
+      logger_.debug(LogFormatter.create().add("form", form_).add("key", key_).add("value", value_).formatDebug());
     }
     if (eTermForms.Range.equals(form_)) {
       return engine.rangeCardinality(key_, value_);
@@ -151,8 +145,7 @@ final public class TerminalNode<T extends AbstractQueryEngine> extends AbstractN
     Preconditions.checkNotNull(engine, "engine should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create().add("form", form_).add("key", key_)
-          .add("value", value_).formatDebug());
+      logger_.debug(LogFormatter.create().add("form", form_).add("key", key_).add("value", value_).formatDebug());
     }
     if (eTermForms.Range.equals(form_)) {
       return engine.rangeQuery(key_, value_);

@@ -1,8 +1,7 @@
 package com.computablefacts.asterix;
 
-import java.util.function.Supplier;
-
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.function.Supplier;
 
 @Generated
 @CheckReturnValue
@@ -21,8 +20,7 @@ public abstract class Result<T> {
   }
 
   public static <T> Result<T> of(T value) {
-    return value != null ? new Success<>(value)
-        : new Failure<>(new IllegalStateException("value must not be null"));
+    return value != null ? new Success<>(value) : new Failure<>(new IllegalStateException("value must not be null"));
   }
 
   public abstract boolean isSuccess();
@@ -41,7 +39,8 @@ public abstract class Result<T> {
 
   private static class Empty<T> extends Result<T> {
 
-    public Empty() {}
+    public Empty() {
+    }
 
     @Override
     public boolean isSuccess() {

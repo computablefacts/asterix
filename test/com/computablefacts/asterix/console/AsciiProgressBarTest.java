@@ -2,7 +2,6 @@ package com.computablefacts.asterix.console;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,8 +59,7 @@ public class AsciiProgressBarTest {
   public void testUpdate100() {
     AsciiProgressBar.ProgressBar progressBar = AsciiProgressBar.create();
     progressBar.update(100, 100);
-    Assert.assertEquals(
-        "\r100% ################################################## |" + System.lineSeparator(),
+    Assert.assertEquals("\r100% ################################################## |" + System.lineSeparator(),
         outContent_.toString());
   }
 
@@ -75,28 +73,23 @@ public class AsciiProgressBarTest {
       progressBar.update();
 
       if (i == 0) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 2/2 (slice 1)"
-                + System.lineSeparator()));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 2/2 (slice 1)" + System.lineSeparator()));
       } else if (i == 2) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 3/3 (slice 2)"
-                + System.lineSeparator()));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 3/3 (slice 2)" + System.lineSeparator()));
       } else if (i == 5) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 4/4 (slice 3)"
-                + System.lineSeparator()));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 4/4 (slice 3)" + System.lineSeparator()));
       } else if (i == 10) {
-        Assert.assertTrue(outContent_.toString()
-            .endsWith("\r100% ################################################## 6/6 (slice 4)"
-                + System.lineSeparator()));
+        Assert.assertTrue(outContent_.toString().endsWith(
+            "\r100% ################################################## 6/6 (slice 4)" + System.lineSeparator()));
       }
     }
 
     progressBar.complete();
 
-    Assert.assertTrue(outContent_.toString()
-        .endsWith("\r100% ################################################## 2821/3597 (slice 20)"
-            + System.lineSeparator()));
+    Assert.assertTrue(outContent_.toString().endsWith(
+        "\r100% ################################################## 2821/3597 (slice 20)" + System.lineSeparator()));
   }
 }

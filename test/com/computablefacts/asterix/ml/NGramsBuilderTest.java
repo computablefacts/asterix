@@ -15,8 +15,8 @@ public class NGramsBuilderTest {
 
     for (int i = 0; i < spans.size(); i++) {
       System.out.println(
-          "span=\"" + spans.span(i).text() + "\", index=" + i + ", tags=" + spans.span(i).tags()
-              + ", features=" + spans.span(i).features());
+          "span=\"" + spans.span(i).text() + "\", index=" + i + ", tags=" + spans.span(i).tags() + ", features="
+              + spans.span(i).features());
     }
 
     Assert.assertEquals("Welcome to Yahoo", spans.span(0).text());

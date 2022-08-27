@@ -97,8 +97,7 @@ public class IOTest {
     Assert.assertTrue(input.exists());
     Assert.assertTrue(IO.writeCompressedText(input, text, true));
 
-    File output =
-        new File(input.getAbsolutePath().substring(0, input.getAbsolutePath().lastIndexOf('.')));
+    File output = new File(input.getAbsolutePath().substring(0, input.getAbsolutePath().lastIndexOf('.')));
 
     Assert.assertFalse(output.exists());
     Assert.assertTrue(IO.gunzip(input, output));

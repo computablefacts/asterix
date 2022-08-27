@@ -1,19 +1,16 @@
 package com.computablefacts.asterix.trie;
 
+import com.google.errorprone.annotations.Var;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.errorprone.annotations.Var;
 
 public class TrieTest {
 
   private static List<OneCharacter> toCharacters(String str) {
-    return Arrays.stream(str.split("(?!^)")).map(c -> new OneCharacter(c.charAt(0)))
-        .collect(Collectors.toList());
+    return Arrays.stream(str.split("(?!^)")).map(c -> new OneCharacter(c.charAt(0))).collect(Collectors.toList());
   }
 
   @Test
@@ -89,8 +86,7 @@ public class TrieTest {
     trie.insert(toCharacters("Hello world!"));
     trie.insert(toCharacters("The world is yours!"));
 
-    @Var
-    List<List<OneCharacter>> paths = trie.paths();
+    @Var List<List<OneCharacter>> paths = trie.paths();
 
     Assert.assertEquals(4, paths.size());
     Assert.assertTrue(paths.contains(toCharacters("Hello!")));
@@ -118,8 +114,7 @@ public class TrieTest {
     trie.insert(toCharacters("Hello world!"));
     trie.insert(toCharacters("The world is yours!"));
 
-    @Var
-    List<List<OneCharacter>> paths = trie.paths();
+    @Var List<List<OneCharacter>> paths = trie.paths();
 
     Assert.assertEquals(4, paths.size());
 

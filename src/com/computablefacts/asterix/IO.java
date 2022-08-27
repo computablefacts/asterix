@@ -50,9 +50,8 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file)
-          .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
-          .message(e).formatError());
+      logger_.error(LogFormatter.create().add("file", file).add("text", text.substring(0, Math.min(80, text.length())))
+          .add("append", append).message(e).formatError());
     }
     return false;
   }
@@ -67,9 +66,8 @@ final public class IO {
       writer.write(text);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file)
-          .add("text", text.substring(0, Math.min(80, text.length()))).add("append", append)
-          .message(e).formatError());
+      logger_.error(LogFormatter.create().add("file", file).add("text", text.substring(0, Math.min(80, text.length())))
+          .add("append", append).message(e).formatError());
     }
     return false;
   }
@@ -100,9 +98,7 @@ final public class IO {
       }
       return true;
     } catch (IOException e) {
-      logger_.error(
-          LogFormatter.create().add("file", file).add("append", append).message(e)
-              .formatError());
+      logger_.error(LogFormatter.create().add("file", file).add("append", append).message(e).formatError());
     }
     return false;
   }
@@ -137,8 +133,8 @@ final public class IO {
     Preconditions.checkArgument(!append || file.exists(), "file does not exist : %s", file);
 
     if (!append) {
-      return Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8,
-          StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
+      return Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8, StandardOpenOption.WRITE,
+          StandardOpenOption.CREATE_NEW);
     }
     return Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8, StandardOpenOption.WRITE,
         StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -149,26 +145,24 @@ final public class IO {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
 
-    return new BufferedReader(new InputStreamReader(
-        new GZIPInputStream(Files.newInputStream(file.toPath(), StandardOpenOption.READ)),
-        StandardCharsets.UTF_8));
+    return new BufferedReader(
+        new InputStreamReader(new GZIPInputStream(Files.newInputStream(file.toPath(), StandardOpenOption.READ)),
+            StandardCharsets.UTF_8));
   }
 
-  public static BufferedWriter newCompressedFileWriter(File file, boolean append)
-      throws IOException {
+  public static BufferedWriter newCompressedFileWriter(File file, boolean append) throws IOException {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(!append || file.exists(), "file does not exist : %s", file);
 
     if (!append) {
-      return new BufferedWriter(
-          new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(file.toPath(),
-              StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)), StandardCharsets.UTF_8));
+      return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(
+          Files.newOutputStream(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)),
+          StandardCharsets.UTF_8));
     }
-    return new BufferedWriter(new OutputStreamWriter(
-        new GZIPOutputStream(Files.newOutputStream(file.toPath(), StandardOpenOption.WRITE,
-            StandardOpenOption.CREATE, StandardOpenOption.APPEND)),
-        StandardCharsets.UTF_8));
+    return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(
+        Files.newOutputStream(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE,
+            StandardOpenOption.APPEND)), StandardCharsets.UTF_8));
   }
 
   public static boolean gzip(File input, File output) {
@@ -182,8 +176,7 @@ final public class IO {
       try (BufferedWriter writer = newCompressedFileWriter(output, false)) {
 
         char[] buffer = new char[4096];
-        @Var
-        int len;
+        @Var int len;
 
         while ((len = reader.read(buffer)) != -1) {
           writer.write(buffer, 0, len);
@@ -191,9 +184,7 @@ final public class IO {
         return true;
       }
     } catch (IOException e) {
-      logger_.error(
-          LogFormatter.create().add("input", input).add("output", output).message(e)
-              .formatError());
+      logger_.error(LogFormatter.create().add("input", input).add("output", output).message(e).formatError());
     }
     return false;
   }
@@ -209,8 +200,7 @@ final public class IO {
       try (BufferedWriter writer = newFileWriter(output, false)) {
 
         char[] buffer = new char[4096];
-        @Var
-        int len;
+        @Var int len;
 
         while ((len = reader.read(buffer)) != -1) {
           writer.write(buffer, 0, len);
@@ -218,9 +208,7 @@ final public class IO {
         return true;
       }
     } catch (IOException e) {
-      logger_.error(
-          LogFormatter.create().add("input", input).add("output", output).message(e)
-              .formatError());
+      logger_.error(LogFormatter.create().add("input", input).add("output", output).message(e).formatError());
     }
     return false;
   }

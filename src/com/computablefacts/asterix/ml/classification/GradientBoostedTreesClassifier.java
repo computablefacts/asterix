@@ -67,8 +67,7 @@ final public class GradientBoostedTreesClassifier implements AbstractBinaryClass
 
   @Override
   public void update(FeatureVector vector, int actual) {
-    throw new NotImplementedException(
-        "Gradient Boosted Trees classifier cannot be incrementally trained");
+    throw new NotImplementedException("Gradient Boosted Trees classifier cannot be incrementally trained");
   }
 
   @Override

@@ -1,13 +1,5 @@
 package com.computablefacts.asterix.codecs;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.text.Normalizer;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
-
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.StringIterator;
@@ -17,16 +9,23 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import com.google.re2j.Matcher;
 import com.google.re2j.Pattern;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.text.Normalizer;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
 
 @CheckReturnValue
 final public class StringCodec {
 
   private static final SpanSequence SPAN_SEQUENCE_EMPTY = new SpanSequence();
-  private static final Pattern SPLIT_ON_PUNCT =
-      Pattern.compile("[^\r\n\t\\p{P}\\p{Zs}\\|\\^<>+=~]+",
-          Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+  private static final Pattern SPLIT_ON_PUNCT = Pattern.compile("[^\r\n\t\\p{P}\\p{Zs}\\|\\^<>+=~]+",
+      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
 
-  private StringCodec() {}
+  private StringCodec() {
+  }
 
   /**
    * Reverse a string.
@@ -137,8 +136,7 @@ final public class StringCodec {
 
     Preconditions.checkNotNull(s);
 
-    @Var
-    boolean isFirst = true;
+    @Var boolean isFirst = true;
 
     for (int i = 0; i < s.length(); i++) {
       int c = s.codePointAt(i);
@@ -207,8 +205,7 @@ final public class StringCodec {
     Preconditions.checkNotNull(s);
 
     String decomposed = Normalizer.normalize(s, Normalizer.Form.NFD);
-    java.util.regex.Pattern diacriticals =
-        java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}");
+    java.util.regex.Pattern diacriticals = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}");
     java.util.regex.Matcher matcher = diacriticals.matcher(decomposed);
     String noDiacriticals = matcher.replaceAll("");
     return Normalizer.normalize(noDiacriticals, Normalizer.Form.NFC);
@@ -240,8 +237,8 @@ final public class StringCodec {
    * </p>
    *
    * <p>
-   * Valid numbers include hexadecimal marked with the <code>0x</code> qualifier, scientific
-   * notation and numbers marked with a type qualifier (e.g. 123L).
+   * Valid numbers include hexadecimal marked with the <code>0x</code> qualifier, scientific notation and numbers marked
+   * with a type qualifier (e.g. 123L).
    * </p>
    *
    * <p>
@@ -250,9 +247,7 @@ final public class StringCodec {
    *
    * @param text the <code>String</code> to check
    * @return <code>true</code> if the string is a correctly formatted number
-   *
-   * @see <a href=
-   *      "https://commons.apache.org/proper/commons-math">https://commons.apache.org/proper/commons-math</a>
+   * @see <a href= "https://commons.apache.org/proper/commons-math">https://commons.apache.org/proper/commons-math</a>
    */
   public static boolean isNumber(String text) {
 
@@ -261,30 +256,24 @@ final public class StringCodec {
     }
 
     char[] chars = text.toCharArray();
-    @Var
-    int sz = chars.length;
-    @Var
-    boolean hasExp = false;
-    @Var
-    boolean hasDecPoint = false;
-    @Var
-    boolean allowSigns = false;
-    @Var
-    boolean foundDigit = false;
+    @Var int sz = chars.length;
+    @Var boolean hasExp = false;
+    @Var boolean hasDecPoint = false;
+    @Var boolean allowSigns = false;
+    @Var boolean foundDigit = false;
 
     // deal with any possible sign up front
     int start = (chars[0] == '-') ? 1 : 0;
     if (sz > start + 1 && chars[start] == '0' && chars[start + 1] == 'x') {
-      @Var
-      int i = start + 2;
+      @Var int i = start + 2;
       if (i == sz) {
         return false; // text == "0x"
       }
 
       // checking hex (it can't be anything else)
       for (; i < chars.length; i++) {
-        if ((chars[i] < '0' || chars[i] > '9') && (chars[i] < 'a' || chars[i] > 'f')
-            && (chars[i] < 'A' || chars[i] > 'F')) {
+        if ((chars[i] < '0' || chars[i] > '9') && (chars[i] < 'a' || chars[i] > 'f') && (chars[i] < 'A'
+            || chars[i] > 'F')) {
           return false;
         }
       }
@@ -294,8 +283,7 @@ final public class StringCodec {
     sz--; // don't want to loop to the last char, check it afterwords
 
     // for type qualifiers
-    @Var
-    int i = start;
+    @Var int i = start;
 
     // loop to the next to last char or to the last char if we need another digit to
     // make a valid number (e.g. chars[0..5] = "1234E")
@@ -356,8 +344,7 @@ final public class StringCodec {
         // single trailing decimal point after non-exponent is ok
         return foundDigit;
       }
-      if (!allowSigns
-          && (chars[i] == 'd' || chars[i] == 'D' || chars[i] == 'f' || chars[i] == 'F')) {
+      if (!allowSigns && (chars[i] == 'd' || chars[i] == 'D' || chars[i] == 'f' || chars[i] == 'F')) {
         return foundDigit;
       }
       if (chars[i] == 'l' || chars[i] == 'L') {
@@ -468,14 +455,13 @@ final public class StringCodec {
   /**
    * Coerce a given value.
    *
-   * @param value the value to box/coerce.
-   * @param interpretStringInScientificNotation true iif "79E2863560" should be interpreted as
-   *        7.9E+2863561 and false otherwise.
+   * @param value                               the value to box/coerce.
+   * @param interpretStringInScientificNotation true iif "79E2863560" should be interpreted as 7.9E+2863561 and false
+   *                                            otherwise.
    * @return a coerced value.
    */
   public static Object defaultCoercer(Object value, boolean interpretStringInScientificNotation) {
-    if (value == null || value instanceof Boolean || value instanceof BigInteger
-        || value instanceof BigDecimal) {
+    if (value == null || value instanceof Boolean || value instanceof BigInteger || value instanceof BigDecimal) {
       return value;
     }
     if (value instanceof Integer) {
@@ -505,24 +491,22 @@ final public class StringCodec {
       if (!isNumber(text)) {
 
         // Check if text is a date in ISO Instant format
-        if (text.length() >= 20 && text.length() <= 24
-            && (text.charAt(10) == 'T' || text.charAt(10) == 't')
-            && (text.charAt(text.length() - 1) == 'Z' || text.charAt(text.length() - 1) == 'z')) {
+        if (text.length() >= 20 && text.length() <= 24 && (text.charAt(10) == 'T' || text.charAt(10) == 't') && (
+            text.charAt(text.length() - 1) == 'Z' || text.charAt(text.length() - 1) == 'z')) {
           try {
             return Date.from(Instant.parse(text));
           } catch (Exception e) {
             // FALL THROUGH
           }
         }
-      } else if (interpretStringInScientificNotation
-          || (!text.contains("E") && !text.contains("e"))) {
+      } else if (interpretStringInScientificNotation || (!text.contains("E") && !text.contains("e"))) {
         try {
 
           BigInteger bigInteger = new BigInteger(text);
 
           // Here, text is an integer (otherwise a NumberFormatException has been thrown)
           StringIterator iterator = new StringIterator(text);
-          iterator.movePast(new char[] {'0'});
+          iterator.movePast(new char[]{'0'});
 
           // The condition below ensures "0" is interpreted as a number but "00" as a string
           if (iterator.position() > 1 || (iterator.position() > 0 && iterator.remaining() > 0)) {

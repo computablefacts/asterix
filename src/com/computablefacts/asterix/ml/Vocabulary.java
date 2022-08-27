@@ -53,8 +53,8 @@ final public class Vocabulary {
   }
 
   /**
-   * Build a vocabulary from a corpus of documents. To be versatile, this method does not attempt to
-   * remove stop words, diacritical marks or even lowercase tokens.
+   * Build a vocabulary from a corpus of documents. To be versatile, this method does not attempt to remove stop words,
+   * diacritical marks or even lowercase tokens.
    * <ul>
    * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
    * <li>{@code args[1]} the threshold (document frequency) under which a token must be excluded from the vocabulary.</li>
@@ -71,8 +71,7 @@ final public class Vocabulary {
     double minDocFreq = Double.parseDouble(args[1]);
     double maxDocFreq = Double.parseDouble(args[2]);
     int maxVocabSize = Integer.parseInt(args[3], 10);
-    Set<String> includeTags = Sets.newHashSet(
-        Splitter.on(',').trimResults().omitEmptyStrings().split(args[4]));
+    Set<String> includeTags = Sets.newHashSet(Splitter.on(',').trimResults().omitEmptyStrings().split(args[4]));
     int ngramsLength = Integer.parseInt(args[5], 10);
 
     Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
@@ -88,26 +87,21 @@ final public class Vocabulary {
 
       observations.add(String.format("Dataset is %s.", file));
       observations.add(String.format("NGrams length is %d.", ngramsLength));
-      observations.add(
-          String.format("Min. document freq. is %.01f%% of all documents.", minDocFreq * 100));
-      observations.add(
-          String.format("Max. document freq. is %.01f%% of all documents.", maxDocFreq * 100));
+      observations.add(String.format("Min. document freq. is %.01f%% of all documents.", minDocFreq * 100));
+      observations.add(String.format("Max. document freq. is %.01f%% of all documents.", maxDocFreq * 100));
       observations.add(String.format("Max. vocab size is %d.", maxVocabSize));
       observations.add(String.format("Included tags are %s.", includeTags));
       observations.add("Building vocabulary...");
 
       Stopwatch stopwatch = Stopwatch.createStarted();
       View<List<String>> tokens = Document.of(file, true)
-          .map(doc -> tokenizer(includeTags, ngramsLength).apply((String) doc.text()))
-          .displayProgress(10_000);
+          .map(doc -> tokenizer(includeTags, ngramsLength).apply((String) doc.text())).displayProgress(10_000);
       Vocabulary vocabulary = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
-      vocabulary.save(new File(
-          String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator,
-              ngramsLength)));
+      vocabulary.save(
+          new File(String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator, ngramsLength)));
       stopwatch.stop();
 
-      observations.add(
-          String.format("Vocabulary built in %d seconds.", stopwatch.elapsed(TimeUnit.SECONDS)));
+      observations.add(String.format("Vocabulary built in %d seconds.", stopwatch.elapsed(TimeUnit.SECONDS)));
       observations.add(String.format("Vocabulary size is %d.", vocabulary.size()));
     }
   }
@@ -125,22 +119,20 @@ final public class Vocabulary {
   /**
    * Build a vocabulary from a set of tokenized documents.
    *
-   * @param docs a set of tokenized documents.
-   * @param minDocFreq the document-frequency threshold (as a number of documents) under which a
-   * term must be excluded.
-   * @param maxDocFreq the document-frequency threshold (as a number of documents) above which a
-   * term must be excluded.
+   * @param docs         a set of tokenized documents.
+   * @param minDocFreq   the document-frequency threshold (as a number of documents) under which a term must be
+   *                     excluded.
+   * @param maxDocFreq   the document-frequency threshold (as a number of documents) above which a term must be
+   *                     excluded.
    * @param maxVocabSize the maximum number of terms to include in the vocabulary.
    * @return a {@link Vocabulary}.
    */
-  public static Vocabulary of(View<List<String>> docs, int minDocFreq, int maxDocFreq,
-      int maxVocabSize) {
+  public static Vocabulary of(View<List<String>> docs, int minDocFreq, int maxDocFreq, int maxVocabSize) {
 
     Preconditions.checkNotNull(docs, "docs should not be null");
     Preconditions.checkArgument(0 <= minDocFreq, "minDocFreq must be >= 0");
     Preconditions.checkArgument(minDocFreq <= maxDocFreq, "minDocFreq must be >= minDocFreq ");
-    Preconditions.checkArgument(maxVocabSize == -1 || maxVocabSize > 0,
-        "maxVocabSize must be = -1 or > 0");
+    Preconditions.checkArgument(maxVocabSize == -1 || maxVocabSize > 0, "maxVocabSize must be = -1 or > 0");
 
     Vocabulary vocabulary = new Vocabulary();
     vocabulary.fill(docs);
@@ -152,28 +144,26 @@ final public class Vocabulary {
   /**
    * Build a vocabulary from a set of tokenized documents.
    *
-   * @param docs a set of tokenized documents.
-   * @param minDocFreq the document-frequency threshold (as a percentage of the total number of
-   * documents) under which a term must be excluded.
-   * @param maxDocFreq the document-frequency threshold (as a percentage of the total number of
-   * documents) above which a term must be excluded.
+   * @param docs         a set of tokenized documents.
+   * @param minDocFreq   the document-frequency threshold (as a percentage of the total number of documents) under which
+   *                     a term must be excluded.
+   * @param maxDocFreq   the document-frequency threshold (as a percentage of the total number of documents) above which
+   *                     a term must be excluded.
    * @param maxVocabSize the maximum number of terms to include in the vocabulary.
    * @return a {@link Vocabulary}.
    */
-  public static Vocabulary of(View<List<String>> docs, double minDocFreq, double maxDocFreq,
-      int maxVocabSize) {
+  public static Vocabulary of(View<List<String>> docs, double minDocFreq, double maxDocFreq, int maxVocabSize) {
 
     Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
         "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
     Preconditions.checkArgument(minDocFreq <= maxDocFreq && maxDocFreq <= 1.0,
         "minDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
-    Preconditions.checkArgument(maxVocabSize == -1 || maxVocabSize > 0,
-        "maxVocabSize must be = -1 or > 0");
+    Preconditions.checkArgument(maxVocabSize == -1 || maxVocabSize > 0, "maxVocabSize must be = -1 or > 0");
 
     Vocabulary vocabulary = new Vocabulary();
     vocabulary.fill(docs);
-    vocabulary.freeze((int) (minDocFreq * vocabulary.nbDocsSeen_),
-        (int) (maxDocFreq * vocabulary.nbDocsSeen_), maxVocabSize);
+    vocabulary.freeze((int) (minDocFreq * vocabulary.nbDocsSeen_), (int) (maxDocFreq * vocabulary.nbDocsSeen_),
+        maxVocabSize);
 
     return vocabulary;
   }
@@ -182,7 +172,7 @@ final public class Vocabulary {
    * A pipeline that maps a single text to a list of tokens.
    *
    * @param tagsToKeep the types of tokens to keep: WORD, PUNCTUATION, etc.
-   * @param length the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.
+   * @param length     the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.
    * @return the tokenized text.
    */
   static Function<String, List<String>> tokenizer(Set<String> tagsToKeep, int length) {
@@ -191,12 +181,11 @@ final public class Vocabulary {
 
     TextNormalizer normalizer = new TextNormalizer(true);
     TextTokenizer tokenizer = new TextTokenizer();
-    Predicate<Span> filter = span -> tagsToKeep == null || !Sets.intersection(tagsToKeep,
-        span.tags()).isEmpty();
+    Predicate<Span> filter = span -> tagsToKeep == null || !Sets.intersection(tagsToKeep, span.tags()).isEmpty();
 
     if (length == 1) {
-      return text -> normalizer.andThen(tokenizer)
-          .andThen(seq -> View.of(seq).filter(filter).map(Span::text).toList()).apply(text);
+      return text -> normalizer.andThen(tokenizer).andThen(seq -> View.of(seq).filter(filter).map(Span::text).toList())
+          .apply(text);
     }
     return text -> normalizer.andThen(tokenizer).andThen(
         seq -> View.of(seq).filter(filter).map(Span::text).overlappingWindowWithStrictLength(length)
@@ -213,8 +202,7 @@ final public class Vocabulary {
     }
     Vocabulary v = (Vocabulary) obj;
     return Objects.equals(tf_, v.tf_) && Objects.equals(df_, v.df_) && Objects.equals(idx_, v.idx_)
-        && nbTermsSeen_ == v.nbTermsSeen_ && nbDocsSeen_ == v.nbDocsSeen_
-        && isFrozen_ == v.isFrozen_;
+        && nbTermsSeen_ == v.nbTermsSeen_ && nbDocsSeen_ == v.nbDocsSeen_ && isFrozen_ == v.isFrozen_;
   }
 
   @Override
@@ -377,8 +365,7 @@ final public class Vocabulary {
   }
 
   /**
-   * Returns the inverse document frequency which measures how common a word is among all
-   * documents.
+   * Returns the inverse document frequency which measures how common a word is among all documents.
    *
    * @param term the term.
    * @return the inverse document frequency.
@@ -388,8 +375,7 @@ final public class Vocabulary {
   }
 
   /**
-   * Returns the inverse document frequency which measures how common a word is among all
-   * documents.
+   * Returns the inverse document frequency which measures how common a word is among all documents.
    *
    * @param index the term index in the current vocabulary.
    * @return the inverse document frequency.
@@ -401,7 +387,7 @@ final public class Vocabulary {
   /**
    * Computes the TF-IDF score of a given term.
    *
-   * @param term the term for which TF-IDF must be computed.
+   * @param term  the term for which TF-IDF must be computed.
    * @param count the term frequency in the source document.
    * @return TF-IDF.
    */
@@ -431,9 +417,8 @@ final public class Vocabulary {
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
     Preconditions.checkState(isFrozen_, "vocabulary must be frozen");
 
-    View.of(idx_.keySet()).map(
-            term -> idx_.get(term) + "\t" + term + "\t" + tf_.getOrDefault(term, 0) + "\t"
-                + df_.getOrDefault(term, 0))
+    View.of(idx_.keySet())
+        .map(term -> idx_.get(term) + "\t" + term + "\t" + tf_.getOrDefault(term, 0) + "\t" + df_.getOrDefault(term, 0))
         .prepend(String.format("# %d %d\nidx\tnormalized_term\ttf\tdf", nbTermsSeen_, nbDocsSeen_))
         .toFile(Function.identity(), file, false, true);
   }
@@ -458,19 +443,18 @@ final public class Vocabulary {
     nbTermsSeen_ = Integer.parseInt(stats.substring(index1 + 1, index2), 10);
     nbDocsSeen_ = Integer.parseInt(stats.substring(index2 + 1), 10);
 
-    View.of(file, true).drop(1 /* number of terms/docs seen */ + 1/* header */)
-        .forEachRemaining(row -> {
+    View.of(file, true).drop(1 /* number of terms/docs seen */ + 1/* header */).forEachRemaining(row -> {
 
-          List<String> columns = Splitter.on('\t').trimResults().splitToList(row);
-          int idx = Integer.parseInt(columns.get(0), 10);
-          String term = columns.get(1);
-          int tf = Integer.parseInt(columns.get(2), 10);
-          int df = Integer.parseInt(columns.get(3), 10);
+      List<String> columns = Splitter.on('\t').trimResults().splitToList(row);
+      int idx = Integer.parseInt(columns.get(0), 10);
+      String term = columns.get(1);
+      int tf = Integer.parseInt(columns.get(2), 10);
+      int df = Integer.parseInt(columns.get(3), 10);
 
-          tf_.put(term, tf_.getOrDefault(term, 0) + tf);
-          df_.put(term, df_.getOrDefault(term, 0) + df);
-          idx_.put(term, idx);
-        });
+      tf_.put(term, tf_.getOrDefault(term, 0) + tf);
+      df_.put(term, df_.getOrDefault(term, 0) + df);
+      idx_.put(term, idx);
+    });
   }
 
   private void fill(View<List<String>> docs) {
@@ -517,19 +501,17 @@ final public class Vocabulary {
     idx_.put(tokenUnk_, idxUnk_);
 
     df_.entrySet().removeIf(
-        freq -> !tokenUnk_.equals(freq.getKey()) && (freq.getValue() < minDocFreq
-            || freq.getValue() > maxDocFreq));
-    tf_.entrySet()
-        .removeIf(freq -> !tokenUnk_.equals(freq.getKey()) && !df_.containsKey(freq.getKey()));
+        freq -> !tokenUnk_.equals(freq.getKey()) && (freq.getValue() < minDocFreq || freq.getValue() > maxDocFreq));
+    tf_.entrySet().removeIf(freq -> !tokenUnk_.equals(freq.getKey()) && !df_.containsKey(freq.getKey()));
 
     Preconditions.checkState(tf_.containsKey(tokenUnk_));
     Preconditions.checkState(df_.containsKey(tokenUnk_));
     Preconditions.checkState(df_.entrySet().size() == tf_.entrySet().size());
 
-    @Var Stream<Map.Entry<String, Integer>> stream = tf_.entrySet().stream()
-        .filter(e -> !tokenUnk_.equals(e.getKey())).sorted(
-            (e1, e2) -> ComparisonChain.start().compare(e1.getValue(), e2.getValue())
-                .compare(e1.getKey(), e2.getKey()).result());
+    @Var Stream<Map.Entry<String, Integer>> stream = tf_.entrySet().stream().filter(e -> !tokenUnk_.equals(e.getKey()))
+        .sorted(
+            (e1, e2) -> ComparisonChain.start().compare(e1.getValue(), e2.getValue()).compare(e1.getKey(), e2.getKey())
+                .result());
 
     if (maxVocabSize > 0) {
       stream = stream.limit(maxVocabSize - 1 /* UNK */);
@@ -559,15 +541,14 @@ final public class Vocabulary {
 
       Preconditions.checkNotNull(term, "term must not be null");
 
-      return (set_ != null || bloomFilter_ != null) && (bloomFilter_ != null
-          ? bloomFilter_.contains(term) : set_.contains(term));
+      return (set_ != null || bloomFilter_ != null) && (bloomFilter_ != null ? bloomFilter_.contains(term)
+          : set_.contains(term));
     }
 
     void add(String term) {
 
       Preconditions.checkNotNull(term, "term must not be null");
-      Preconditions.checkState(
-          (set_ == null && bloomFilter_ == null) || set_ != null || bloomFilter_ != null);
+      Preconditions.checkState((set_ == null && bloomFilter_ == null) || set_ != null || bloomFilter_ != null);
 
       if (bloomFilter_ != null) {
         bloomFilter_.add(term);

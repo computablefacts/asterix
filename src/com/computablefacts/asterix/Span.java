@@ -1,18 +1,16 @@
 package com.computablefacts.asterix;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.validation.constraints.NotNull;
-
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * Never ever rely on groups. Groups are for internal use only.
@@ -69,9 +67,8 @@ final public class Span implements Comparable<Span> {
       return false;
     }
     Span other = (Span) obj;
-    return Objects.equal(text_, other.text_) && Objects.equal(begin_, other.begin_)
-        && Objects.equal(end_, other.end_) && Objects.equal(features_, other.features_)
-        && Objects.equal(tags_, other.tags_);
+    return Objects.equal(text_, other.text_) && Objects.equal(begin_, other.begin_) && Objects.equal(end_, other.end_)
+        && Objects.equal(features_, other.features_) && Objects.equal(tags_, other.tags_);
   }
 
   @Override
@@ -163,8 +160,7 @@ final public class Span implements Comparable<Span> {
   }
 
   /**
-   * Checks whether the left of this span (ex. [4, 7]) overlaps the right of the given span (ex. [2,
-   * 5]).
+   * Checks whether the left of this span (ex. [4, 7]) overlaps the right of the given span (ex. [2, 5]).
    *
    * @param span span span.
    * @return true if the spans overlap, false otherwise.
@@ -177,8 +173,7 @@ final public class Span implements Comparable<Span> {
   }
 
   /**
-   * Checks whether the right of this span (ex. [4, 7]) overlaps the left of the given span (ex. [6,
-   * 9]).
+   * Checks whether the right of this span (ex. [4, 7]) overlaps the left of the given span (ex. [6, 9]).
    *
    * @param span span span.
    * @return true if the spans overlap, false otherwise.
@@ -192,7 +187,7 @@ final public class Span implements Comparable<Span> {
 
   /**
    * Checks whether a position falls into this span range.
-   * 
+   *
    * @param position position.
    * @return true if the position falls into this span, false otherwise.
    */
@@ -256,16 +251,14 @@ final public class Span implements Comparable<Span> {
   }
 
   /**
-   * Add a new feature. If the feature already exists, the previous value is replaced by the new
-   * one.
+   * Add a new feature. If the feature already exists, the previous value is replaced by the new one.
    *
-   * @param name the feature name.
+   * @param name  the feature name.
    * @param value the name value.
    */
   public void setFeature(String name, String value) {
 
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(name),
-        "name should neither be null nor empty");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "name should neither be null nor empty");
     Preconditions.checkNotNull(value, "value is null");
 
     features_.put(name, value);

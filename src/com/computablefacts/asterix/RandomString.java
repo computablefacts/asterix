@@ -1,11 +1,10 @@
 package com.computablefacts.asterix;
 
+import com.google.common.base.Preconditions;
+import com.google.errorprone.annotations.CheckReturnValue;
 import java.security.SecureRandom;
 import java.util.Objects;
 import java.util.Random;
-
-import com.google.common.base.Preconditions;
-import com.google.errorprone.annotations.CheckReturnValue;
 
 /**
  * Extracted from https://stackoverflow.com/a/41156

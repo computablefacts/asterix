@@ -1,18 +1,8 @@
 package com.computablefacts.asterix.codecs;
 
-import static org.junit.Assert.*;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.computablefacts.asterix.RandomString;
 import com.computablefacts.asterix.Span;
@@ -21,6 +11,16 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class StringCodecTest {
 
@@ -293,8 +293,7 @@ public class StringCodecTest {
     assertEquals("?1.5*", StringCodec.defaultLexicoder(1.5d));
     assertEquals("?0.0*", StringCodec.defaultLexicoder(0.0d));
     assertEquals("*8:4?", StringCodec.defaultLexicoder(-1.5d));
-    assertEquals("?1.5555555555555556*",
-        StringCodec.defaultLexicoder(1.555555555555555555555555555555555555d));
+    assertEquals("?1.5555555555555556*", StringCodec.defaultLexicoder(1.555555555555555555555555555555555555d));
     assertEquals("?0.3333333333333333*", StringCodec.defaultLexicoder(1.0d / 3d));
     assertEquals("?3.0*", StringCodec.defaultLexicoder(6d / 2.0d));
     assertEquals("inf", StringCodec.defaultLexicoder(1.5d / 0.0d));
@@ -307,8 +306,7 @@ public class StringCodecTest {
     assertEquals("?1.5*", StringCodec.defaultLexicoder(1.5f));
     assertEquals("?0.0*", StringCodec.defaultLexicoder(0.0f));
     assertEquals("*8:4?", StringCodec.defaultLexicoder(-1.5f));
-    assertEquals("?1.5555555820465088*",
-        StringCodec.defaultLexicoder(1.555555555555555555555555555555555555f));
+    assertEquals("?1.5555555820465088*", StringCodec.defaultLexicoder(1.555555555555555555555555555555555555f));
     assertEquals("?3.0*", StringCodec.defaultLexicoder(6f / 2.0f));
     assertEquals("inf", StringCodec.defaultLexicoder(1.5f / 0.0f));
     assertEquals("inf", StringCodec.defaultLexicoder(-1.5f / 0.0f));
@@ -318,8 +316,7 @@ public class StringCodecTest {
   @Test
   public void testLexicodeDate() {
     Date date = new Date();
-    assertEquals(DateTimeFormatter.ISO_INSTANT.format(date.toInstant()),
-        StringCodec.defaultLexicoder(date));
+    assertEquals(DateTimeFormatter.ISO_INSTANT.format(date.toInstant()), StringCodec.defaultLexicoder(date));
   }
 
   @Test
@@ -396,8 +393,8 @@ public class StringCodecTest {
   @Test
   public void testTokenizeSentence() {
 
-    SpanSequence spansComputed =
-        StringCodec.defaultTokenizer("Nous sommes le 29 avril 2017 (29/04/2017) et il est 12:43.");
+    SpanSequence spansComputed = StringCodec.defaultTokenizer(
+        "Nous sommes le 29 avril 2017 (29/04/2017) et il est 12:43.");
 
     String textNormalized = "nous sommes le 29 avril 2017 (29/04/2017) et il est 12:43.";
     SpanSequence spansExpected = new SpanSequence();
@@ -525,8 +522,7 @@ public class StringCodecTest {
     Assert.assertNotEquals(BigDecimal.ONE, StringCodec.defaultCoercer(BigDecimal.valueOf(1.0)));
 
     Assert.assertEquals(BigDecimal.valueOf(1.0), StringCodec.defaultCoercer("1.0"));
-    Assert.assertEquals(BigDecimal.valueOf(1.0),
-        StringCodec.defaultCoercer(BigDecimal.valueOf(1.0)));
+    Assert.assertEquals(BigDecimal.valueOf(1.0), StringCodec.defaultCoercer(BigDecimal.valueOf(1.0)));
   }
 
   @Test

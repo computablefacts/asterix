@@ -55,8 +55,7 @@ public class ViewTest {
 
     Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(1, Sets.newHashSet("a"))));
     Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(2, Sets.newHashSet("ab"))));
-    Assert.assertTrue(
-        list.contains(new AbstractMap.SimpleEntry<>(3, Sets.newHashSet("abc", "abc"))));
+    Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(3, Sets.newHashSet("abc", "abc"))));
     Assert.assertTrue(list.contains(new AbstractMap.SimpleEntry<>(4, Sets.newHashSet("abcd"))));
   }
 
@@ -217,10 +216,10 @@ public class ViewTest {
     Set<Map.Entry<Integer, String>> set = View.repeat("a").take(3).index().toSet();
     List<Map.Entry<Integer, String>> list = View.repeat("a").take(3).index().toList();
 
-    Assert.assertEquals(Sets.newHashSet(new AbstractMap.SimpleEntry<>(1, "a"),
-        new AbstractMap.SimpleEntry<>(2, "a"), new AbstractMap.SimpleEntry<>(3, "a")), set);
-    Assert.assertEquals(Lists.newArrayList(new AbstractMap.SimpleEntry<>(1, "a"),
-        new AbstractMap.SimpleEntry<>(2, "a"), new AbstractMap.SimpleEntry<>(3, "a")), list);
+    Assert.assertEquals(Sets.newHashSet(new AbstractMap.SimpleEntry<>(1, "a"), new AbstractMap.SimpleEntry<>(2, "a"),
+        new AbstractMap.SimpleEntry<>(3, "a")), set);
+    Assert.assertEquals(Lists.newArrayList(new AbstractMap.SimpleEntry<>(1, "a"), new AbstractMap.SimpleEntry<>(2, "a"),
+        new AbstractMap.SimpleEntry<>(3, "a")), list);
   }
 
   @Test
@@ -526,8 +525,8 @@ public class ViewTest {
     View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
     List<List<String>> list = view.partition(3).toList();
 
-    Assert.assertEquals(Lists.newArrayList(Lists.newArrayList("a", "ab", "abc"),
-        Lists.newArrayList("abcd", "abcde")), list);
+    Assert.assertEquals(Lists.newArrayList(Lists.newArrayList("a", "ab", "abc"), Lists.newArrayList("abcd", "abcde")),
+        list);
   }
 
   @Test
@@ -621,8 +620,7 @@ public class ViewTest {
   @Test
   public void testDedupViewWithoutDuplicates() {
 
-    List<String> actual = View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h"))
-        .dedupSorted().toList();
+    List<String> actual = View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h")).dedupSorted().toList();
     List<String> expected = Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h");
 
     Assert.assertEquals(expected, actual);
@@ -632,8 +630,8 @@ public class ViewTest {
   public void testDedupViewWithDuplicates() {
 
     List<String> actual = View.of(
-            Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "e", "f", "g", "h"))
-        .dedupSorted().toList();
+            Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "e", "f", "g", "h")).dedupSorted()
+        .toList();
     List<String> expected = Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h");
 
     Assert.assertEquals(expected, actual);
@@ -660,8 +658,9 @@ public class ViewTest {
   @Test
   public void testFlattenViewOfViews() {
 
-    List<String> actual = View.of(Lists.newArrayList(View.of(Lists.newArrayList("a", "ab")),
-        View.of(Lists.newArrayList("abc", "abcd", "abcde")))).flatten(l -> l).toList();
+    List<String> actual = View.of(
+            Lists.newArrayList(View.of(Lists.newArrayList("a", "ab")), View.of(Lists.newArrayList("abc", "abcd", "abcde"))))
+        .flatten(l -> l).toList();
     List<String> expected = Lists.newArrayList("a", "ab", "abc", "abcd", "abcde");
 
     Assert.assertEquals(expected, actual);
@@ -741,8 +740,8 @@ public class ViewTest {
   public void testIntersectLeftViewHasDuplicatedElements() {
 
     View<String> left = View.of(
-        Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "d", "d", "d", "d",
-            "e", "e", "e", "e", "e", "e"));
+        Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "d", "d", "d", "d", "e", "e", "e", "e",
+            "e", "e"));
     View<String> right = View.of(Lists.newArrayList("a", "c", "e"));
     List<String> intersection = left.intersectSorted(right).toList();
 
@@ -813,8 +812,7 @@ public class ViewTest {
       }
     });
 
-    Assert.assertEquals(3,
-        Sets.intersection(Sets.newHashSet("elephant", "rabbit", "duck"), result).size());
+    Assert.assertEquals(3, Sets.intersection(Sets.newHashSet("elephant", "rabbit", "duck"), result).size());
   }
 
   @Test
@@ -825,12 +823,11 @@ public class ViewTest {
     View<String> view3 = View.of(Lists.newArrayList("6", "7", "8", "9", "b", "d", "f"));
     View<String> view4 = View.of(Lists.newArrayList("a", "c", "e", "g"));
 
-    View<String> merged = view1.mergeSorted(Lists.newArrayList(view2, view3, view4),
-        String::compareTo);
+    View<String> merged = view1.mergeSorted(Lists.newArrayList(view2, view3, view4), String::compareTo);
 
     Assert.assertEquals(
-        Lists.newArrayList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d",
-            "e", "f", "g"), merged.toList());
+        Lists.newArrayList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g"),
+        merged.toList());
   }
 
   @Test
@@ -892,8 +889,7 @@ public class ViewTest {
     List<Integer> list = new ArrayList<>();
     list.add(1);
 
-    @Var List<List<Integer>> groups = View.of(list).groupSorted(Integer::equals).map(View::toList)
-        .toList();
+    @Var List<List<Integer>> groups = View.of(list).groupSorted(Integer::equals).map(View::toList).toList();
 
     Assert.assertEquals(1, groups.size());
     Assert.assertTrue(groups.contains(ImmutableList.of(1)));
@@ -923,8 +919,7 @@ public class ViewTest {
   public void testPeek() {
 
     List<String> valuesPeeked = new ArrayList<>();
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"))
-        .peek(valuesPeeked::add);
+    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7")).peek(valuesPeeked::add);
 
     Assert.assertTrue(valuesPeeked.isEmpty());
 
@@ -1075,8 +1070,7 @@ public class ViewTest {
 
     Predicate<Integer> isEven = x -> x % 2 == 0;
     Function<Integer, Optional<Integer>> ifTrue = Optional::of;
-    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, null)
-        .toList();
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, null).toList();
 
     Assert.assertEquals(2, list.size());
     Assert.assertEquals(2, (long) list.get(0));
@@ -1088,8 +1082,7 @@ public class ViewTest {
 
     Predicate<Integer> isEven = x -> x % 2 == 0;
     Function<Integer, Optional<Integer>> ifFalse = Optional::of;
-    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, null, ifFalse)
-        .toList();
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, null, ifFalse).toList();
 
     Assert.assertEquals(3, list.size());
     Assert.assertEquals(1, (long) list.get(0));
@@ -1103,8 +1096,7 @@ public class ViewTest {
     Predicate<Integer> isEven = x -> x % 2 == 0;
     Function<Integer, Optional<Integer>> ifTrue = Optional::of;
     Function<Integer, Optional<Integer>> ifFalse = Optional::of;
-    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, ifFalse)
-        .toList();
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, ifFalse).toList();
 
     Assert.assertEquals(5, list.size());
     Assert.assertEquals(1, (long) list.get(0));

@@ -105,10 +105,9 @@ public class TextTokenizer implements Function<String, SpanSequence> {
       boolean isTerminalMark = StringIterator.isTerminalMark(c);
       boolean isWhitespace = StringIterator.isWhitespace(c);
 
-      if (!isApostrophe && !isArrow && !isBracket && !isCjkSymbol && !isCurrency
-          && !isDoubleQuotationMark && !isGeneralPunctuation && !isNumber && !isListMark
-          && !isPunctuation && !isQuotationMark && !isSeparatorMark && !isSingleQuotationMark
-          && !isTerminalMark && !isWhitespace) {
+      if (!isApostrophe && !isArrow && !isBracket && !isCjkSymbol && !isCurrency && !isDoubleQuotationMark
+          && !isGeneralPunctuation && !isNumber && !isListMark && !isPunctuation && !isQuotationMark && !isSeparatorMark
+          && !isSingleQuotationMark && !isTerminalMark && !isWhitespace) {
         token.append(c);
       } else {
         if (token.length() <= 0 && !isWhitespace) {

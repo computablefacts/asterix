@@ -33,8 +33,7 @@ public class ConfusionMatrixTest {
     matrixD.addTruePositives(1);
     matrixD.addFalsePositives(1);
 
-    String microAverage = ConfusionMatrix.microAverage(
-        Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
+    String microAverage = ConfusionMatrix.microAverage(Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
 
     Assert.assertTrue(microAverage.contains("MCC : NaN"));
     Assert.assertTrue(microAverage.contains("\nF1 : 0.21848739495798317"));
@@ -62,8 +61,7 @@ public class ConfusionMatrixTest {
     matrixD.addTruePositives(1);
     matrixD.addFalsePositives(1);
 
-    String macroAverage = ConfusionMatrix.macroAverage(
-        Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
+    String macroAverage = ConfusionMatrix.macroAverage(Lists.newArrayList(matrixA, matrixB, matrixC, matrixD));
 
     Assert.assertTrue(macroAverage.contains("MCC : 0.0"));
     Assert.assertTrue(macroAverage.contains("\nF1 : 0.5454545454545454"));

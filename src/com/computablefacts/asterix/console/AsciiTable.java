@@ -23,8 +23,7 @@ final public class AsciiTable {
     return format(table, hasHeader, false, 30);
   }
 
-  public static String format(String[][] table, boolean hasHeader, boolean leftJustify,
-      int maxColWidth) {
+  public static String format(String[][] table, boolean hasHeader, boolean leftJustify, int maxColWidth) {
 
     Preconditions.checkNotNull(table, "table should not be null");
     Preconditions.checkArgument(table.length > 0, "table should have at least one row");
@@ -92,8 +91,7 @@ final public class AsciiTable {
     String columnSeparator = "|";
 
     for (int i = 0; i < columnLengths.size(); i++) {
-      builder.append(columnSeparator).append(" %").append(emptyCell).append(columnLengths.get(i))
-          .append("s ");
+      builder.append(columnSeparator).append(" %").append(emptyCell).append(columnLengths.get(i)).append("s ");
     }
 
     builder.append(columnSeparator).append("\n");

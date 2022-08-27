@@ -1,13 +1,10 @@
 package com.computablefacts.asterix;
 
+import com.google.common.collect.Lists;
 import java.util.Iterator;
-
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.collect.Lists;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class SpanSequenceTest {
 
@@ -158,8 +155,7 @@ public class SpanSequenceTest {
 
     Assert.assertEquals(new SpanSequence(Lists.newArrayList(day, month)), sequence.sequence(0, 2));
     Assert.assertEquals(new SpanSequence(Lists.newArrayList(month, year)), sequence.sequence(1, 3));
-    Assert.assertEquals(new SpanSequence(Lists.newArrayList(day, month, year)),
-        sequence.sequence(0, 3));
+    Assert.assertEquals(new SpanSequence(Lists.newArrayList(day, month, year)), sequence.sequence(0, 3));
     Assert.assertEquals(new SpanSequence(Lists.newArrayList(month)), sequence.sequence(1, 2));
   }
 

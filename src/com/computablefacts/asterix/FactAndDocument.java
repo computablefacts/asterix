@@ -23,8 +23,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Link a {@link com.computablefacts.junon.Fact}, i.e. a span of text associated with a label, to
- * its underlying {@link Document}, i.e. the document from which the fact has been extracted.
+ * Link a {@link com.computablefacts.junon.Fact}, i.e. a span of text associated with a label, to its underlying
+ * {@link Document}, i.e. the document from which the fact has been extracted.
  */
 @CheckReturnValue
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -68,8 +68,7 @@ public final class FactAndDocument {
     Preconditions.checkArgument(facts.exists(), "missing facts: %s", facts);
     Preconditions.checkArgument(documents.exists(), "missing documents: %s", documents);
 
-    File dataset = new File(
-        String.format("%sfacts_and_documents.jsonl.gz", facts.getParent() + File.separator));
+    File dataset = new File(String.format("%sfacts_and_documents.jsonl.gz", facts.getParent() + File.separator));
 
     System.out.printf("Facts dataset is %s\n", facts);
     System.out.printf("Documents dataset is %s\n", documents);
@@ -85,16 +84,15 @@ public final class FactAndDocument {
 
     System.out.println("Facts and documents merged.");
 
-    File goldLabels = new File(
-        String.format("%sgold_labels.jsonl.gz", facts.getParent() + File.separator));
+    File goldLabels = new File(String.format("%sgold_labels.jsonl.gz", facts.getParent() + File.separator));
 
     System.out.printf("Gold labels dataset is %s\n", goldLabels);
     System.out.println("Exporting gold labels...");
 
     if (GoldLabel.save(goldLabels, load(dataset, null).flatten(fad -> {
       View<GoldLabel> view =
-          (fad.isAccepted() || fad.isRejected()) && !Strings.isNullOrEmpty(fad.matchedPage())
-              ? View.of(fad.pageAsGoldLabel()) : View.of();
+          (fad.isAccepted() || fad.isRejected()) && !Strings.isNullOrEmpty(fad.matchedPage()) ? View.of(
+              fad.pageAsGoldLabel()) : View.of();
       return view; // fad.isAccepted() ? view.concat(View.of(fad.syntheticPagesAsGoldLabels())) : view;
     }).displayProgress(5000))) {
       System.out.println("Gold labels exported.");
@@ -106,9 +104,9 @@ public final class FactAndDocument {
   /**
    * Load elements from a gzipped JSONL file.
    *
-   * @param file the input file.
-   * @param label the specific gold labels to load. If {@code label} is set to {@code null}, all
-   * gold labels will be loaded.
+   * @param file  the input file.
+   * @param label the specific gold labels to load. If {@code label} is set to {@code null}, all gold labels will be
+   *              loaded.
    * @return a set of elements.
    */
   @SuppressWarnings("unchecked")
@@ -117,24 +115,23 @@ public final class FactAndDocument {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file file does not exist : %s", file);
 
-    return View.of(file, true).filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */)
-        .map(row -> {
+    return View.of(file, true).filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */).map(row -> {
 
-          Map<String, Object> element = JsonCodec.asObject(row);
-          Map<String, Object> fact = (Map<String, Object>) element.get("fact");
-          Map<String, Object> document = (Map<String, Object>) element.get("document");
+      Map<String, Object> element = JsonCodec.asObject(row);
+      Map<String, Object> fact = (Map<String, Object>) element.get("fact");
+      Map<String, Object> document = (Map<String, Object>) element.get("document");
 
-          return new FactAndDocument(fact, document);
-        }).filter(fact -> label == null || label.equals(fact.label()));
+      return new FactAndDocument(fact, document);
+    }).filter(fact -> label == null || label.equals(fact.label()));
   }
 
   /**
    * Load elements from raw gzipped JSONL files.
    *
-   * @param facts the 'fact' file as a gzipped JSONL file.
+   * @param facts     the 'fact' file as a gzipped JSONL file.
    * @param documents the 'document' file as a gzipped JSONL file.
-   * @param label the specific gold labels to load. If {@code label} is set to {@code null}, all
-   * gold labels will be loaded.
+   * @param label     the specific gold labels to load. If {@code label} is set to {@code null}, all gold labels will be
+   *                  loaded.
    * @return a set of elements.
    */
   public static View<FactAndDocument> merge(File facts, File documents, String label) {
@@ -142,8 +139,7 @@ public final class FactAndDocument {
     Preconditions.checkNotNull(facts, "facts should not be null");
     Preconditions.checkArgument(facts.exists(), "facts file does not exist : %s", facts);
     Preconditions.checkNotNull(documents, "documents should not be null");
-    Preconditions.checkArgument(documents.exists(), "documents file does not exist : %s",
-        documents);
+    Preconditions.checkArgument(documents.exists(), "documents file does not exist : %s", documents);
 
     // Load facts
     Map<String, List<FactAndDocument>> factsIndexedByDocId = View.of(facts, true)
@@ -152,8 +148,8 @@ public final class FactAndDocument {
         .groupAll(FactAndDocument::id);
 
     // Load documents and associate them with facts
-    return Document.of(documents, true).takeWhile(
-            row -> !factsIndexedByDocId.isEmpty() /* exit as soon as all facts are associated with a document */)
+    return Document.of(documents, true)
+        .takeWhile(row -> !factsIndexedByDocId.isEmpty() /* exit as soon as all facts are associated with a document */)
         .filter(doc -> {
 
           // Ignore documents that are not linked to at least one fact
@@ -175,7 +171,7 @@ public final class FactAndDocument {
   /**
    * Save facts and documents to a gzipped JSONL file.
    *
-   * @param file the output file.
+   * @param file  the output file.
    * @param facts the facts and documents to save.
    * @return true iif the facts have been written to the file, false otherwise.
    */
@@ -203,16 +199,14 @@ public final class FactAndDocument {
     Preconditions.checkNotNull(facts, "facts should not be null");
 
     return facts.filter(fact -> fact.isAccepted() || fact.isRejected())
-        .filter(fact -> !Strings.isNullOrEmpty(fact.matchedPage()))
-        .map(FactAndDocument::pageAsGoldLabel);
+        .filter(fact -> !Strings.isNullOrEmpty(fact.matchedPage())).map(FactAndDocument::pageAsGoldLabel);
   }
 
   /**
    * Returns each accepted or rejected fact as a gold label.
    *
-   * @param facts some facts and documents.
-   * @param resize true iif the fact should be enlarged when less than 300 characters, false
-   * otherwise.
+   * @param facts  some facts and documents.
+   * @param resize true iif the fact should be enlarged when less than 300 characters, false otherwise.
    * @return a set of gold labels.
    */
   public static View<GoldLabel> factsAsGoldLabels(View<FactAndDocument> facts, boolean resize) {
@@ -220,8 +214,7 @@ public final class FactAndDocument {
     Preconditions.checkNotNull(facts, "facts should not be null");
 
     return facts.filter(fact -> fact.isAccepted() || fact.isRejected())
-        .filter(fact -> !Strings.isNullOrEmpty(fact.fact()))
-        .map(fact -> fact.factAsGoldLabel(resize));
+        .filter(fact -> !Strings.isNullOrEmpty(fact.fact())).map(fact -> fact.factAsGoldLabel(resize));
   }
 
   /**
@@ -234,13 +227,11 @@ public final class FactAndDocument {
 
     Preconditions.checkNotNull(facts, "facts should not be null");
 
-    return facts.filter(FactAndDocument::isAccepted)
-        .flatten(fact -> View.of(fact.syntheticPagesAsGoldLabels()));
+    return facts.filter(FactAndDocument::isAccepted).flatten(fact -> View.of(fact.syntheticPagesAsGoldLabels()));
   }
 
   /**
-   * For each accepted fact returns a single random span from each unmatched pages as 'true
-   * negative' gold labels.
+   * For each accepted fact returns a single random span from each unmatched pages as 'true negative' gold labels.
    *
    * @param facts a set of facts and documents.
    * @return a set of gold labels.
@@ -249,8 +240,7 @@ public final class FactAndDocument {
 
     Preconditions.checkNotNull(facts, "facts should not be null");
 
-    return facts.filter(FactAndDocument::isAccepted)
-        .flatten(fact -> View.of(fact.syntheticFactsAsGoldLabels()));
+    return facts.filter(FactAndDocument::isAccepted).flatten(fact -> View.of(fact.syntheticFactsAsGoldLabels()));
   }
 
   @Override
@@ -273,8 +263,7 @@ public final class FactAndDocument {
   @Generated
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("fact", fact_).add("document", document_)
-        .omitNullValues().toString();
+    return MoreObjects.toStringHelper(this).add("fact", fact_).add("document", document_).omitNullValues().toString();
   }
 
   /**
@@ -295,8 +284,7 @@ public final class FactAndDocument {
    * @return the fact's underlying document identifier if any, an empty string otherwise.
    */
   public String id() {
-    return source().filter(map -> map.containsKey("doc_id")).map(map -> (String) map.get("doc_id"))
-        .orElse("");
+    return source().filter(map -> map.containsKey("doc_id")).map(map -> (String) map.get("doc_id")).orElse("");
   }
 
   /**
@@ -391,10 +379,8 @@ public final class FactAndDocument {
    */
   public GoldLabel pageAsGoldLabel() {
 
-    Preconditions.checkState(isAccepted() || isRejected(),
-        "unverified facts cannot be treated as gold labels");
-    Preconditions.checkState(!Strings.isNullOrEmpty(matchedPage()),
-        "empty pages cannot be used as as gold labels");
+    Preconditions.checkState(isAccepted() || isRejected(), "unverified facts cannot be treated as gold labels");
+    Preconditions.checkState(!Strings.isNullOrEmpty(matchedPage()), "empty pages cannot be used as as gold labels");
 
     return new GoldLabel(id(), label(), matchedPage(), isRejected(), isAccepted(), false, false);
   }
@@ -402,14 +388,12 @@ public final class FactAndDocument {
   /**
    * Returns the fact as a gold label.
    *
-   * @param resize true iif the fact should be enlarged when less than 300 characters, false
-   * otherwise.
+   * @param resize true iif the fact should be enlarged when less than 300 characters, false otherwise.
    * @return a gold label.
    */
   public GoldLabel factAsGoldLabel(boolean resize) {
 
-    Preconditions.checkState(isAccepted() || isRejected(),
-        "unverified facts cannot be treated as gold labels");
+    Preconditions.checkState(isAccepted() || isRejected(), "unverified facts cannot be treated as gold labels");
 
     int minLength = 300;
     String fact = fact();
@@ -437,13 +421,12 @@ public final class FactAndDocument {
         "unverified or rejected facts cannot be used to create synthetic gold labels");
 
     return unmatchedPages().stream().filter(page -> !Strings.isNullOrEmpty(page))
-        .map(page -> new GoldLabel(id(), label(), page, true, false, false, false))
-        .collect(Collectors.toSet());
+        .map(page -> new GoldLabel(id(), label(), page, true, false, false, false)).collect(Collectors.toSet());
   }
 
   /**
-   * If the current fact has been accepted, returns a single random span from unmatched pages as
-   * 'true negative' gold labels.
+   * If the current fact has been accepted, returns a single random span from unmatched pages as 'true negative' gold
+   * labels.
    *
    * @return a set of synthetic gold labels.
    */
@@ -453,12 +436,11 @@ public final class FactAndDocument {
         "unverified or rejected facts cannot be used to create synthetic gold labels");
 
     Random random = new Random();
-    return unmatchedPages().stream().filter(page -> !Strings.isNullOrEmpty(page))
-        .filter(page -> page.length() > 300).map(page -> {
+    return unmatchedPages().stream().filter(page -> !Strings.isNullOrEmpty(page)).filter(page -> page.length() > 300)
+        .map(page -> {
           int begin = random.nextInt(page.length() - 300);
           int end = begin + 300;
-          return new GoldLabel(id(), label(), page.substring(begin, end), true, false, false,
-              false);
+          return new GoldLabel(id(), label(), page.substring(begin, end), true, false, false, false);
         }).collect(Collectors.toSet());
   }
 
@@ -486,13 +468,11 @@ public final class FactAndDocument {
   }
 
   private Optional<Integer> startIndex() {
-    return provenance().filter(map -> map.containsKey("start_index"))
-        .map(map -> (Integer) map.get("start_index"));
+    return provenance().filter(map -> map.containsKey("start_index")).map(map -> (Integer) map.get("start_index"));
   }
 
   private Optional<Integer> endIndex() {
-    return provenance().filter(map -> map.containsKey("end_index"))
-        .map(map -> (Integer) map.get("end_index"));
+    return provenance().filter(map -> map.containsKey("end_index")).map(map -> (Integer) map.get("end_index"));
   }
 
   @SuppressWarnings("unchecked")
@@ -502,8 +482,7 @@ public final class FactAndDocument {
 
   @SuppressWarnings("unchecked")
   private Optional<Map<String, Object>> source() {
-    return provenance().filter(map -> map.containsKey("source"))
-        .map(map -> (Map<String, Object>) map.get("source"));
+    return provenance().filter(map -> map.containsKey("source")).map(map -> (Map<String, Object>) map.get("source"));
   }
 
   private Optional<Map<String, Object>> provenance() {

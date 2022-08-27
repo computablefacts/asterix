@@ -100,16 +100,14 @@ final public class FeatureVector {
 
   public double get(int pos) {
 
-    Preconditions.checkArgument(0 <= pos && pos < length_, "pos must be such as 0 <= pos <= %s",
-        length_);
+    Preconditions.checkArgument(0 <= pos && pos < length_, "pos must be such as 0 <= pos <= %s", length_);
 
     return nonZeroEntries_.getOrDefault(pos, 0.0);
   }
 
   public void set(int pos, double value) {
 
-    Preconditions.checkArgument(0 <= pos && pos < length_, "pos must be such as 0 <= pos <= %s",
-        length_);
+    Preconditions.checkArgument(0 <= pos && pos < length_, "pos must be such as 0 <= pos <= %s", length_);
 
     if (value == 0.0) {
       nonZeroEntries_.remove(pos);

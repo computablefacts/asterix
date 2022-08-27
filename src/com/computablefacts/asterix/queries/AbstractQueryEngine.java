@@ -1,13 +1,16 @@
 package com.computablefacts.asterix.queries;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.StringCodec;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Var;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The execution layer.
@@ -17,7 +20,7 @@ public abstract class AbstractQueryEngine {
   /**
    * Estimate the cardinality of the range query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
    * @return the estimated number of documents ids returned by {@link #rangeQuery(String, String)}.
    */
@@ -28,10 +31,9 @@ public abstract class AbstractQueryEngine {
   /**
    * Estimate the cardinality of the inflectional query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
-   * @return the estimated number of documents ids returned by
-   *         {@link #inflectionalQuery(String, String)}.
+   * @return the estimated number of documents ids returned by {@link #inflectionalQuery(String, String)}.
    */
   public long inflectionalCardinality(String key, String value) {
     return inflectionalQuery(key, value).reduce(0L, (carry, id) -> carry + 1L);
@@ -40,10 +42,9 @@ public abstract class AbstractQueryEngine {
   /**
    * Estimate the cardinality of the literal query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
-   * @return the estimated number of documents ids returned by
-   *         {@link #literalQuery(String, String)}.
+   * @return the estimated number of documents ids returned by {@link #literalQuery(String, String)}.
    */
   public long literalCardinality(String key, String value) {
     return literalQuery(key, value).reduce(0L, (carry, id) -> carry + 1L);
@@ -52,10 +53,9 @@ public abstract class AbstractQueryEngine {
   /**
    * Estimate the cardinality of the thesaurus query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
-   * @return the estimated number of documents ids returned by
-   *         {@link #thesaurusQuery(String, String)}.
+   * @return the estimated number of documents ids returned by {@link #thesaurusQuery(String, String)}.
    */
   public long thesaurusCardinality(String key, String value) {
     return thesaurusQuery(key, value).reduce(0L, (carry, id) -> carry + 1L);
@@ -64,7 +64,7 @@ public abstract class AbstractQueryEngine {
   /**
    * Perform a range query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
    * @return an ordered stream of documents ids.
    */
@@ -87,7 +87,7 @@ public abstract class AbstractQueryEngine {
   /**
    * Perform an inflectional query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
    * @return an ordered stream of documents ids.
    */
@@ -104,24 +104,21 @@ public abstract class AbstractQueryEngine {
         views.add(results.dedupSorted());
       }
     }
-    return views.isEmpty() ? View.of()
-        : views.size() == 1 ? views.get(0)
-            : views.get(0).mergeSorted(views.subList(1, views.size()), String::compareTo)
-                .dedupSorted();
+    return views.isEmpty() ? View.of() : views.size() == 1 ? views.get(0)
+        : views.get(0).mergeSorted(views.subList(1, views.size()), String::compareTo).dedupSorted();
   }
 
   /**
    * Perform a literal query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
    * @return an ordered stream of documents ids.
    */
   public View<String> literalQuery(String key, String value) {
 
     List<String> terms = tokenize(value);
-    @Var
-    View<String> view = null;
+    @Var View<String> view = null;
 
     for (String term : terms) {
 
@@ -144,15 +141,14 @@ public abstract class AbstractQueryEngine {
   /**
    * Perform a thesaurus query.
    *
-   * @param key the field.
+   * @param key   the field.
    * @param value the field's value to match.
    * @return an ordered stream of documents ids.
    */
   public View<String> thesaurusQuery(String key, String value) {
 
     List<String> terms = tokenize(value);
-    @Var
-    View<String> view = null;
+    @Var View<String> view = null;
 
     for (String term : terms) {
 
@@ -168,10 +164,8 @@ public abstract class AbstractQueryEngine {
         }
       }
 
-      View<String> results = newViews.isEmpty() ? View.of()
-          : newViews.size() == 1 ? newViews.get(0)
-              : newViews.get(0).mergeSorted(newViews.subList(1, newViews.size()), String::compareTo)
-                  .dedupSorted();
+      View<String> results = newViews.isEmpty() ? View.of() : newViews.size() == 1 ? newViews.get(0)
+          : newViews.get(0).mergeSorted(newViews.subList(1, newViews.size()), String::compareTo).dedupSorted();
 
       if (view == null) {
         view = results;
@@ -192,8 +186,7 @@ public abstract class AbstractQueryEngine {
    * @return a list of tokens/terms.
    */
   protected List<String> tokenize(String value) {
-    return StringCodec.defaultTokenizer(value).stream().map(Span::text)
-        .collect(Collectors.toList());
+    return StringCodec.defaultTokenizer(value).stream().map(Span::text).collect(Collectors.toList());
   }
 
   /**
@@ -209,15 +202,14 @@ public abstract class AbstractQueryEngine {
   /**
    * Returns the list of documents containing a given term.
    *
-   * @param key the field.
+   * @param key  the field.
    * @param term the field's term to match.
    * @return an ordered stream of documents ids.
    */
   protected abstract View<String> executeQuery(String key, String term);
 
   /**
-   * Returns the list of documents containing a numeric value between {@code min} and {@code max}
-   * included.
+   * Returns the list of documents containing a numeric value between {@code min} and {@code max} included.
    *
    * @param key the field.
    * @param min the field's minimum value to match (included).

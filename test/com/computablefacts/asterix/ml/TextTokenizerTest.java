@@ -21,8 +21,8 @@ public class TextTokenizerTest {
 
     for (int i = 0; i < spans.size(); i++) {
       System.out.println(
-          "span=\"" + spans.span(i).text() + "\", index=" + i + ", tags=" + spans.span(i).tags()
-              + ", features=" + spans.span(i).features());
+          "span=\"" + spans.span(i).text() + "\", index=" + i + ", tags=" + spans.span(i).tags() + ", features="
+              + spans.span(i).features());
     }
 
     Assert.assertEquals("Welcome", spans.span(0).text());
@@ -73,90 +73,79 @@ public class TextTokenizerTest {
 
     TextTokenizer tokenizer = new TextTokenizer();
     List<Map.Entry<String, SpanSequence>> papers = DocumentTest.papers().map(
-        document -> (Map.Entry<String, SpanSequence>) new AbstractMap.SimpleImmutableEntry<>(
-            document.docId(), tokenizer.apply((String) document.text()))).toList();
+        document -> (Map.Entry<String, SpanSequence>) new AbstractMap.SimpleImmutableEntry<>(document.docId(),
+            tokenizer.apply((String) document.text()))).toList();
 
     Optional<String> hasApostrophe = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isApostrophe)).map(Entry::getKey)
-        .findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isApostrophe)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasApostrophe.get());
 
-    Optional<String> hasArrow = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isArrow)).map(Entry::getKey)
-        .findFirst();
+    Optional<String> hasArrow = papers.stream().filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isArrow))
+        .map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasArrow.get());
 
-    Optional<String> hasBracket = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isBracket)).map(Entry::getKey)
-        .findFirst();
+    Optional<String> hasBracket = papers.stream().filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isBracket))
+        .map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasBracket.get());
 
     Optional<String> hasCjkSymbol = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isCjkSymbol)).map(Entry::getKey)
-        .findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isCjkSymbol)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5641", hasCjkSymbol.get());
 
     Optional<String> hasCurrency = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isCurrency)).map(Entry::getKey)
-        .findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isCurrency)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("6002", hasCurrency.get());
 
     Optional<String> hasDoubleQuotationMark = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isDoubleQuotationMark))
-        .map(Entry::getKey).findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isDoubleQuotationMark)).map(Entry::getKey)
+        .findFirst();
 
     Assert.assertEquals("5677", hasDoubleQuotationMark.get());
 
     Optional<String> hasGeneralPunctuation = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isGeneralPunctuation))
-        .map(Entry::getKey).findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isGeneralPunctuation)).map(Entry::getKey)
+        .findFirst();
 
     Assert.assertEquals("5677", hasGeneralPunctuation.get());
 
-    Optional<String> hasNumber = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isNumber)).map(Entry::getKey)
-        .findFirst();
+    Optional<String> hasNumber = papers.stream().filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isNumber))
+        .map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasNumber.get());
 
     Optional<String> hasListMark = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isListMark)).map(Entry::getKey)
-        .findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isListMark)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasListMark.get());
 
     Optional<String> hasPunctuation = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isPunctuation))
-        .map(Entry::getKey).findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isPunctuation)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasPunctuation.get());
 
     Optional<String> hasQuotationMark = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isQuotationMark))
-        .map(Entry::getKey).findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isQuotationMark)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasQuotationMark.get());
 
     Optional<String> hasSeparatorMark = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isSeparatorMark))
-        .map(Entry::getKey).findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isSeparatorMark)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasSeparatorMark.get());
 
     Optional<String> hasSingleQuotationMark = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isSingleQuotationMark))
-        .map(Entry::getKey).findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isSingleQuotationMark)).map(Entry::getKey)
+        .findFirst();
 
     Assert.assertEquals("5677", hasSingleQuotationMark.get());
 
     Optional<String> hasTerminalMark = papers.stream()
-        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isTerminalMark))
-        .map(Entry::getKey).findFirst();
+        .filter(e -> e.getValue().stream().anyMatch(TextTokenizer::isTerminalMark)).map(Entry::getKey).findFirst();
 
     Assert.assertEquals("5677", hasTerminalMark.get());
   }

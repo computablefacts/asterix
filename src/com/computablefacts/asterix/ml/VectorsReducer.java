@@ -11,8 +11,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Reduce a list of vectors by removing entries that are zeroes across all vectors. The reduction is
- * computed on the first batch of vectors seen and then applied on all the subsequents batches.
+ * Reduce a list of vectors by removing entries that are zeroes across all vectors. The reduction is computed on the
+ * first batch of vectors seen and then applied on all the subsequents batches.
  */
 @CheckReturnValue
 final public class VectorsReducer implements Function<List<FeatureVector>, List<FeatureVector>> {

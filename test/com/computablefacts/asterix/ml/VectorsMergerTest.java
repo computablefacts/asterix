@@ -21,9 +21,9 @@ public class VectorsMergerTest {
     List<FeatureVector> vectors = Lists.newArrayList(vector1, vector2, vector3);
     FeatureVector vector = new VectorsMerger().apply(vectors);
 
-    Assert.assertEquals(new FeatureVector(
-        new double[]{0.0, 0.640, 0.0, 0.0, 0.845, 1.0, 0.0, 3.0, 0.0, 5.0, 0.0, 2.0, 0.0, 4.0,
-            0.0}), vector);
+    Assert.assertEquals(
+        new FeatureVector(new double[]{0.0, 0.640, 0.0, 0.0, 0.845, 1.0, 0.0, 3.0, 0.0, 5.0, 0.0, 2.0, 0.0, 4.0, 0.0}),
+        vector);
   }
 
   @Test
@@ -40,8 +40,6 @@ public class VectorsMergerTest {
     List<FeatureVector> vectors = Lists.newArrayList(vector1, vector2, vector3);
     FeatureVector vector = new VectorsMerger().apply(vectors);
 
-    Assert.assertEquals(
-        new FeatureVector(new double[]{0.0, 0.640, 0.0, 0.0, 0.845, 1.0, 3.0, 5.0, 2.0, 4.0}),
-        vector);
+    Assert.assertEquals(new FeatureVector(new double[]{0.0, 0.640, 0.0, 0.0, 0.845, 1.0, 3.0, 5.0, 2.0, 4.0}), vector);
   }
 }

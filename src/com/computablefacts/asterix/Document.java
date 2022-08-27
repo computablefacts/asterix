@@ -69,7 +69,7 @@ final public class Document {
   /**
    * Load a corpus of documents.
    *
-   * @param file the corpus of documents as a gzipped JSONL file.
+   * @param file      the corpus of documents as a gzipped JSONL file.
    * @param onlyTexts true iif non-textual documents (ex. JSON objects) must be filtered out.
    * @return a {@link View} over the corpus of documents.
    */
@@ -78,32 +78,31 @@ final public class Document {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file file does not exist : %s", file);
 
-    return View.of(file, true).filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */)
-        .map(row -> {
-          try {
-            return new Document(JsonCodec.asObject(row));
-          } catch (Exception ex) {
-            logger_.error(LogFormatter.create().message(ex).add("line_number", row).formatError());
-          }
-          return new Document("UNK");
-        }).filter(doc -> {
+    return View.of(file, true).filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */).map(row -> {
+      try {
+        return new Document(JsonCodec.asObject(row));
+      } catch (Exception ex) {
+        logger_.error(LogFormatter.create().message(ex).add("line_number", row).formatError());
+      }
+      return new Document("UNK");
+    }).filter(doc -> {
 
-          // Ignore documents when an exception occurred
-          if ("UNK".equals(doc.docId())) {
-            return false;
-          }
+      // Ignore documents when an exception occurred
+      if ("UNK".equals(doc.docId())) {
+        return false;
+      }
 
-          // Ignore empty documents
-          if (doc.isEmpty()) {
-            return false;
-          }
+      // Ignore empty documents
+      if (doc.isEmpty()) {
+        return false;
+      }
 
-          // Ignore non-textual files
-          if (onlyTexts && !(doc.text() instanceof String)) {
-            return false;
-          }
-          return true;
-        });
+      // Ignore non-textual files
+      if (onlyTexts && !(doc.text() instanceof String)) {
+        return false;
+      }
+      return true;
+    });
   }
 
   @Generated
@@ -121,8 +120,8 @@ final public class Document {
       return false;
     }
     Document other = (Document) obj;
-    return Objects.equal(docId_, other.docId_) && Objects.equal(metadata_, other.metadata_)
-        && Objects.equal(content_, other.content_);
+    return Objects.equal(docId_, other.docId_) && Objects.equal(metadata_, other.metadata_) && Objects.equal(content_,
+        other.content_);
   }
 
   @Override
@@ -277,8 +276,7 @@ final public class Document {
   }
 
   public String modificationDate() {
-    return metadata_.containsKey(MODIFICATION_DATE) ? (String) metadata_.get(MODIFICATION_DATE)
-        : null;
+    return metadata_.containsKey(MODIFICATION_DATE) ? (String) metadata_.get(MODIFICATION_DATE) : null;
   }
 
   public void author(String obj) {

@@ -1,15 +1,5 @@
 package com.computablefacts.asterix.codecs;
 
-import java.io.IOException;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.validation.constraints.NotNull;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.computablefacts.logfmt.LogFormatter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,6 +14,19 @@ import com.github.wnameless.json.flattener.FlattenMode;
 import com.github.wnameless.json.flattener.JsonFlattener;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @CheckReturnValue
 final public class JsonCodec {
@@ -38,12 +41,13 @@ final public class JsonCodec {
     mapper_.registerModule(dateSerializerModule);
   }
 
-  private JsonCodec() {}
+  private JsonCodec() {
+  }
 
   /**
    * Flatten a single JSON object using {@code separator} as the attribute separator.
    *
-   * @param json the JSON object.
+   * @param json      the JSON object.
    * @param separator the separator to use.
    * @return a flattened JSON object.
    */
@@ -52,35 +56,33 @@ final public class JsonCodec {
   }
 
   /**
-   * Flatten a single JSON object using {@code separator} as the attribute separator. Do not flatten
-   * arrays.
+   * Flatten a single JSON object using {@code separator} as the attribute separator. Do not flatten arrays.
    *
-   * @param json the JSON object.
+   * @param json      the JSON object.
    * @param separator the separator to use.
    * @return a flattened JSON object.
    */
   public static Map<String, Object> flattenKeepArrays(String json, char separator) {
-    return new JsonFlattener(json).withSeparator(separator).withFlattenMode(FlattenMode.KEEP_ARRAYS)
-        .flattenAsMap();
+    return new JsonFlattener(json).withSeparator(separator).withFlattenMode(FlattenMode.KEEP_ARRAYS).flattenAsMap();
   }
 
   /**
-   * Flatten a single JSON object using {@code separator} as the attribute separator. Do not flatten
-   * arrays of primitives.
+   * Flatten a single JSON object using {@code separator} as the attribute separator. Do not flatten arrays of
+   * primitives.
    *
-   * @param json the JSON object.
+   * @param json      the JSON object.
    * @param separator the separator to use.
    * @return a flattened JSON object.
    */
   public static Map<String, Object> flattenKeepPrimitiveArrays(String json, char separator) {
-    return new JsonFlattener(json).withSeparator(separator)
-        .withFlattenMode(FlattenMode.KEEP_PRIMITIVE_ARRAYS).flattenAsMap();
+    return new JsonFlattener(json).withSeparator(separator).withFlattenMode(FlattenMode.KEEP_PRIMITIVE_ARRAYS)
+        .flattenAsMap();
   }
 
   /**
    * Unflatten a single JSON object using {@code separator} as the attribute separator.
    *
-   * @param json the JSON object.
+   * @param json      the JSON object.
    * @param separator the separator to use.
    * @return an unflattened JSON object.
    */
@@ -91,7 +93,7 @@ final public class JsonCodec {
   /**
    * Unflatten a single JSON object using {@code separator} as the attribute separator.
    *
-   * @param json the JSON object.
+   * @param json      the JSON object.
    * @param separator the separator to use.
    * @return an unflattened JSON object.
    */
@@ -108,8 +110,8 @@ final public class JsonCodec {
    */
   public static <T> @NotNull Map<String, Object> dtoToObject(T obj) {
     try {
-      return obj == null ? Collections.emptyMap()
-          : mapper_.convertValue(obj, new TypeReference<Map<String, Object>>() {});
+      return obj == null ? Collections.emptyMap() : mapper_.convertValue(obj, new TypeReference<Map<String, Object>>() {
+      });
     } catch (IllegalArgumentException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -127,8 +129,7 @@ final public class JsonCodec {
     if (obj == null) {
       return Collections.emptyList();
     }
-    return obj.stream().filter(Objects::nonNull).map(JsonCodec::dtoToObject)
-        .collect(Collectors.toList());
+    return obj.stream().filter(Objects::nonNull).map(JsonCodec::dtoToObject).collect(Collectors.toList());
   }
 
   /**
@@ -143,8 +144,7 @@ final public class JsonCodec {
     if (obj == null) {
       return Collections.emptyList();
     }
-    return Arrays.stream(obj).filter(Objects::nonNull).map(JsonCodec::dtoToObject)
-        .collect(Collectors.toList());
+    return Arrays.stream(obj).filter(Objects::nonNull).map(JsonCodec::dtoToObject).collect(Collectors.toList());
   }
 
   /**
@@ -221,8 +221,7 @@ final public class JsonCodec {
   public static @NotNull Collection<Map<String, Object>> asCollection(String json) {
     try {
       return json == null ? Collections.emptyList()
-          : mapper_.readValue(json,
-              TypeFactory.defaultInstance().constructCollectionType(List.class, Map.class));
+          : mapper_.readValue(json, TypeFactory.defaultInstance().constructCollectionType(List.class, Map.class));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -253,9 +252,8 @@ final public class JsonCodec {
    */
   public static @NotNull Collection<Object> asCollectionOfUnknownType(String json) {
     try {
-      return json == null ? Collections.emptyList()
-          : mapper_.readValue(json, TypeFactory.defaultInstance()
-              .constructCollectionType(List.class, TypeFactory.unknownType()));
+      return json == null ? Collections.emptyList() : mapper_.readValue(json,
+          TypeFactory.defaultInstance().constructCollectionType(List.class, TypeFactory.unknownType()));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -271,8 +269,7 @@ final public class JsonCodec {
   public static @NotNull Object[] asArrayOfUnknownType(String json) {
     try {
       return json == null ? new Map[0]
-          : mapper_.readValue(json,
-              TypeFactory.defaultInstance().constructArrayType(TypeFactory.unknownType()));
+          : mapper_.readValue(json, TypeFactory.defaultInstance().constructArrayType(TypeFactory.unknownType()));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -290,8 +287,7 @@ final public class JsonCodec {
     }
 
     @Override
-    public void serialize(Date value, JsonGenerator jgen, SerializerProvider provider)
-        throws IOException {
+    public void serialize(Date value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
       jgen.writeString(DateTimeFormatter.ISO_INSTANT.format(value.toInstant()));
     }
   }

@@ -86,11 +86,9 @@ public class StackTest {
     isDivisibleByThree.init(dataset, actuals3Or10);
     isDivisibleByFive.init(dataset, actuals3Or10);
 
-    Stack stack = new Stack(
-        Lists.newArrayList(isDivisibleByTwo, isDivisibleByThree, isDivisibleByFive));
+    Stack stack = new Stack(Lists.newArrayList(isDivisibleByTwo, isDivisibleByThree, isDivisibleByFive));
 
-    Assert.assertEquals("((IsDivisibleByTwo AND IsDivisibleByFive) OR IsDivisibleByThree)",
-        stack.toString());
+    Assert.assertEquals("((IsDivisibleByTwo AND IsDivisibleByFive) OR IsDivisibleByThree)", stack.toString());
     Assert.assertEquals(1.0, stack.confusionMatrix().matthewsCorrelationCoefficient(), 0.0);
     Assert.assertEquals(1.0, stack.confusionMatrix().f1Score(), 0.0);
 

@@ -1,12 +1,10 @@
 package com.computablefacts.asterix.queries;
 
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.computablefacts.asterix.View;
 import com.google.common.collect.Lists;
+import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class RangeQueryEngineTest {
 

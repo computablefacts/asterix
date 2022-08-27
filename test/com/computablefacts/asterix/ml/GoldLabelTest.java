@@ -71,8 +71,7 @@ public class GoldLabelTest {
   @Test
   public void testSplit_75_25() {
 
-    Map.Entry<List<GoldLabel>, List<GoldLabel>> goldLabels = GoldLabel.split(goldLabels(), false,
-        0.75);
+    Map.Entry<List<GoldLabel>, List<GoldLabel>> goldLabels = GoldLabel.split(goldLabels(), false, 0.75);
 
     Assert.assertEquals(6, goldLabels.getKey().size());
     Assert.assertEquals(2, goldLabels.getValue().size());
@@ -91,8 +90,7 @@ public class GoldLabelTest {
   public void testConfusionMatrix() {
 
     ConfusionMatrix confusionMatrix = GoldLabel.confusionMatrix(
-        goldLabels().stream().filter(gl -> gl.label().equals("test1"))
-            .collect(Collectors.toList()));
+        goldLabels().stream().filter(gl -> gl.label().equals("test1")).collect(Collectors.toList()));
 
     Assert.assertEquals(4, confusionMatrix.nbTruePositives());
     Assert.assertEquals(0, confusionMatrix.nbTrueNegatives());
@@ -103,8 +101,7 @@ public class GoldLabelTest {
   @Test
   public void testCopyConstructor() {
 
-    List<GoldLabel> gls = goldLabels().stream().map(gl -> new GoldLabel(gl))
-        .collect(Collectors.toList());
+    List<GoldLabel> gls = goldLabels().stream().map(gl -> new GoldLabel(gl)).collect(Collectors.toList());
 
     Assert.assertEquals(gls, goldLabels());
   }
@@ -140,18 +137,15 @@ public class GoldLabelTest {
 
     List<GoldLabel> test1Gls = GoldLabel.load(file, "test1").toList();
 
-    Assert.assertEquals(test1Gls,
-        gls.stream().filter(gl -> "test1".equals(gl.label())).collect(Collectors.toList()));
+    Assert.assertEquals(test1Gls, gls.stream().filter(gl -> "test1".equals(gl.label())).collect(Collectors.toList()));
 
     List<GoldLabel> test2Gls = GoldLabel.load(file, "test2").toList();
 
-    Assert.assertEquals(test2Gls,
-        gls.stream().filter(gl -> "test2".equals(gl.label())).collect(Collectors.toList()));
+    Assert.assertEquals(test2Gls, gls.stream().filter(gl -> "test2".equals(gl.label())).collect(Collectors.toList()));
   }
 
   private List<GoldLabel> goldLabels() {
-    return Lists.newArrayList(
-        new GoldLabel(Integer.toString(1, 10), "test1", "test1", false, true, false, false),
+    return Lists.newArrayList(new GoldLabel(Integer.toString(1, 10), "test1", "test1", false, true, false, false),
         new GoldLabel(Integer.toString(2, 10), "test1", "test2", false, true, false, false),
         new GoldLabel(Integer.toString(3, 10), "test1", "test3", false, true, false, false),
         new GoldLabel(Integer.toString(4, 10), "test1", "test4", false, true, false, false),

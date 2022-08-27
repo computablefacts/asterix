@@ -25,7 +25,7 @@ public class EuclideanNormNormalizerTest {
 
     Assert.assertEquals(vector.length(), newVector.length());
     Assert.assertArrayEquals(
-        new double[]{0.5669467095138409, 0.5669467095138409, 0.1889822365046136,
-            0.5669467095138409}, newVector.denseArray(), 0.000001);
+        new double[]{0.5669467095138409, 0.5669467095138409, 0.1889822365046136, 0.5669467095138409},
+        newVector.denseArray(), 0.000001);
   }
 }

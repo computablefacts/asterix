@@ -35,12 +35,12 @@ final public class Stack {
       newStackz.add(stack);
     }
 
-    newStackz.addAll(stacks.stream()
-        .filter(stack -> Double.isFinite(stack.confusionMatrix().matthewsCorrelationCoefficient()))
-        .collect(Collectors.toList()));
+    newStackz.addAll(
+        stacks.stream().filter(stack -> Double.isFinite(stack.confusionMatrix().matthewsCorrelationCoefficient()))
+            .collect(Collectors.toList()));
 
-    stack_ = newStackz.stream().max(Comparator.comparingDouble(
-        (AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient()));
+    stack_ = newStackz.stream().max(
+        Comparator.comparingDouble((AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient()));
   }
 
   @Override
@@ -65,8 +65,7 @@ final public class Stack {
     return stack_.get().predict(vector);
   }
 
-  private AbstractStack merge(eStackType stackType, AbstractStack leftNode,
-      List<AbstractStack> rightNodes) {
+  private AbstractStack merge(eStackType stackType, AbstractStack leftNode, List<AbstractStack> rightNodes) {
 
     Preconditions.checkNotNull(stackType, "stackType should not be null");
     Preconditions.checkNotNull(rightNodes, "rightNodes should not be null");
@@ -84,8 +83,7 @@ final public class Stack {
     return merge(stackType, leftNode, rightNodes.subList(1, rightNodes.size()));
   }
 
-  private Optional<AbstractStack> merge(eStackType stackType, AbstractStack leftStack,
-      AbstractStack rightStack) {
+  private Optional<AbstractStack> merge(eStackType stackType, AbstractStack leftStack, AbstractStack rightStack) {
 
     Preconditions.checkNotNull(stackType, "stackType should not be null");
     Preconditions.checkNotNull(leftStack, "leftStack should not be null");

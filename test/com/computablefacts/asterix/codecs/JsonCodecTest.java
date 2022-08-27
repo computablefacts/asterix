@@ -1,18 +1,22 @@
 package com.computablefacts.asterix.codecs;
 
-import java.sql.Date;
-import java.text.ParseException;
-import java.time.Instant;
-import java.util.*;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.sql.Date;
+import java.text.ParseException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class JsonCodecTest {
 
@@ -109,8 +113,8 @@ public class JsonCodecTest {
   @Test
   public void testDeserializeJsonAsCollectionOfObjects() {
 
-    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
-        new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
+    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"), new SimplePojo<>("key2", 2),
+        new SimplePojo<>("key3", false));
     String json = JsonCodec.asString(pojos);
 
     Assert.assertFalse(Strings.isNullOrEmpty(json));
@@ -125,8 +129,8 @@ public class JsonCodecTest {
   @Test
   public void testDeserializeJsonAsArrayOfObjects() {
 
-    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
-        new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
+    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"), new SimplePojo<>("key2", 2),
+        new SimplePojo<>("key3", false));
     String json = JsonCodec.asString(pojos);
 
     Assert.assertFalse(Strings.isNullOrEmpty(json));
@@ -141,8 +145,8 @@ public class JsonCodecTest {
   @Test
   public void testDeserializeJsonAsCollectionOfUnknownType() {
 
-    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
-        new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
+    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"), new SimplePojo<>("key2", 2),
+        new SimplePojo<>("key3", false));
     String json = JsonCodec.asString(pojos);
 
     Assert.assertFalse(Strings.isNullOrEmpty(json));
@@ -157,8 +161,8 @@ public class JsonCodecTest {
   @Test
   public void testDeserializeJsonAsArrayOfUnknownType() {
 
-    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"),
-        new SimplePojo<>("key2", 2), new SimplePojo<>("key3", false));
+    List<SimplePojo<?>> pojos = Lists.newArrayList(new SimplePojo<>("key1", "value1"), new SimplePojo<>("key2", 2),
+        new SimplePojo<>("key3", false));
     String json = JsonCodec.asString(pojos);
 
     Assert.assertFalse(Strings.isNullOrEmpty(json));
@@ -173,8 +177,7 @@ public class JsonCodecTest {
   @Test
   public void testSerializeDeserializeDate() throws ParseException {
 
-    Map<String, Object> map1 =
-        ImmutableMap.of("date", Date.from(Instant.parse("2004-04-01T00:00:00Z")));
+    Map<String, Object> map1 = ImmutableMap.of("date", Date.from(Instant.parse("2004-04-01T00:00:00Z")));
 
     Map<String, Object> map2 = ImmutableMap.of("date", "2004-04-01T00:00:00Z");
 
@@ -194,8 +197,7 @@ public class JsonCodecTest {
   @Test
   public void testFlatten() {
 
-    String json =
-        "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
+    String json = "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
     Map<String, Object> map = JsonCodec.flatten(json, '¤');
 
     Assert.assertTrue(map.containsKey("id"));
@@ -236,8 +238,7 @@ public class JsonCodecTest {
   @Test
   public void testFlattenKeepArrays() {
 
-    String json =
-        "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
+    String json = "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
     Map<String, Object> map = JsonCodec.flattenKeepArrays(json, '¤');
 
     Assert.assertTrue(map.containsKey("id"));
@@ -258,8 +259,7 @@ public class JsonCodecTest {
   @Test
   public void testFlattenKeepPrimitiveArrays() {
 
-    String json =
-        "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[\"Regular\",\"Slim\"]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
+    String json = "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[\"Regular\",\"Slim\"]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
     Map<String, Object> map = JsonCodec.flattenKeepPrimitiveArrays(json, '¤');
 
     Assert.assertTrue(map.containsKey("id"));
@@ -315,11 +315,9 @@ public class JsonCodecTest {
     map.put("topping[4]¤id", "5004");
     map.put("topping[4]¤type", "Maple");
 
-    String json =
-        "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
+    String json = "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
 
-    Assert.assertEquals(JsonCodec.asObject(json),
-        JsonCodec.asObject(JsonCodec.unflattenAsString(map, '¤')));
+    Assert.assertEquals(JsonCodec.asObject(json), JsonCodec.asObject(JsonCodec.unflattenAsString(map, '¤')));
   }
 
   @Test
@@ -343,8 +341,7 @@ public class JsonCodecTest {
     map.put("topping[4]¤id", "5004");
     map.put("topping[4]¤type", "Maple");
 
-    String json =
-        "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
+    String json = "{\"id\":\"0002\",\"type\":\"donut\",\"name\":\"Raised\",\"ppu\":0.55,\"batters\":{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"}]},\"topping\":[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]}";
 
     Assert.assertEquals(JsonCodec.asObject(json), JsonCodec.unflattenAsMap(map, '¤'));
   }

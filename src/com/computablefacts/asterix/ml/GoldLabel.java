@@ -42,30 +42,26 @@ public final class GoldLabel {
   private final boolean isFalsePositive_;
 
   public GoldLabel(GoldLabel goldLabel) {
-    this(goldLabel.id(), goldLabel.label(), goldLabel.data(), goldLabel.isTrueNegative(),
-        goldLabel.isTruePositive(), goldLabel.isFalseNegative(), goldLabel.isFalsePositive());
+    this(goldLabel.id(), goldLabel.label(), goldLabel.data(), goldLabel.isTrueNegative(), goldLabel.isTruePositive(),
+        goldLabel.isFalseNegative(), goldLabel.isFalsePositive());
   }
 
   public GoldLabel(Map<String, Object> goldLabel) {
-    this((String) goldLabel.get("id"), (String) goldLabel.get("label"),
-        (String) goldLabel.get("data"), (Boolean) goldLabel.get("is_true_negative"),
-        (Boolean) goldLabel.get("is_true_positive"), (Boolean) goldLabel.get("is_false_negative"),
-        (Boolean) goldLabel.get("is_false_positive"));
+    this((String) goldLabel.get("id"), (String) goldLabel.get("label"), (String) goldLabel.get("data"),
+        (Boolean) goldLabel.get("is_true_negative"), (Boolean) goldLabel.get("is_true_positive"),
+        (Boolean) goldLabel.get("is_false_negative"), (Boolean) goldLabel.get("is_false_positive"));
   }
 
   @JsonCreator
-  public GoldLabel(@JsonProperty(value = "id") String id,
-      @JsonProperty(value = "label") String label, @JsonProperty(value = "data") String data,
-      @JsonProperty(value = "is_true_negative") boolean isTrueNegative,
+  public GoldLabel(@JsonProperty(value = "id") String id, @JsonProperty(value = "label") String label,
+      @JsonProperty(value = "data") String data, @JsonProperty(value = "is_true_negative") boolean isTrueNegative,
       @JsonProperty(value = "is_true_positive") boolean isTruePositive,
       @JsonProperty(value = "is_false_negative") boolean isFalseNegative,
       @JsonProperty(value = "is_false_positive") boolean isFalsePositive) {
 
     Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "id should neither be null nor empty");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(label),
-        "label should neither be null nor empty");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(data),
-        "data should neither be null nor empty");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(label), "label should neither be null nor empty");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(data), "data should neither be null nor empty");
 
     id_ = id;
     label_ = label;
@@ -80,17 +76,17 @@ public final class GoldLabel {
     int fp = isFalsePositive ? 1 : 0;
     int fn = isFalseNegative ? 1 : 0;
 
-    Preconditions.checkState(tp + tn + fp + fn == 1,
-        "inconsistent state reached for gold label : (%s, %s)", id(), label());
+    Preconditions.checkState(tp + tn + fp + fn == 1, "inconsistent state reached for gold label : (%s, %s)", id(),
+        label());
   }
 
   /**
    * Split a set of gold labels, i.e. reference labels, into 2 subsets : train and test.
    *
    * @param goldLabels gold labels.
-   * @return a {@link Map.Entry}. The key represents the train dataset (75% of the gold labels) and
-   * the value represents the test dataset (25% of the gold labels). The proportion of TP, TN, FP
-   * and FN will be roughly the same in the train and test datasets.
+   * @return a {@link Map.Entry}. The key represents the train dataset (75% of the gold labels) and the value represents
+   * the test dataset (25% of the gold labels). The proportion of TP, TN, FP and FN will be roughly the same in the
+   * train and test datasets.
    */
   public static Map.Entry<List<GoldLabel>, List<GoldLabel>> split(List<GoldLabel> goldLabels) {
     return split(goldLabels, true, 0.75);
@@ -99,13 +95,13 @@ public final class GoldLabel {
   /**
    * Split a set of gold labels, i.e. reference labels, into 2 subsets : train and test.
    *
-   * @param goldLabels gold labels.
-   * @param keepProportions must be true iif the proportion of TP, TN, FP and FN must be roughly the
-   * same in the train and test subsets.
+   * @param goldLabels      gold labels.
+   * @param keepProportions must be true iif the proportion of TP, TN, FP and FN must be roughly the same in the train
+   *                        and test subsets.
    * @return a {@link Map.Entry}. The key is the train dataset and the value is the test dataset.
    */
-  public static Map.Entry<List<GoldLabel>, List<GoldLabel>> split(List<GoldLabel> goldLabels,
-      boolean keepProportions, double trainSizeInPercent) {
+  public static Map.Entry<List<GoldLabel>, List<GoldLabel>> split(List<GoldLabel> goldLabels, boolean keepProportions,
+      double trainSizeInPercent) {
 
     Preconditions.checkNotNull(goldLabels, "goldLabels should not be null");
     Preconditions.checkArgument(0.0 <= trainSizeInPercent && trainSizeInPercent <= 1.0,
@@ -126,14 +122,10 @@ public final class GoldLabel {
       test.addAll(gls.subList(trainSize, gls.size()));
     } else {
 
-      List<GoldLabel> tps = goldLabels.stream().filter(GoldLabel::isTruePositive)
-          .collect(Collectors.toList());
-      List<GoldLabel> tns = goldLabels.stream().filter(GoldLabel::isTrueNegative)
-          .collect(Collectors.toList());
-      List<GoldLabel> fps = goldLabels.stream().filter(GoldLabel::isFalsePositive)
-          .collect(Collectors.toList());
-      List<GoldLabel> fns = goldLabels.stream().filter(GoldLabel::isFalseNegative)
-          .collect(Collectors.toList());
+      List<GoldLabel> tps = goldLabels.stream().filter(GoldLabel::isTruePositive).collect(Collectors.toList());
+      List<GoldLabel> tns = goldLabels.stream().filter(GoldLabel::isTrueNegative).collect(Collectors.toList());
+      List<GoldLabel> fps = goldLabels.stream().filter(GoldLabel::isFalsePositive).collect(Collectors.toList());
+      List<GoldLabel> fns = goldLabels.stream().filter(GoldLabel::isFalseNegative).collect(Collectors.toList());
 
       int trainTpSize = (int) (trainSizeInPercent * tps.size());
       int trainTnSize = (int) (trainSizeInPercent * tns.size());
@@ -152,8 +144,7 @@ public final class GoldLabel {
     }
 
     Preconditions.checkState(train.size() + test.size() == gls.size(),
-        "Inconsistent state reached for splits : %s found vs %s expected",
-        train.size() + test.size(), gls.size());
+        "Inconsistent state reached for splits : %s found vs %s expected", train.size() + test.size(), gls.size());
 
     return new SimpleImmutableEntry<>(train, test);
   }
@@ -179,8 +170,8 @@ public final class GoldLabel {
       int fp = gl.isFalsePositive() ? 1 : 0;
       int fn = gl.isFalseNegative() ? 1 : 0;
 
-      Preconditions.checkState(tp + tn + fp + fn == 1,
-          "Inconsistent state reached for gold label : (%s, %s)", gl.label(), gl.id());
+      Preconditions.checkState(tp + tn + fp + fn == 1, "Inconsistent state reached for gold label : (%s, %s)",
+          gl.label(), gl.id());
 
       matrix.addTruePositives(tp);
       matrix.addTrueNegatives(tn);
@@ -207,9 +198,9 @@ public final class GoldLabel {
   /**
    * Load a given set of gold labels from a gzipped JSONL file.
    *
-   * @param file the input file.
-   * @param label the specific gold labels to load. If {@code label} is set to {@code null}, all
-   * gold labels will be loaded.
+   * @param file  the input file.
+   * @param label the specific gold labels to load. If {@code label} is set to {@code null}, all gold labels will be
+   *              loaded.
    * @return a set of gold labels.
    */
   public static View<GoldLabel> load(File file, String label) {
@@ -217,8 +208,7 @@ public final class GoldLabel {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file file does not exist : %s", file);
 
-    return View.of(file, true).index()
-        .filter(row -> !Strings.isNullOrEmpty(row.getValue()) /* remove empty rows */)
+    return View.of(file, true).index().filter(row -> !Strings.isNullOrEmpty(row.getValue()) /* remove empty rows */)
         .map(row -> new GoldLabel(JsonCodec.asObject(row.getValue())))
         .filter(goldLabel -> label == null || label.equals(goldLabel.label()));
   }
@@ -226,7 +216,7 @@ public final class GoldLabel {
   /**
    * Save gold labels to a gzipped JSONL file.
    *
-   * @param file the output file.
+   * @param file       the output file.
    * @param goldLabels the gold labels to save.
    * @return true iif the gold labels have been written to the file, false otherwise.
    */
@@ -252,24 +242,23 @@ public final class GoldLabel {
       return false;
     }
     GoldLabel gl = (GoldLabel) obj;
-    return Objects.equals(id(), gl.id()) && Objects.equals(label(), gl.label()) && Objects.equals(
-        data(), gl.data()) && isTrueNegative() == gl.isTrueNegative()
-        && isTruePositive() == gl.isTruePositive() && isFalseNegative() == gl.isFalseNegative()
-        && isFalsePositive() == gl.isFalsePositive();
+    return Objects.equals(id(), gl.id()) && Objects.equals(label(), gl.label()) && Objects.equals(data(), gl.data())
+        && isTrueNegative() == gl.isTrueNegative() && isTruePositive() == gl.isTruePositive()
+        && isFalseNegative() == gl.isFalseNegative() && isFalsePositive() == gl.isFalsePositive();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id(), label(), data(), isTrueNegative(), isTruePositive(),
-        isFalseNegative(), isFalsePositive());
+    return Objects.hash(id(), label(), data(), isTrueNegative(), isTruePositive(), isFalseNegative(),
+        isFalsePositive());
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("id", id()).add("label", label())
-        .add("data", data()).add("is_true_negative", isTrueNegative())
-        .add("is_true_positive", isTruePositive()).add("is_false_negative", isFalseNegative())
-        .add("is_false_positive", isFalsePositive()).omitNullValues().toString();
+    return MoreObjects.toStringHelper(this).add("id", id()).add("label", label()).add("data", data())
+        .add("is_true_negative", isTrueNegative()).add("is_true_positive", isTruePositive())
+        .add("is_false_negative", isFalseNegative()).add("is_false_positive", isFalsePositive()).omitNullValues()
+        .toString();
   }
 
   /**

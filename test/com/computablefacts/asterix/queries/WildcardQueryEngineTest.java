@@ -1,15 +1,13 @@
 package com.computablefacts.asterix.queries;
 
-import java.util.List;
-import java.util.Set;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.WildcardMatcher;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Set;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class WildcardQueryEngineTest {
 
@@ -20,8 +18,7 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("mary");
 
     Assert.assertEquals(2, node.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"),
-        node.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"), node.execute(engine).toList());
   }
 
   @Test
@@ -31,8 +28,9 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("mar*");
 
     Assert.assertEquals(5, node.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Marie Delacroix", "Marie Moreau", "Mary Morita",
-        "Mary Short", "Summer Martinez"), node.execute(engine).toList());
+    Assert.assertEquals(
+        Lists.newArrayList("Marie Delacroix", "Marie Moreau", "Mary Morita", "Mary Short", "Summer Martinez"),
+        node.execute(engine).toList());
   }
 
   @Test
@@ -42,8 +40,7 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("*ell");
 
     Assert.assertEquals(2, node.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Edward Bell", "Paul Powell"),
-        node.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Edward Bell", "Paul Powell"), node.execute(engine).toList());
   }
 
   @Test
@@ -78,14 +75,12 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node1 = QueryBuilder.build("mary *or* OR *ita");
 
     Assert.assertEquals(3, node1.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"),
-        node1.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"), node1.execute(engine).toList());
 
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("mary *or* OR *ort");
 
     Assert.assertEquals(3, node.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"),
-        node.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"), node.execute(engine).toList());
   }
 
   @Test
@@ -120,14 +115,12 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node1 = QueryBuilder.build("\"mary *or*\" OR *ita");
 
     Assert.assertEquals(3, node1.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"),
-        node1.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"), node1.execute(engine).toList());
 
     AbstractNode<WildcardQueryEngine> node2 = QueryBuilder.build("\"mary *or*\" OR *ort");
 
     Assert.assertEquals(3, node2.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"),
-        node2.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Mary Morita", "Mary Short"), node2.execute(engine).toList());
   }
 
   @Test
@@ -137,8 +130,7 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("~marie");
 
     Assert.assertEquals(4, node.cardinality(engine));
-    Assert.assertEquals(
-        Lists.newArrayList("Marie Delacroix", "Marie Moreau", "Mary Morita", "Mary Short"),
+    Assert.assertEquals(Lists.newArrayList("Marie Delacroix", "Marie Moreau", "Mary Morita", "Mary Short"),
         node.execute(engine).toList());
   }
 
@@ -149,8 +141,7 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("~marie AND mor*");
 
     Assert.assertEquals(2, node.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Marie Moreau", "Mary Morita"),
-        node.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Marie Moreau", "Mary Morita"), node.execute(engine).toList());
   }
 
   @Test
@@ -160,8 +151,7 @@ public class WildcardQueryEngineTest {
     AbstractNode<WildcardQueryEngine> node = QueryBuilder.build("~marie AND -mor*");
 
     Assert.assertEquals(4, node.cardinality(engine));
-    Assert.assertEquals(Lists.newArrayList("Marie Delacroix", "Mary Short"),
-        node.execute(engine).toList());
+    Assert.assertEquals(Lists.newArrayList("Marie Delacroix", "Mary Short"), node.execute(engine).toList());
   }
 
   private static class WildcardQueryEngine extends AbstractQueryEngine {
@@ -186,9 +176,9 @@ public class WildcardQueryEngineTest {
     }
 
     private List<String> persons() {
-      return Lists.newArrayList("Delores Hardy", "Edward Bell", "Gregory Blackwood",
-          "Keith Franklin", "Marie Delacroix", "Marie Moreau", "Mary Morita", "Mary Short",
-          "Michele Moore", "Paul Powell", "Robert Frye", "Summer Martinez");
+      return Lists.newArrayList("Delores Hardy", "Edward Bell", "Gregory Blackwood", "Keith Franklin",
+          "Marie Delacroix", "Marie Moreau", "Mary Morita", "Mary Short", "Michele Moore", "Paul Powell", "Robert Frye",
+          "Summer Martinez");
     }
   }
 }

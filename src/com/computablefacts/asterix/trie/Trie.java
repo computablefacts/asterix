@@ -1,20 +1,20 @@
 package com.computablefacts.asterix.trie;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
-
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 
 @CheckReturnValue
 final public class Trie<T> {
 
   private final TrieNode<T> root_ = new TrieNode<>();
 
-  public Trie() {}
+  public Trie() {
+  }
 
   public void insert(List<T> elements) {
     insert(root_, elements);
@@ -30,8 +30,7 @@ final public class Trie<T> {
       return false;
     }
 
-    @Var
-    TrieNode<T> node = head;
+    @Var TrieNode<T> node = head;
 
     for (T t : elements) {
       if (!node.has(t)) {
@@ -56,8 +55,7 @@ final public class Trie<T> {
       return false;
     }
 
-    @Var
-    TrieNode<T> node = head;
+    @Var TrieNode<T> node = head;
 
     for (T t : elements) {
       node = node.get(t);
@@ -82,8 +80,7 @@ final public class Trie<T> {
     }
 
     if (!elements.isEmpty()) {
-      if (head.has(elements.get(0))
-          && delete(head.get(elements.get(0)), elements.subList(1, elements.size()))
+      if (head.has(elements.get(0)) && delete(head.get(elements.get(0)), elements.subList(1, elements.size()))
           && !head.isLeaf_) {
         if (!head.hasChildren(elements.get(0))) {
           head.remove(elements.get(0));
@@ -123,8 +120,7 @@ final public class Trie<T> {
       return new ArrayList<>();
     }
 
-    @Var
-    TrieNode<T> node = head;
+    @Var TrieNode<T> node = head;
     List<List<T>> allPaths = new ArrayList<>();
 
     if (node.isLeaf_) {

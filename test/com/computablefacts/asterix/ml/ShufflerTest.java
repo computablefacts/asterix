@@ -14,8 +14,8 @@ public class ShufflerTest {
     List<String> textsOrdered = DocumentTest.papers().map(doc -> (String) doc.text()).toList();
 
     Shuffler<String> shuffler = new Shuffler<>();
-    List<String> textsShuffled = DocumentTest.papers().map(doc -> (String) doc.text())
-        .partition(100).map(shuffler).flatten(View::of).toList();
+    List<String> textsShuffled = DocumentTest.papers().map(doc -> (String) doc.text()).partition(100).map(shuffler)
+        .flatten(View::of).toList();
 
     Assert.assertEquals(textsOrdered, textsOrdered);
     Assert.assertEquals(textsShuffled, textsShuffled);

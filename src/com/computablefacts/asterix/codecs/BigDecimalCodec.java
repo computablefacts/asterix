@@ -1,16 +1,14 @@
 package com.computablefacts.asterix.codecs;
 
+import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.errorprone.annotations.Var;
 import java.math.BigDecimal;
 import java.text.ParseException;
 
-import com.google.errorprone.annotations.CheckReturnValue;
-import com.google.errorprone.annotations.Var;
-
 /**
- * Encodes numbers as strings in such a way that the lexicographic order of the encoded strings is
- * the same as the natural order of the original numbers. The length of an encoded number is only
- * slightly larger than the length of its original number. Unlike other schemes, there is no limit
- * to the size of numbers which may be encoded.
+ * Encodes numbers as strings in such a way that the lexicographic order of the encoded strings is the same as the
+ * natural order of the original numbers. The length of an encoded number is only slightly larger than the length of its
+ * original number. Unlike other schemes, there is no limit to the size of numbers which may be encoded.
  *
  * @author ted stockwell
  * @author David Fuelling
@@ -20,7 +18,6 @@ final public class BigDecimalCodec {
 
   /**
    * @param input
-   *
    * @return
    */
   public static String decode(String input) {
@@ -39,7 +36,6 @@ final public class BigDecimalCodec {
 
   /**
    * @param input
-   *
    * @return
    */
   public static BigDecimal decodeAsBigDecimal(String input) {
@@ -58,7 +54,6 @@ final public class BigDecimalCodec {
 
   /**
    * @param input
-   *
    * @return
    */
   public static String encode(String input) {
@@ -77,7 +72,6 @@ final public class BigDecimalCodec {
 
   /**
    * @param decimal
-   *
    * @return
    */
   public static String encode(BigDecimal decimal) {
@@ -88,7 +82,6 @@ final public class BigDecimalCodec {
   }
 
   /**
-   *
    *
    */
   static public class Encoder {
@@ -104,8 +97,7 @@ final public class BigDecimalCodec {
       this._input = input;
       this._end = this._input.length();
 
-      @Var
-      char c = this._input.charAt(this._position);
+      @Var char c = this._input.charAt(this._position);
       if (c == '-') {
         c = this._input.charAt(this._position++);
         this._isNegative = true;
@@ -137,7 +129,6 @@ final public class BigDecimalCodec {
     }
 
     /**
-     *
      * @throws ParseException
      */
     private void readNumberBeforeDecimal() throws ParseException {
@@ -145,8 +136,7 @@ final public class BigDecimalCodec {
       char[] buffer = new char[this._input.length()];
 
       // readAll number until decimal point reached or end
-      @Var
-      int i = 0;
+      @Var int i = 0;
       while (this._end > this._position) {
         char c = this._input.charAt(this._position++);
         if (('0' <= c) && (c <= '9')) {
@@ -158,16 +148,12 @@ final public class BigDecimalCodec {
       }
 
       // now figure out needed prefixes
-      @Var
-      String prefix = "";
-      @Var
-      int l = i;
-      @Var
-      String unaryPrefix = this._isNegative ? "*" : "?";
+      @Var String prefix = "";
+      @Var int l = i;
+      @Var String unaryPrefix = this._isNegative ? "*" : "?";
       while (1 < l) {
         unaryPrefix += this._isNegative ? '*' : '?';
-        @Var
-        String s = Integer.toString(l);
+        @Var String s = Integer.toString(l);
         if (this._isNegative) {
           char[] cs = s.toCharArray();
           for (int j = 0; j < cs.length; j++) {
@@ -225,8 +211,7 @@ final public class BigDecimalCodec {
 
       this._input = input;
       this._end = this._input.length();
-      @Var
-      int lastChar = this._input.charAt(this._end - 1);
+      @Var int lastChar = this._input.charAt(this._end - 1);
       while ((lastChar == '*') || (lastChar == '?') || (lastChar == ':') || (lastChar == '.')) {
         lastChar = this._input.charAt((--this._end) - 1);
       }
@@ -236,8 +221,7 @@ final public class BigDecimalCodec {
         this._output += '-';
         this._isNegative = true;
       } else if (c != '?') {
-        throw new ParseException("All encoded numbers must begin with either '?' or '*'",
-            this._position);
+        throw new ParseException("All encoded numbers must begin with either '?' or '*'", this._position);
       }
 
       this.readSequence();
@@ -265,12 +249,10 @@ final public class BigDecimalCodec {
     }
 
     /**
-     *
      * @throws ParseException
      */
     private void readSequence() throws ParseException {
-      @Var
-      int sequenceCount = 0;
+      @Var int sequenceCount = 0;
       while (true) {
         int c = this._input.charAt(this._position++);
         if ((c == '*') || (c == '?')) {
@@ -287,8 +269,7 @@ final public class BigDecimalCodec {
      * @param sequenceCount
      */
     private void readNumberSequence(@Var int sequenceCount) {
-      @Var
-      int prefixLength = 1;
+      @Var int prefixLength = 1;
       while (1 < sequenceCount--) {
         prefixLength = this.readPrefix(prefixLength);
       }
@@ -297,15 +278,13 @@ final public class BigDecimalCodec {
 
     /**
      * @param length
-     *
      * @return
      */
     private int readPrefix(@Var int length) {
       String s;
       if (this._isNegative) {
         char[] cs = new char[length];
-        @Var
-        int i = 0;
+        @Var int i = 0;
         while (0 < length--) {
           cs[i++] = (char) ('0' + ('9' - this._input.charAt(this._position++)));
         }

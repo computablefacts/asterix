@@ -80,8 +80,7 @@ public class DocumentTest {
     doc.put(Document.METADATA, metadata);
     doc.put(Document.CONTENT, content());
 
-    Assert.assertFalse(
-        ((Map<String, Object>) doc.get(Document.METADATA)).containsKey("content_type"));
+    Assert.assertFalse(((Map<String, Object>) doc.get(Document.METADATA)).containsKey("content_type"));
 
     Document document = new Document(doc);
 
@@ -310,8 +309,7 @@ public class DocumentTest {
     Document document = new Document(document());
     document.path("/var/sftp/sentinel/prod_out/test/lorem-ipsum.processed.docx");
 
-    Assert.assertEquals("/var/sftp/sentinel/prod_out/test/lorem-ipsum.processed.docx",
-        document.path());
+    Assert.assertEquals("/var/sftp/sentinel/prod_out/test/lorem-ipsum.processed.docx", document.path());
   }
 
   @Test

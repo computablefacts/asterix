@@ -6,7 +6,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 
 /**
  * Common interface for expression nodes.
- *
+ * <p>
  * See http://www.blackbeltcoder.com/Articles/data/easy-full-text-search-queries for details.
  */
 @CheckReturnValue

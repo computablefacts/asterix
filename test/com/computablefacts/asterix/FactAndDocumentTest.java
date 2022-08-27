@@ -88,8 +88,8 @@ public class FactAndDocumentTest {
     return documents;
   }
 
-  private static Map<String, Object> newFact(int id, String type, String docId, int page,
-      String text, int startIdx, int endIdx) {
+  private static Map<String, Object> newFact(int id, String type, String docId, int page, String text, int startIdx,
+      int endIdx) {
 
     List<String> values = Lists.newArrayList("ref0", "ref1", Integer.toString(page, 10));
 
@@ -136,20 +136,16 @@ public class FactAndDocumentTest {
     FactAndDocument.main(args);
 
     String path = facts.getParent();
-    List<FactAndDocument> fads = FactAndDocument.load(
-        new File(path + File.separator + "facts_and_documents.jsonl.gz"), null).toList();
+    List<FactAndDocument> fads = FactAndDocument.load(new File(path + File.separator + "facts_and_documents.jsonl.gz"),
+        null).toList();
 
     Assert.assertEquals(39, fads.size());
-    Assert.assertEquals(39,
-        FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
+    Assert.assertEquals(39, FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
     Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(316,
-        FactAndDocument.syntheticFactsAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(335,
-        FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(316, FactAndDocument.syntheticFactsAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(335, FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
 
-    List<GoldLabel> gls = GoldLabel.load(new File(path + File.separator + "gold_labels.jsonl.gz"))
-        .toList();
+    List<GoldLabel> gls = GoldLabel.load(new File(path + File.separator + "gold_labels.jsonl.gz")).toList();
 
     Assert.assertEquals(39 /* + 335 */, gls.size());
     Assert.assertEquals(39, gls.stream().filter(GoldLabel::isTruePositive).count());
@@ -164,12 +160,9 @@ public class FactAndDocumentTest {
     List<FactAndDocument> fads = FactAndDocument.load(factsAndDocuments(), null).toList();
 
     Assert.assertEquals(39, fads.size());
-    Assert.assertEquals(39,
-        FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
+    Assert.assertEquals(39, FactAndDocument.factsAsGoldLabels(View.of(fads), false).toList().size());
     Assert.assertEquals(39, FactAndDocument.pagesAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(316,
-        FactAndDocument.syntheticFactsAsGoldLabels(View.of(fads)).toList().size());
-    Assert.assertEquals(335,
-        FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(316, FactAndDocument.syntheticFactsAsGoldLabels(View.of(fads)).toList().size());
+    Assert.assertEquals(335, FactAndDocument.syntheticPagesAsGoldLabels(View.of(fads)).toList().size());
   }
 }

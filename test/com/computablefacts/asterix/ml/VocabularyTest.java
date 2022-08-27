@@ -280,8 +280,8 @@ public class VocabularyTest {
 
     Assert.assertEquals(15, vocabulary.terms().size());
     Assert.assertEquals(15, Sets.intersection(
-        Sets.newHashSet("<UNK>", "-", "address", "in", "most", "popular", "with", "yahoo", ".", "’",
-            ",", "as", "to", "and", "the"), vocabulary.terms()).size());
+        Sets.newHashSet("<UNK>", "-", "address", "in", "most", "popular", "with", "yahoo", ".", "’", ",", "as", "to",
+            "and", "the"), vocabulary.terms()).size());
   }
 
   @Test
@@ -305,8 +305,8 @@ public class VocabularyTest {
       Assert.assertTrue(vocabDecompressed.delete());
     }
 
-    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000",
-        "WORD,NUMBER,TERMINAL_MARK", Integer.toString(ngramLength, 10)};
+    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK",
+        Integer.toString(ngramLength, 10)};
     Vocabulary.main(args);
 
     Assert.assertTrue(vocabCompressed.exists());
@@ -350,8 +350,8 @@ public class VocabularyTest {
       Assert.assertTrue(vocabDecompressed.delete());
     }
 
-    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000",
-        "WORD,NUMBER,TERMINAL_MARK", Integer.toString(ngramLength, 10)};
+    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK",
+        Integer.toString(ngramLength, 10)};
     Vocabulary.main(args);
 
     Assert.assertTrue(vocabCompressed.exists());
@@ -375,20 +375,20 @@ public class VocabularyTest {
   }
 
   private Vocabulary vocabularyFilteredByValues() {
-    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
-        .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
+    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true)).map(new TextTokenizer())
+        .map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens, 0, 3, 10);
   }
 
   private Vocabulary vocabularyFilteredByPercentages() {
-    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
-        .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
+    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true)).map(new TextTokenizer())
+        .map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens, 0.01, 1.0, 10);
   }
 
   private Vocabulary vocabulary() {
-    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true))
-        .map(new TextTokenizer()).map(spans -> View.of(spans).map(Span::text).toList());
+    View<List<String>> tokens = View.of(sentences()).map(new TextNormalizer(true)).map(new TextTokenizer())
+        .map(spans -> View.of(spans).map(Span::text).toList());
     return Vocabulary.of(tokens);
   }
 

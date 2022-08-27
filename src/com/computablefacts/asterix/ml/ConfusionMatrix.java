@@ -17,8 +17,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * See https://en.wikipedia.org/wiki/Evaluation_of_binary_classifiers for details.
  * <p>
- * See https://mkhalusova.github.io/blog/2019/04/11/ml-model-evaluation-metrics-p1 for an overview
- * of MCC.
+ * See https://mkhalusova.github.io/blog/2019/04/11/ml-model-evaluation-metrics-p1 for an overview of MCC.
  */
 @CheckReturnValue
 final public class ConfusionMatrix {
@@ -34,8 +33,8 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * In a multi-class classification setup, micro-average is preferable if you suspect there might
-   * be class imbalance (i.e you may have many more examples of one class than of other classes).
+   * In a multi-class classification setup, micro-average is preferable if you suspect there might be class imbalance
+   * (i.e you may have many more examples of one class than of other classes).
    *
    * @param matrices confusion matrices.
    * @return micro-averages.
@@ -64,10 +63,9 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * A macro-average will compute the metric independently for each class and then take the average
-   * (hence treating all classes equally). The macro-average is used when you want to know how the
-   * system performs overall across a given dataset. You should not come up with any specific
-   * decision with this average.
+   * A macro-average will compute the metric independently for each class and then take the average (hence treating all
+   * classes equally). The macro-average is used when you want to know how the system performs overall across a given
+   * dataset. You should not come up with any specific decision with this average.
    *
    * @param matrices confusion matrices.
    * @return macro-averages.
@@ -83,9 +81,7 @@ final public class ConfusionMatrix {
     @Var double accuracy = 0;
 
     for (ConfusionMatrix m : matrices) {
-      mcc +=
-          Double.isFinite(m.matthewsCorrelationCoefficient()) ? m.matthewsCorrelationCoefficient()
-              : 0;
+      mcc += Double.isFinite(m.matthewsCorrelationCoefficient()) ? m.matthewsCorrelationCoefficient() : 0;
       f1 += Double.isFinite(m.f1Score()) ? m.f1Score() : 0;
       precision += Double.isFinite(m.precision()) ? m.precision() : 0;
       recall += Double.isFinite(m.recall()) ? m.recall() : 0;
@@ -124,7 +120,7 @@ final public class ConfusionMatrix {
   /**
    * Compute TP, TN, FP and FN. Works only for binary classification.
    *
-   * @param actual gold labels.
+   * @param actual    gold labels.
    * @param predicted predicted labels.
    */
   public void addAll(List<Integer> actual, List<Integer> predicted) {
@@ -132,8 +128,8 @@ final public class ConfusionMatrix {
     Preconditions.checkNotNull(actual, "actual should not be null");
     Preconditions.checkNotNull(predicted, "predicted should not be null");
     Preconditions.checkArgument(actual.size() == predicted.size(),
-        "mismatch between the number of actual and predicted labels : %s expected vs %s found",
-        actual.size(), predicted.size());
+        "mismatch between the number of actual and predicted labels : %s expected vs %s found", actual.size(),
+        predicted.size());
 
     for (int i = 0; i < actual.size(); i++) {
 
@@ -147,7 +143,7 @@ final public class ConfusionMatrix {
   /**
    * Compute TP, TN, FP and FN. Works only for binary classification.
    *
-   * @param act gold label.
+   * @param act  gold label.
    * @param pred predicted label.
    */
   public void add(int act, int pred) {
@@ -225,18 +221,15 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The Matthews correlation coefficient (aka. MCC) takes into account true and false positives and
-   * negatives and is generally regarded as a balanced measure which can be used even if the classes
-   * are of very different sizes. The MCC is in essence a correlation coefficient between the
-   * observed and predicted binary classifications.
+   * The Matthews correlation coefficient (aka. MCC) takes into account true and false positives and negatives and is
+   * generally regarded as a balanced measure which can be used even if the classes are of very different sizes. The MCC
+   * is in essence a correlation coefficient between the observed and predicted binary classifications.
    *
-   * @return returns a value between −1 and +1. A coefficient of +1 represents a perfect prediction,
-   * 0 no better than random prediction and −1 indicates total disagreement between prediction and
-   * observation.
+   * @return returns a value between −1 and +1. A coefficient of +1 represents a perfect prediction, 0 no better than
+   * random prediction and −1 indicates total disagreement between prediction and observation.
    */
   public double matthewsCorrelationCoefficient() {
-    return ((tp_ * tn_) - (fp_ * fn_)) / Math.sqrt(
-        (tp_ + fp_) * (tp_ + fn_) * (tn_ + fp_) * (tn_ + fn_));
+    return ((tp_ * tn_) - (fp_ * fn_)) / Math.sqrt((tp_ + fp_) * (tp_ + fn_) * (tn_ + fp_) * (tn_ + fn_));
   }
 
   /**
@@ -249,8 +242,8 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The Positive Predictive Value (PPV), also known as Precision is the proportion of positive
-   * results that are true positive.
+   * The Positive Predictive Value (PPV), also known as Precision is the proportion of positive results that are true
+   * positive.
    *
    * @return precision.
    */
@@ -259,8 +252,8 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The Positive Predictive Value (PPV), also known as Precision is the proportion of positive
-   * results that are true positive.
+   * The Positive Predictive Value (PPV), also known as Precision is the proportion of positive results that are true
+   * positive.
    *
    * @return positive prediction value.
    */
@@ -269,8 +262,7 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The Negative Predictive Value (NPV) is the proportion of negative results that are true
-   * negative.
+   * The Negative Predictive Value (NPV) is the proportion of negative results that are true negative.
    *
    * @return negative prediction value.
    */
@@ -279,9 +271,9 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * One of the most commonly determined statistical measures is Sensitivity (also known as recall,
-   * hit rate or true positive rate TPR). Sensitivity measures the proportion of actual positives
-   * that are correctly identified as positives.
+   * One of the most commonly determined statistical measures is Sensitivity (also known as recall, hit rate or true
+   * positive rate TPR). Sensitivity measures the proportion of actual positives that are correctly identified as
+   * positives.
    *
    * @return recall.
    */
@@ -290,9 +282,9 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * One of the most commonly determined statistical measures is Sensitivity (also known as recall,
-   * hit rate or true positive rate TPR). Sensitivity measures the proportion of actual positives
-   * that are correctly identified as positives.
+   * One of the most commonly determined statistical measures is Sensitivity (also known as recall, hit rate or true
+   * positive rate TPR). Sensitivity measures the proportion of actual positives that are correctly identified as
+   * positives.
    *
    * @return sensitivity.
    */
@@ -301,8 +293,8 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * Specificity, also known as selectivity or true negative rate (TNR), measures the proportion of
-   * actual negatives that are correctly identified as negatives.
+   * Specificity, also known as selectivity or true negative rate (TNR), measures the proportion of actual negatives
+   * that are correctly identified as negatives.
    *
    * @return specificity.
    */
@@ -311,8 +303,7 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The F1 Score is a measure of a test’s accuracy, defined as the harmonic mean of precision and
-   * recall.
+   * The F1 Score is a measure of a test’s accuracy, defined as the harmonic mean of precision and recall.
    *
    * @return F1 score.
    */
@@ -323,9 +314,9 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The False Positive Rate (FPR) or fall-out is the ratio between the number of negative events
-   * incorrectly categorized as positive (false positives) and the total number of actual negative
-   * events (regardless of classification).
+   * The False Positive Rate (FPR) or fall-out is the ratio between the number of negative events incorrectly
+   * categorized as positive (false positives) and the total number of actual negative events (regardless of
+   * classification).
    *
    * @return false positive rate.
    */
@@ -334,8 +325,8 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The False Discovery Rate (FDR) is a statistical approach used in multiple hypothesis testing to
-   * correct for multiple comparisons.
+   * The False Discovery Rate (FDR) is a statistical approach used in multiple hypothesis testing to correct for
+   * multiple comparisons.
    *
    * @return false discovery rate.
    */
@@ -344,8 +335,8 @@ final public class ConfusionMatrix {
   }
 
   /**
-   * The False Negative Rate (FNR) measures the proportion of the individuals where a condition is
-   * present for which the test result is negative.
+   * The False Negative Rate (FNR) measures the proportion of the individuals where a condition is present for which the
+   * test result is negative.
    *
    * @return false negative rate.
    */

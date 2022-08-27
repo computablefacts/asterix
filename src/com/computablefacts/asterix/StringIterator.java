@@ -42,8 +42,7 @@ final public class StringIterator implements Iterator<Character> {
    * @return true iif c is a punctuation character.
    */
   public static boolean isPunctuation(char c) {
-    return isInRange(c, '!', '/') || isInRange(c, ':', '@') || isInRange(c, '[', '`') || isInRange(
-        c, '{', '~');
+    return isInRange(c, '!', '/') || isInRange(c, ':', '@') || isInRange(c, '[', '`') || isInRange(c, '{', '~');
   }
 
   /**
@@ -85,8 +84,7 @@ final public class StringIterator implements Iterator<Character> {
    * @return true iif c is an arrow symbol.
    */
   public static boolean isArrow(char c) {
-    return isInRange(c, '\u2190', '\u21FF') || isInRange(c, '\u27F0', '\u27FF') || isInRange(c,
-        '\u2900', '\u297F');
+    return isInRange(c, '\u2190', '\u21FF') || isInRange(c, '\u27F0', '\u27FF') || isInRange(c, '\u2900', '\u297F');
   }
 
   /**
@@ -117,8 +115,7 @@ final public class StringIterator implements Iterator<Character> {
    * @return true iif c is a list mark.
    */
   public static boolean isListMark(char c) {
-    return c == '-' || c == '\uF0F0' || c == '\u2022' || c == '\u2023' || c == '\u203B'
-        || c == '\u2043';
+    return c == '-' || c == '\uF0F0' || c == '\u2022' || c == '\u2023' || c == '\u203B' || c == '\u2043';
   }
 
   /**
@@ -204,9 +201,9 @@ final public class StringIterator implements Iterator<Character> {
   /**
    * Check if a character is contained in an interval.
    *
-   * @param c character.
+   * @param c     character.
    * @param start lower bound (inclusive).
-   * @param end upper bound (inclusive).
+   * @param end   upper bound (inclusive).
    * @return true iif c is contained in [start, end].
    */
   private static boolean isInRange(char c, int start, int end) {
@@ -246,8 +243,8 @@ final public class StringIterator implements Iterator<Character> {
   }
 
   /**
-   * Returns the character at the specified number of characters beyond the current position, or a
-   * null character if the specified position is at the end of the document.
+   * Returns the character at the specified number of characters beyond the current position, or a null character if the
+   * specified position is at the end of the document.
    *
    * @param ahead The number of characters beyond the current position.
    * @return The character at the current position.
@@ -264,8 +261,8 @@ final public class StringIterator implements Iterator<Character> {
   }
 
   /**
-   * Returns the character beyond the current position, or a null character if the specified
-   * position is at the end of the document.
+   * Returns the character beyond the current position, or a null character if the specified position is at the end of
+   * the document.
    *
    * @return The character at the current position.
    */
@@ -411,7 +408,7 @@ final public class StringIterator implements Iterator<Character> {
   /**
    * Determines if the specified character exists in the specified character array.
    *
-   * @param c Character to find.
+   * @param c     Character to find.
    * @param chars Character array to search.
    */
   private boolean isInArray(char c, char[] chars) {

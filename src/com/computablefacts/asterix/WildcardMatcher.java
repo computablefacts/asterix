@@ -199,17 +199,15 @@ final public class WildcardMatcher {
    * @return Compacted pattern.
    */
   public static @NotNull String compact(String pattern) {
-    return Preconditions.checkNotNull(pattern, "pattern should not be null")
-        .replaceAll("(\\*)\\1+", "*");
+    return Preconditions.checkNotNull(pattern, "pattern should not be null").replaceAll("(\\*)\\1+", "*");
   }
 
   /**
    * Based on @{link https://research.swtch.com/glob}.
    *
-   * @param text where to search.
+   * @param text    where to search.
    * @param pattern what to search.
-   * @return true iif pattern has been matched in text. False otherwise. This method is case
-   * insensitive.
+   * @return true iif pattern has been matched in text. False otherwise. This method is case insensitive.
    */
   public static boolean match(String text, String pattern) {
     return match(text, pattern, null);
@@ -218,11 +216,10 @@ final public class WildcardMatcher {
   /**
    * Based on @{link https://research.swtch.com/glob}.
    *
-   * @param text where to search.
+   * @param text    where to search.
    * @param pattern what to search.
-   * @param match the matched string (optional).
-   * @return true iif pattern has been matched in text. False otherwise. This method is case
-   * insensitive.
+   * @param match   the matched string (optional).
+   * @return true iif pattern has been matched in text. False otherwise. This method is case insensitive.
    */
   public static boolean match(String text, String pattern, StringBuilder match) {
 

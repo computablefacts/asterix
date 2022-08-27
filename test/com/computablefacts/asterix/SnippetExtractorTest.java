@@ -2,10 +2,9 @@ package com.computablefacts.asterix;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.collect.Lists;
 
 public class SnippetExtractorTest {
 
@@ -61,8 +60,7 @@ public class SnippetExtractorTest {
 
   @Test
   public void testSnippetWithoutLeftEllipsis() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("Yahoo", "Outlook"), text(), 300, 50, "");
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("Yahoo", "Outlook"), text(), 300, 50, "");
     assertEquals(
         "in-the-know with the latest news and information. CloudSponge provides an interface to easily enable your users to import contacts from a variety of the most popular webmail services including Yahoo, Gmail and Hotmail/MSN as well as popular desktop address books such as Mac Address Book and Outlook.",
         snippet);
@@ -70,8 +68,7 @@ public class SnippetExtractorTest {
 
   @Test
   public void testSnippetWithRightEllipsis() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("most", "visited", "home", "page"), text());
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("most", "visited", "home", "page"), text());
     assertEquals(
         "Welcome to Yahoo!, the world’s most visited home page. Quickly find what you’re searching for, get in touch with friends and stay in-the-know with the latest news and information. CloudSponge provides an interface to easily enable your users to import contacts from a variety of the most popular webmail...",
         snippet);
@@ -79,8 +76,7 @@ public class SnippetExtractorTest {
 
   @Test
   public void testSnippetWithLeftAndRightEllipsis() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("latest", "news", "CloudSponge"), text());
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("latest", "news", "CloudSponge"), text());
     assertEquals(
         "...touch with friends and stay in-the-know with the latest news and information. CloudSponge provides an interface to easily enable your users to import contacts from a variety of the most popular webmail services including Yahoo, Gmail and Hotmail/MSN as well as popular desktop address books such as Mac...",
         snippet);
@@ -88,8 +84,7 @@ public class SnippetExtractorTest {
 
   @Test
   public void testSnippetWithEmptyIndicator() {
-    String snippet = SnippetExtractor.extract(Lists.newArrayList("latest", "news", "CloudSponge"),
-        text(), 300, 50, "");
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("latest", "news", "CloudSponge"), text(), 300, 50, "");
     assertEquals(
         "touch with friends and stay in-the-know with the latest news and information. CloudSponge provides an interface to easily enable your users to import contacts from a variety of the most popular webmail services including Yahoo, Gmail and Hotmail/MSN as well as popular desktop address books such as Mac",
         snippet);
@@ -97,8 +92,8 @@ public class SnippetExtractorTest {
 
   @Test
   public void testSnippetWithNullIndicator() {
-    String snippet = SnippetExtractor.extract(Lists.newArrayList("latest", "news", "CloudSponge"),
-        text(), 300, 50, null);
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("latest", "news", "CloudSponge"), text(), 300, 50,
+        null);
     assertEquals(
         "...touch with friends and stay in-the-know with the latest news and information. CloudSponge provides an interface to easily enable your users to import contacts from a variety of the most popular webmail services including Yahoo, Gmail and Hotmail/MSN as well as popular desktop address books such as Mac...",
         snippet);
@@ -106,43 +101,37 @@ public class SnippetExtractorTest {
 
   @Test
   public void testDoNotTruncateHead() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("gmail"), "zor@gmail.com", 5, 0, "...");
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("gmail"), "zor@gmail.com", 5, 0, "...");
     assertEquals("...gmail...", snippet);
   }
 
   @Test
   public void testDoNotTruncateHeadWithNullIndicator() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("gmail"), "zor@gmail.com", 5, 0, null);
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("gmail"), "zor@gmail.com", 5, 0, null);
     assertEquals("...gmail...", snippet);
   }
 
   @Test
   public void testDoNotTruncateHeadWithEmptyIndicator() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("gmail"), "zor@gmail.com", 5, 0, "");
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("gmail"), "zor@gmail.com", 5, 0, "");
     assertEquals("gmail", snippet);
   }
 
   @Test
   public void testDoNotTruncateTail() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("zor"), "zor@gmail.com", 3, 50, "...");
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("zor"), "zor@gmail.com", 3, 50, "...");
     assertEquals("zor@gmail.com", snippet);
   }
 
   @Test
   public void testDoNotTruncateTailWithNullIndicator() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("zor"), "zor@gmail.com", 3, 50, null);
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("zor"), "zor@gmail.com", 3, 50, null);
     assertEquals("zor@gmail.com", snippet);
   }
 
   @Test
   public void testDoNotTruncateTailWithEmptyIndicator() {
-    String snippet =
-        SnippetExtractor.extract(Lists.newArrayList("zor"), "zor@gmail.com", 3, 50, "");
+    String snippet = SnippetExtractor.extract(Lists.newArrayList("zor"), "zor@gmail.com", 3, 50, "");
     assertEquals("zor@gmail.com", snippet);
   }
 

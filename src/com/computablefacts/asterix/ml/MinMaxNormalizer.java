@@ -1,6 +1,5 @@
 package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.function.Function;

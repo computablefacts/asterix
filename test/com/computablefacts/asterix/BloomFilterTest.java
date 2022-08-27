@@ -1,17 +1,20 @@
 package com.computablefacts.asterix;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
+import com.google.errorprone.annotations.Var;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-
 import org.junit.Test;
-
-import com.google.errorprone.annotations.Var;
 
 /**
  * Tests for BloomFilter.java
@@ -19,6 +22,7 @@ import com.google.errorprone.annotations.Var;
  * @author Magnus Skjegstad <magnus@skjegstad.com>
  */
 public class BloomFilterTest {
+
   static Random r = new Random();
 
   @Test
@@ -40,7 +44,7 @@ public class BloomFilterTest {
 
   /**
    * Test of createHash method, of class BloomFilter.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -59,7 +63,7 @@ public class BloomFilterTest {
 
   /**
    * Test of createHash method, of class BloomFilter.
-   * 
+   *
    * @throws UnsupportedEncodingException
    */
   @Test
@@ -74,7 +78,7 @@ public class BloomFilterTest {
 
   /**
    * Test of createHash method, of class BloomFilter.
-   * 
+   *
    * @throws UnsupportedEncodingException
    */
   @Test
@@ -89,14 +93,15 @@ public class BloomFilterTest {
     assertArrayEquals(result1, result2);
     int[] result3 = BloomFilter.createHashes(data, 5);
     assertEquals(result3.length, 5);
-    for (int i = 0; i < result3.length; i++)
+    for (int i = 0; i < result3.length; i++) {
       assertEquals(result3[i], result1[i]);
+    }
 
   }
 
   /**
    * Test of equals method, of class BloomFilter.
-   * 
+   *
    * @throws UnsupportedEncodingException
    */
   @Test
@@ -134,17 +139,15 @@ public class BloomFilterTest {
 
   /**
    * Test of hashCode method, of class BloomFilter.
-   * 
+   *
    * @throws UnsupportedEncodingException
    */
   @Test
   public void testHashCode() throws UnsupportedEncodingException {
     System.out.println("hashCode");
 
-    @Var
-    BloomFilter instance1 = new BloomFilter(1000, 100);
-    @Var
-    BloomFilter instance2 = new BloomFilter(1000, 100);
+    @Var BloomFilter instance1 = new BloomFilter(1000, 100);
+    @Var BloomFilter instance2 = new BloomFilter(1000, 100);
 
     assertTrue(instance1.hashCode() == instance2.hashCode());
 
@@ -182,12 +185,9 @@ public class BloomFilterTest {
     // These probabilities are taken from the bloom filter probability table at
     // http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
     System.out.println("expectedFalsePositiveProbability");
-    @Var
-    BloomFilter instance = new BloomFilter(1000, 100);
-    @Var
-    double expResult = 0.00819; // m/n=10, k=7
-    @Var
-    double result = instance.expectedFalsePositiveProbability();
+    @Var BloomFilter instance = new BloomFilter(1000, 100);
+    @Var double expResult = 0.00819; // m/n=10, k=7
+    @Var double result = instance.expectedFalsePositiveProbability();
     assertEquals(instance.k(), 7);
     assertEquals(expResult, result, 0.000009);
 
@@ -217,16 +217,18 @@ public class BloomFilterTest {
   public void testClear() {
     System.out.println("clear");
     BloomFilter instance = new BloomFilter(1000, 100);
-    for (int i = 0; i < instance.size(); i++)
+    for (int i = 0; i < instance.size(); i++) {
       instance.setBit(i, true);
+    }
     instance.clear();
-    for (int i = 0; i < instance.size(); i++)
+    for (int i = 0; i < instance.size(); i++) {
       assertSame(instance.getBit(i), false);
+    }
   }
 
   /**
    * Test of add method, of class BloomFilter.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -243,7 +245,7 @@ public class BloomFilterTest {
 
   /**
    * Test of addAll method, of class BloomFilter.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -252,18 +254,20 @@ public class BloomFilterTest {
     List<String> v = new ArrayList<String>();
     BloomFilter instance = new BloomFilter(1000, 100);
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 100; i++) {
       v.add(UUID.randomUUID().toString());
+    }
 
     instance.addAll(v);
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 100; i++) {
       assert (instance.contains(v.get(i)));
+    }
   }
 
   /**
    * Test of contains method, of class BloomFilter.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -281,7 +285,7 @@ public class BloomFilterTest {
 
   /**
    * Test of containsAll method, of class BloomFilter.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -349,7 +353,7 @@ public class BloomFilterTest {
 
   /**
    * Test error rate *
-   * 
+   *
    * @throws UnsupportedEncodingException
    */
   @Test
@@ -369,8 +373,7 @@ public class BloomFilterTest {
       }
       instance.addAll(v);
 
-      @Var
-      long f = 0;
+      @Var long f = 0;
       double tests = 300000;
       for (int i = 0; i < tests; i++) {
         byte[] bytes = new byte[100];
@@ -384,19 +387,19 @@ public class BloomFilterTest {
 
       double ratio = f / tests;
 
-      System.out.println(
-          " - got " + ratio + ", math says " + instance.expectedFalsePositiveProbability());
+      System.out.println(" - got " + ratio + ", math says " + instance.expectedFalsePositiveProbability());
       assertEquals(instance.expectedFalsePositiveProbability(), ratio, 0.01);
     }
   }
 
-  /** Test for correct k **/
+  /**
+   * Test for correct k
+   **/
   @Test
   public void testGetK() {
     // Numbers are from http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
     System.out.println("testGetK");
-    @Var
-    BloomFilter instance = null;
+    @Var BloomFilter instance = null;
 
     instance = new BloomFilter(2, 1);
     assertEquals(1, instance.k());
@@ -473,15 +476,13 @@ public class BloomFilterTest {
   public void testCount() {
     System.out.println("count");
     int expResult = 100;
-    @Var
-    BloomFilter instance = new BloomFilter(0.01, expResult);
+    @Var BloomFilter instance = new BloomFilter(0.01, expResult);
     for (int i = 0; i < expResult; i++) {
       byte[] bytes = new byte[100];
       r.nextBytes(bytes);
       instance.add(bytes);
     }
-    @Var
-    int result = instance.count();
+    @Var int result = instance.count();
     assertEquals(expResult, result);
 
     instance = new BloomFilter(0.01, expResult);

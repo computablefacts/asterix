@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * {@link TextCategorizer} is able to categorize texts by computing the similarity of the
- * {@link Fingerprint} of a text with a collection of the fingerprints of the categories.
+ * {@link TextCategorizer} is able to categorize texts by computing the similarity of the {@link Fingerprint} of a text
+ * with a collection of the fingerprints of the categories.
  */
 @CheckReturnValue
 final public class TextCategorizer {
@@ -43,8 +43,7 @@ final public class TextCategorizer {
   public static void main(String[] args) {
 
     File file = new File(args[0]);
-    List<String> labels = Splitter.on(',').trimResults()
-        .splitToList(args.length < 2 ? "" : args[1]);
+    List<String> labels = Splitter.on(',').trimResults().splitToList(args.length < 2 ? "" : args[1]);
 
     Preconditions.checkArgument(file.exists(), "missing gold labels: %s", file);
 
@@ -52,18 +51,16 @@ final public class TextCategorizer {
 
     for (String label : labels) {
 
-      System.out.println(
-          "================================================================================");
+      System.out.println("================================================================================");
       System.out.printf("== Label is %s\n", label);
-      System.out.println(
-          "================================================================================");
+      System.out.println("================================================================================");
       System.out.println("Creating fingerprints...");
 
       Stopwatch stopwatch = Stopwatch.createStarted();
       Map<String, Fingerprint> categories = new HashMap<>();
 
-      GoldLabel.load(file, label).displayProgress(5000)
-          .filter(gl -> gl.isTruePositive() || gl.isFalseNegative()).forEachRemaining(gl -> {
+      GoldLabel.load(file, label).displayProgress(5000).filter(gl -> gl.isTruePositive() || gl.isFalseNegative())
+          .forEachRemaining(gl -> {
 
             String lbl = gl.label();
 
@@ -79,8 +76,8 @@ final public class TextCategorizer {
 
       stopwatch.stop();
 
-      System.out.printf("Fingerprints created in %d seconds for %d categories.\n",
-          stopwatch.elapsed(TimeUnit.SECONDS), categories.size());
+      System.out.printf("Fingerprints created in %d seconds for %d categories.\n", stopwatch.elapsed(TimeUnit.SECONDS),
+          categories.size());
       System.out.println("Initializing text categorizer...");
 
       TextCategorizer categorizer = new TextCategorizer();
@@ -90,8 +87,7 @@ final public class TextCategorizer {
 
       ConfusionMatrix confusionMatrix = new ConfusionMatrix();
 
-      View<GoldLabel> sample = View.of(
-          GoldLabel.load(file).filter(gl -> !label.equals(gl.label())).sample(5000));
+      View<GoldLabel> sample = View.of(GoldLabel.load(file).filter(gl -> !label.equals(gl.label())).sample(5000));
 
       GoldLabel.load(file, label).concat(sample).displayProgress(5000).forEachRemaining(gl -> {
 
@@ -99,8 +95,9 @@ final public class TextCategorizer {
         int actual = gl.isTruePositive() || gl.isFalseNegative() ? OK : KO;
 
         String predictedLabel = categorizer.categorize(gl.data());
-        int prediction = (actual == OK && predictedLabel.equals(actualLabel)) || (actual == KO
-            && !predictedLabel.equals(actualLabel)) ? OK : KO;
+        int prediction =
+            (actual == OK && predictedLabel.equals(actualLabel)) || (actual == KO && !predictedLabel.equals(
+                actualLabel)) ? OK : KO;
 
         confusionMatrix.add(actual, prediction);
       });
@@ -136,8 +133,7 @@ final public class TextCategorizer {
     Map<String, Integer> distances = fp.categorize(fingerprints_);
     int minDistance = distances.values().stream().mapToInt(i -> i).min().orElse(0);
     double newThreshold = minDistance * threshold;
-    int nbCandidates = distances.entrySet().stream().filter(e -> e.getValue() <= newThreshold)
-        .mapToInt(e -> 1).sum();
+    int nbCandidates = distances.entrySet().stream().filter(e -> e.getValue() <= newThreshold).mapToInt(e -> 1).sum();
 
     return nbCandidates > maxCandidates ? "<UNK>" : fp.category();
   }

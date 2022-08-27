@@ -142,8 +142,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     Preconditions.checkNotNull(file, "file should not be null");
 
     try {
-      return new View<>(
-          isCompressed ? IO.newCompressedLineIterator(file) : IO.newLineIterator(file));
+      return new View<>(isCompressed ? IO.newCompressedLineIterator(file) : IO.newLineIterator(file));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -165,7 +164,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * Returns a sequence of integers in {@code begin} included and {@code end} excluded.
    *
    * @param begin the beginning of the sequence (included).
-   * @param end the end of the sequence (excluded).
+   * @param end   the end of the sequence (excluded).
    * @return a sequence of consecutive integers.
    */
   public static View<Integer> range(int begin, int end) {
@@ -266,7 +265,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Accumulates the view elements into a new {@link String}.
    *
-   * @param fn map each view element to a {@link String}.
+   * @param fn        map each view element to a {@link String}.
    * @param separator join mapped elements together using the specified separator.
    * @return a {@link String} whose format is {@code <el1><separator><el2><separator><el3>...}.
    */
@@ -277,12 +276,11 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Accumulates the view elements into a new {@link String}.
    *
-   * @param fn map each view element to a {@link String}.
+   * @param fn        map each view element to a {@link String}.
    * @param separator join mapped elements together using the specified separator.
-   * @param prefix string to add at the beginning of the buffer (optional).
-   * @param suffix string to add at the end of the buffer (optional).
-   * @return a {@link String} whose format is
-   * {@code <prefix><el1><separator><el2><separator><el3>...<suffix>}.
+   * @param prefix    string to add at the beginning of the buffer (optional).
+   * @param suffix    string to add at the end of the buffer (optional).
+   * @return a {@link String} whose format is {@code <prefix><el1><separator><el2><separator><el3>...<suffix>}.
    */
   public String toString(Function<T, String> fn, String separator, String prefix, String suffix) {
 
@@ -308,10 +306,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Write view elements to a file.
    *
-   * @param fn transform each view element to a string.
-   * @param file where the view elements must be written.
-   * @param append false iif a new file must be created. Otherwise, view elements are appended at
-   * the end of an existing file.
+   * @param fn     transform each view element to a string.
+   * @param file   where the view elements must be written.
+   * @param append false iif a new file must be created. Otherwise, view elements are appended at the end of an existing
+   *               file.
    */
   public void toFile(Function<T, String> fn, File file, boolean append) {
     toFile(fn, file, append, false);
@@ -320,10 +318,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Write view elements to a file.
    *
-   * @param fn transform each view element to a string.
-   * @param file where the view elements must be written.
-   * @param append false iif a new file must be created. Otherwise, view elements are appended at
-   * the end of an existing file.
+   * @param fn       transform each view element to a string.
+   * @param file     where the view elements must be written.
+   * @param append   false iif a new file must be created. Otherwise, view elements are appended at the end of an
+   *                 existing file.
    * @param compress true iif the output must be compressed (gzip), false otherwise.
    */
   public void toFile(Function<T, String> fn, File file, boolean append, boolean compress) {
@@ -338,14 +336,14 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
           writer.write(el);
           writer.newLine();
         } catch (IOException e) {
-          logger_.error(LogFormatter.create().add("file", file).add("append", append)
-              .add("compress", compress).message(e).formatError());
+          logger_.error(
+              LogFormatter.create().add("file", file).add("append", append).add("compress", compress).message(e)
+                  .formatError());
         }
       });
     } catch (IOException e) {
-      logger_.error(
-          LogFormatter.create().add("file", file).add("append", append).add("compress", compress)
-              .message(e).formatError());
+      logger_.error(LogFormatter.create().add("file", file).add("append", append).add("compress", compress).message(e)
+          .formatError());
     }
   }
 
@@ -362,19 +360,18 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Split the view elements into two sub-lists : one matching the given predicate and another one
-   * not matching the given predicate.
+   * Split the view elements into two sub-lists : one matching the given predicate and another one not matching the
+   * given predicate.
    *
    * @param predicate the predicate to match.
-   * @return the two sub-lists. {@code Map.Entry.getKey()} returns the elements matching the given
-   * predicate. {@code Map.Entry.getValue()} returns the elements not matching the given predicate.
+   * @return the two sub-lists. {@code Map.Entry.getKey()} returns the elements matching the given predicate.
+   * {@code Map.Entry.getValue()} returns the elements not matching the given predicate.
    */
   public Map.Entry<List<T>, List<T>> divide(Predicate<T> predicate) {
 
     Preconditions.checkNotNull(predicate, "predicate should not be null");
 
-    Map.Entry<List<T>, List<T>> entry = new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(),
-        new ArrayList<>());
+    Map.Entry<List<T>, List<T>> entry = new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>());
 
     while (hasNext()) {
 
@@ -390,16 +387,15 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Split the view elements into two sub-lists : one with the elements in odd positions and another
-   * one with the elements in even positions.
+   * Split the view elements into two sub-lists : one with the elements in odd positions and another one with the
+   * elements in even positions.
    *
    * @return the two sub-lists. {@code Map.Entry.getKey()} returns the elements in odd positions.
    * {@code Map.Entry.getValue()} returns the elements in even positions.
    */
   public Map.Entry<List<T>, List<T>> divide() {
 
-    Map.Entry<List<T>, List<T>> entry = new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(),
-        new ArrayList<>());
+    Map.Entry<List<T>, List<T>> entry = new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>());
 
     View<Map.Entry<Integer, T>> view = index();
 
@@ -417,10 +413,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a {@link Map} where keys are the result of a function applied to each element of the
-   * view and values are lists of elements corresponding to each key.
+   * Returns a {@link Map} where keys are the result of a function applied to each element of the view and values are
+   * lists of elements corresponding to each key.
    *
-   * @param fn the function to apply.
+   * @param fn  the function to apply.
    * @param <U>
    * @return a {@link Map}.
    */
@@ -444,10 +440,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a {@link Map} where keys are the result of a function applied to each element of the
-   * view and values are sets of elements corresponding to each key.
+   * Returns a {@link Map} where keys are the result of a function applied to each element of the view and values are
+   * sets of elements corresponding to each key.
    *
-   * @param fn the function to apply.
+   * @param fn  the function to apply.
    * @param <U>
    * @return a {@link Map}.
    */
@@ -497,7 +493,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Makes two lists out of one by "deconstructing" the elements.
    *
-   * @param fn a function that maps a single element to a tuple.
+   * @param fn  a function that maps a single element to a tuple.
    * @param <U>
    * @param <V>
    * @return a {@link Map.Entry}.
@@ -506,13 +502,11 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
     Preconditions.checkNotNull(fn, "fn should not be null");
 
-    return map(fn).reduce(
-        new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>()),
-        (carry, e) -> {
-          carry.getKey().add(e.getKey());
-          carry.getValue().add(e.getValue());
-          return carry;
-        });
+    return map(fn).reduce(new AbstractMap.SimpleImmutableEntry<>(new ArrayList<>(), new ArrayList<>()), (carry, e) -> {
+      carry.getKey().add(e.getKey());
+      carry.getValue().add(e.getValue());
+      return carry;
+    });
   }
 
   /**
@@ -536,8 +530,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a view where all elements are indexed by there position in the underlying stream of
-   * values.
+   * Returns a view where all elements are indexed by there position in the underlying stream of values.
    *
    * @return a new {@link View}.
    */
@@ -550,8 +543,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
       @Override
       protected Map.Entry<Integer, T> computeNext() {
-        return self.hasNext() ? new AbstractMap.SimpleImmutableEntry<>(++index_, self.next())
-            : endOfData();
+        return self.hasNext() ? new AbstractMap.SimpleImmutableEntry<>(++index_, self.next()) : endOfData();
       }
     });
   }
@@ -580,16 +572,15 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * Returns whether all elements of this view match the provided predicate.
    *
    * @param predicate the predicate to satisfy.
-   * @return true if every element returned by this view satisfies the given predicate. If the view
-   * is empty, true is returned.
+   * @return true if every element returned by this view satisfies the given predicate. If the view is empty, true is
+   * returned.
    */
   public boolean allMatch(Predicate<? super T> predicate) {
     return Iterators.all(this, predicate::test);
   }
 
   /**
-   * Returns an {@link Optional} containing the first element of this view that satisfies the
-   * provided predicate.
+   * Returns an {@link Optional} containing the first element of this view that satisfies the provided predicate.
    *
    * @param predicate the predicate to satisfy.
    * @return an {@link Optional}.
@@ -599,8 +590,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a {@link View} containing all the elements of this view that satisfy the provided
-   * predicate.
+   * Returns a {@link View} containing all the elements of this view that satisfy the provided predicate.
    *
    * @param predicate the predicate to satisfy.
    * @return a new {@link View}.
@@ -610,8 +600,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Performs the given action for each remaining element of the view until all elements have been
-   * processed or the caller stopped the enumeration.
+   * Performs the given action for each remaining element of the view until all elements have been processed or the
+   * caller stopped the enumeration.
    *
    * @param consumer the action to be performed for each element.
    */
@@ -627,8 +617,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Performs the given action for each remaining element of the view in parallel until all elements
-   * have been processed.
+   * Performs the given action for each remaining element of the view in parallel until all elements have been
+   * processed.
    *
    * @param consumer the action to be performed for each element.
    */
@@ -654,7 +644,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Reduce the view to a single value using a given operation.
    *
-   * @param carry the neutral element.
+   * @param carry     the neutral element.
    * @param operation the operation to apply.
    * @param <U>
    * @return a single value.
@@ -842,17 +832,17 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * Returns a view where all the elements have been processed according to the predicate.
    *
    * @param predicate the predicate to satisfy.
-   * @param ifTrue the function to apply if the predicate is satisfied. If this parameter is null or
-   * the {@link Optional} returned is `empty`, all the elements that satisfies the predicate will be
-   * dropped.
-   * @param ifFalse the function to apply if the predicate is not satisfied. If this parameter is
-   * null or the {@link Optional} returned is `empty`, all the elements that does not satisfy the
-   * predicate will be dropped.
+   * @param ifTrue    the function to apply if the predicate is satisfied. If this parameter is null or the
+   *                  {@link Optional} returned is `empty`, all the elements that satisfies the predicate will be
+   *                  dropped.
+   * @param ifFalse   the function to apply if the predicate is not satisfied. If this parameter is null or the
+   *                  {@link Optional} returned is `empty`, all the elements that does not satisfy the predicate will be
+   *                  dropped.
    * @param <U>
    * @return a new {@link View}.
    */
-  public <U> View<U> dispatch(Predicate<? super T> predicate,
-      Function<? super T, Optional<U>> ifTrue, Function<? super T, Optional<U>> ifFalse) {
+  public <U> View<U> dispatch(Predicate<? super T> predicate, Function<? super T, Optional<U>> ifTrue,
+      Function<? super T, Optional<U>> ifFalse) {
 
     Preconditions.checkNotNull(predicate, "predicate should not be null");
 
@@ -865,10 +855,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a view consisting of the results of applying the given function to the elements of this
-   * view.
+   * Returns a view consisting of the results of applying the given function to the elements of this view.
    *
-   * @param fn the function to apply.
+   * @param fn  the function to apply.
    * @param <U>
    * @return a new {@link View}.
    */
@@ -877,15 +866,14 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a view consisting of the results of applying the given function to the elements of this
-   * view.
+   * Returns a view consisting of the results of applying the given function to the elements of this view.
    * <p>
-   * Split the original view into sub-lists, then process the elements of each sub-list in parallel.
-   * Despite these shenanigans, the output of {@link #mapInParallel(int, Function)} is identical to
-   * the output of {@link #map(Function)}.
+   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
+   * shenanigans, the output of {@link #mapInParallel(int, Function)} is identical to the output of
+   * {@link #map(Function)}.
    *
    * @param batchSize the size of each batch.
-   * @param fn the function to apply.
+   * @param fn        the function to apply.
    * @param <U>
    * @return a new {@link View}.
    */
@@ -936,9 +924,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Returns a view consisting of the elements of this view matching the given predicate.
    * <p>
-   * Split the original view into sub-lists, then process the elements of each sub-list in parallel.
-   * Despite these shenanigans, the output of {@link #filterInParallel(int, Predicate)} is identical
-   * to the output of {@link #filter(Predicate)}.
+   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
+   * shenanigans, the output of {@link #filterInParallel(int, Predicate)} is identical to the output of
+   * {@link #filter(Predicate)}.
    *
    * @param batchSize the size of each batch.
    * @param predicate the predicate to satisfy.
@@ -949,8 +937,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     Preconditions.checkArgument(batchSize > 0, "batchSize must be > 0");
     Preconditions.checkNotNull(predicate, "predicate should not be null");
 
-    return mapInParallel(batchSize,
-        t -> new AbstractMap.SimpleImmutableEntry<>(t, predicate.test(t))).filter(
+    return mapInParallel(batchSize, t -> new AbstractMap.SimpleImmutableEntry<>(t, predicate.test(t))).filter(
         SimpleImmutableEntry::getValue).map(SimpleImmutableEntry::getKey);
   }
 
@@ -991,8 +978,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Combines two views into a single view. The returned view iterates across the elements of the
-   * current view, followed by the elements of the other view.
+   * Combines two views into a single view. The returned view iterates across the elements of the current view, followed
+   * by the elements of the other view.
    *
    * @param view the other {@link View}.
    * @return a new {@link View}.
@@ -1074,8 +1061,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns elements that are presents in the first view but not in the second one. Duplicate
-   * elements are returned only once.
+   * Returns elements that are presents in the first view but not in the second one. Duplicate elements are returned
+   * only once.
    * <p>
    * Both views must be sorted.
    *
@@ -1168,15 +1155,14 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Merge the output of one or more sorted views with the output of the current view. The
-   * assumption is that all views (including this one) are sorted in non-descending order.
+   * Merge the output of one or more sorted views with the output of the current view. The assumption is that all views
+   * (including this one) are sorted in non-descending order.
    *
-   * @param views the views to merge with the output of the current view.
+   * @param views      the views to merge with the output of the current view.
    * @param comparator the comparator used to merge the output of each view.
    * @return a new {@link View}.
    */
-  public View<T> mergeSorted(Iterable<? extends View<? extends T>> views,
-      Comparator<? super T> comparator) {
+  public View<T> mergeSorted(Iterable<? extends View<? extends T>> views, Comparator<? super T> comparator) {
 
     Preconditions.checkNotNull(views, "views should not be null");
     Preconditions.checkNotNull(comparator, "comparator should not be null");
@@ -1224,7 +1210,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Flatten a view. Optionally map the view entries at the same time.
    *
-   * @param fn the mapping function.
+   * @param fn  the mapping function.
    * @param <U>
    * @return a new {@link View}.
    */
@@ -1264,9 +1250,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Split the view into windows of fixed size {@code length} (the final list may be smaller). At
-   * each step, the first {@code length - 1} elements of the window are a suffix of the previous
-   * window.
+   * Split the view into windows of fixed size {@code length} (the final list may be smaller). At each step, the first
+   * {@code length - 1} elements of the window are a suffix of the previous window.
    *
    * @param length the window size.
    * @return a {@link ImmutableList}.
@@ -1276,8 +1261,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Split the view into windows of fixed size {@code length} (the final list may be smaller). The
-   * returned windows do not intersect.
+   * Split the view into windows of fixed size {@code length} (the final list may be smaller). The returned windows do
+   * not intersect.
    *
    * @param length the window size.
    * @return a {@link ImmutableList}.
@@ -1287,9 +1272,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Split the view into windows of fixed size {@code length} (the final list will never be
-   * smaller). At each step, the first {@code length - 1} elements of the window are a suffix of the
-   * previous window.
+   * Split the view into windows of fixed size {@code length} (the final list will never be smaller). At each step, the
+   * first {@code length - 1} elements of the window are a suffix of the previous window.
    *
    * @param length the window size.
    * @return a {@link ImmutableList}.
@@ -1299,8 +1283,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Split the view into windows of fixed size {@code length} (the final list will never be
-   * smaller). The returned windows do not intersect.
+   * Split the view into windows of fixed size {@code length} (the final list will never be smaller). The returned
+   * windows do not intersect.
    *
    * @param length the window size.
    * @return a {@link ImmutableList}.
@@ -1330,8 +1314,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     private final List<T> list_;
     private final boolean strictWindowsLength_;
 
-    public SlidingWindowIterator(Iterator<T> iterator, int length, boolean overlaps,
-        boolean strictWindowsLength) {
+    public SlidingWindowIterator(Iterator<T> iterator, int length, boolean overlaps, boolean strictWindowsLength) {
 
       Preconditions.checkNotNull(iterator, "iterator should not be null");
       Preconditions.checkArgument(length > 0, "length must be > 0");

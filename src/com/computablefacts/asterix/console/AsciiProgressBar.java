@@ -9,7 +9,8 @@ import com.google.errorprone.annotations.Var;
 @CheckReturnValue
 final public class AsciiProgressBar {
 
-  private AsciiProgressBar() {}
+  private AsciiProgressBar() {
+  }
 
   public static ProgressBar create() {
     return new ProgressBar();
@@ -20,10 +21,8 @@ final public class AsciiProgressBar {
   }
 
   /**
-   * Ascii progress bar. On completion this component will reset itself so it can be reused. <br />
-   * <br />
-   * 100% ################################################## | <br />
-   * <br />
+   * Ascii progress bar. On completion this component will reset itself so it can be reused. <br /> <br /> 100%
+   * ################################################## | <br /> <br />
    */
   public static class ProgressBar {
 
@@ -40,7 +39,7 @@ final public class AsciiProgressBar {
     /**
      * Called whenever the progress bar needs to be updated. That is whenever progress was made.
      *
-     * @param done an int representing the work done so far.
+     * @param done  an int representing the work done so far.
      * @param total an int representing the total work.
      */
     public void update(int done, int total) {
@@ -50,9 +49,9 @@ final public class AsciiProgressBar {
     /**
      * Called whenever the progress bar needs to be updated. That is whenever progress was made.
      *
-     * @param done an int representing the work done so far.
+     * @param done  an int representing the work done so far.
      * @param total an int representing the total work.
-     * @param msg an additional message to display at the end of the row.
+     * @param msg   an additional message to display at the end of the row.
      */
     public void update(int done, int total, String msg) {
 
@@ -60,8 +59,7 @@ final public class AsciiProgressBar {
 
       if (done == 0 || done == total || percent > percentPrev_) {
 
-        @Var
-        int extraChars = (percent / 2) - progress_.length();
+        @Var int extraChars = (percent / 2) - progress_.length();
 
         while (extraChars-- > 0) {
           progress_.append('#');
@@ -86,11 +84,8 @@ final public class AsciiProgressBar {
   }
 
   /**
-   * Ascii progress bar for tasks that take an indeterminate amount of time. On completion this
-   * component will reset itself so it can be reused. <br />
-   * <br />
-   * 100% ################################################## | <br />
-   * <br />
+   * Ascii progress bar for tasks that take an indeterminate amount of time. On completion this component will reset
+   * itself so it can be reused. <br /> <br /> 100% ################################################## | <br /> <br />
    */
   @Deprecated
   public static class IndeterminateProgressBar {
@@ -100,7 +95,8 @@ final public class AsciiProgressBar {
     private int total_ = 2;
     private int slice_ = 1;
 
-    public IndeterminateProgressBar() {}
+    public IndeterminateProgressBar() {
+    }
 
     public void complete() {
 
