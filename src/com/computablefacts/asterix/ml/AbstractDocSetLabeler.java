@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,137 +33,35 @@ public abstract class AbstractDocSetLabeler {
   }
 
   @Beta
-  public static List<Map.Entry<String, Double>> findInterestingNGrams(Vocabulary unigrams, Vocabulary bigrams,
-      Vocabulary trigrams, Vocabulary quadgrams, Vocabulary quintgrams, Vocabulary sextgrams, List<String> ok,
-      List<String> ko) {
+  public static List<Map.Entry<String, Double>> findInterestingNGrams(Function<String, List<String>> tokenizer,
+      Vocabulary ngrams, List<String> ok, List<String> ko) {
 
+    Preconditions.checkNotNull(tokenizer, "tokenizer should not be null");
+    Preconditions.checkNotNull(ngrams, "ngrams should not be null");
     Preconditions.checkNotNull(ok, "ok should not be null");
     Preconditions.checkNotNull(ko, "ko should not be null");
-
-    Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK"); // TODO : expose as parameter
-    Function<String, List<String>> getUnigrams = unigrams == null ? null : Vocabulary.tokenizer(includeTags, 1);
-    Function<String, List<String>> getBigrams = bigrams == null ? null : Vocabulary.tokenizer(includeTags, 2);
-    Function<String, List<String>> getTrigrams = trigrams == null ? null : Vocabulary.tokenizer(includeTags, 3);
-    Function<String, List<String>> getQuadgrams = quadgrams == null ? null : Vocabulary.tokenizer(includeTags, 4);
-    Function<String, List<String>> getQuintgrams = quintgrams == null ? null : Vocabulary.tokenizer(includeTags, 5);
-    Function<String, List<String>> getSextgrams = sextgrams == null ? null : Vocabulary.tokenizer(includeTags, 6);
 
     // Deduplicate datasets
     Set<String> newOk = Sets.newHashSet(ok);
     Set<String> newKo = Sets.difference(Sets.newHashSet(ko), Sets.newHashSet(ok));
 
     // Build vocabulary for the ok and ko datasets
-    Vocabulary unigramsOk = unigrams == null ? null
-        : Vocabulary.of(View.of(newOk).map(getUnigrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary bigramsOk = bigrams == null ? null
-        : Vocabulary.of(View.of(newOk).map(getBigrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary trigramsOk = trigrams == null ? null
-        : Vocabulary.of(View.of(newOk).map(getTrigrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary quadgramsOk = quadgrams == null ? null
-        : Vocabulary.of(View.of(newOk).map(getQuadgrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary quintgramsOk = quintgrams == null ? null
-        : Vocabulary.of(View.of(newOk).map(getQuintgrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary sextgramsOk = sextgrams == null ? null
-        : Vocabulary.of(View.of(newOk).map(getSextgrams).displayProgress(10_000), 0.01, 0.99, 100_000);
+    Vocabulary ngramsOk = Vocabulary.of(View.of(newOk).map(tokenizer).displayProgress(10_000), 0.01, 0.99, 100_000);
+    Vocabulary ngramsKo = Vocabulary.of(View.of(newKo).map(tokenizer).displayProgress(10_000), 0.01, 0.99, 100_000);
 
-    Vocabulary unigramsKo = unigrams == null ? null
-        : Vocabulary.of(View.of(newKo).map(getUnigrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary bigramsKo = bigrams == null ? null
-        : Vocabulary.of(View.of(newKo).map(getBigrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary trigramsKo = trigrams == null ? null
-        : Vocabulary.of(View.of(newKo).map(getTrigrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary quadgramsKo = quadgrams == null ? null
-        : Vocabulary.of(View.of(newKo).map(getQuadgrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary quintgramsKo = quintgrams == null ? null
-        : Vocabulary.of(View.of(newKo).map(getQuintgrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary sextgramsKo = sextgrams == null ? null
-        : Vocabulary.of(View.of(newKo).map(getSextgrams).displayProgress(10_000), 0.01, 0.99, 100_000);
-
+    // Provide an implementation of the DocSetLabeler
     AbstractDocSetLabeler docSetLabeler = new AbstractDocSetLabeler() {
 
       @Override
-      protected List<Map.Entry<String, Double>> filterOutCandidates(List<Map.Entry<String, Double>> candidates) {
-
-        Set<Integer> ignored = new HashSet<>();
-
-        for (int i = 0; i < candidates.size(); i++) {
-          for (int j = i + 1; j < candidates.size(); j++) {
-
-            String c1 = candidates.get(i).getKey().substring(2);
-            String c2 = candidates.get(j).getKey().substring(2);
-
-            if (c1.contains(c2) || c2.contains(c1)) {
-              ignored.add(j);
-            }
-          }
-        }
-        for (int idx = candidates.size() - 1; idx >= 0; idx--) {
-          if (ignored.contains(idx)) {
-            candidates.remove(idx);
-          }
-        }
-        return candidates.stream().map(c -> new SimpleImmutableEntry<>(c.getKey().substring(2), c.getValue()))
-            .collect(Collectors.toList());
-      }
-
-      @Override
       protected Multiset<String> candidates(String text) {
-
-        Multiset<String> multiset = HashMultiset.create();
-        if (unigrams != null) {
-          HashMultiset.create(getUnigrams.apply(text)).entrySet()
-              .forEach(e -> multiset.add("1/" + e.getElement(), e.getCount()));
-        }
-        if (bigrams != null) {
-          HashMultiset.create(getBigrams.apply(text)).entrySet()
-              .forEach(e -> multiset.add("2/" + e.getElement(), e.getCount()));
-        }
-        if (trigrams != null) {
-          HashMultiset.create(getTrigrams.apply(text)).entrySet()
-              .forEach(e -> multiset.add("3/" + e.getElement(), e.getCount()));
-        }
-        if (quadgrams != null) {
-          HashMultiset.create(getQuadgrams.apply(text)).entrySet()
-              .forEach(e -> multiset.add("4/" + e.getElement(), e.getCount()));
-        }
-        if (quintgrams != null) {
-          HashMultiset.create(getQuintgrams.apply(text)).entrySet()
-              .forEach(e -> multiset.add("5/" + e.getElement(), e.getCount()));
-        }
-        if (sextgrams != null) {
-          HashMultiset.create(getSextgrams.apply(text)).entrySet()
-              .forEach(e -> multiset.add("6/" + e.getElement(), e.getCount()));
-        }
-        return multiset;
+        return HashMultiset.create(tokenizer.apply(text));
       }
 
       @Override
       protected double computeX(String text, String candidate, int count) {
 
-        double tfIdfOk;
-        double tfIdfKo;
-
-        if (unigrams != null && candidate.startsWith("1/")) {
-          tfIdfOk = unigramsOk.tfIdf(candidate.substring(2), count);
-          tfIdfKo = unigramsKo.tfIdf(candidate.substring(2), count);
-        } else if (bigrams != null && candidate.startsWith("2/")) {
-          tfIdfOk = bigramsOk.tfIdf(candidate.substring(2), count);
-          tfIdfKo = bigramsKo.tfIdf(candidate.substring(2), count);
-        } else if (trigrams != null && candidate.startsWith("3/")) {
-          tfIdfOk = trigramsOk.tfIdf(candidate.substring(2), count);
-          tfIdfKo = trigramsKo.tfIdf(candidate.substring(2), count);
-        } else if (quadgrams != null && candidate.startsWith("4/")) {
-          tfIdfOk = quadgramsOk.tfIdf(candidate.substring(2), count);
-          tfIdfKo = quadgramsKo.tfIdf(candidate.substring(2), count);
-        } else if (quintgrams != null && candidate.startsWith("5/")) {
-          tfIdfOk = quintgramsOk.tfIdf(candidate.substring(2), count);
-          tfIdfKo = quintgramsKo.tfIdf(candidate.substring(2), count);
-        } else if (sextgrams != null && candidate.startsWith("6/")) {
-          tfIdfOk = sextgramsOk.tfIdf(candidate.substring(2), count);
-          tfIdfKo = sextgramsKo.tfIdf(candidate.substring(2), count);
-        } else {
-          return 0.0;
-        }
+        double tfIdfOk = ngramsOk.tfIdf(candidate, count);
+        double tfIdfKo = ngramsKo.tfIdf(candidate, count);
 
         // The more common the word is in the ok dataset, the better
         return tfIdfOk <= tfIdfKo ? 1.0 : 0.0;
@@ -174,25 +71,7 @@ public abstract class AbstractDocSetLabeler {
       protected double computeY(String text, String candidate, int count) {
 
         // The less common the word is in the whole vocabulary, the better
-        if (unigrams != null && candidate.startsWith("1/")) {
-          return 1.0 - unigrams.ntf(candidate.substring(2));
-        }
-        if (bigrams != null && candidate.startsWith("2/")) {
-          return 1.0 - bigrams.ntf(candidate.substring(2));
-        }
-        if (trigrams != null && candidate.startsWith("3/")) {
-          return 1.0 - trigrams.ntf(candidate.substring(2));
-        }
-        if (quadgrams != null && candidate.startsWith("4/")) {
-          return 1.0 - quadgrams.ntf(candidate.substring(2));
-        }
-        if (quintgrams != null && candidate.startsWith("5/")) {
-          return 1.0 - quintgrams.ntf(candidate.substring(2));
-        }
-        if (sextgrams != null && candidate.startsWith("6/")) {
-          return 1.0 - sextgrams.ntf(candidate.substring(2));
-        }
-        return 0.0;
+        return 1.0 - ngrams.ntf(candidate);
       }
     };
     return docSetLabeler.labels(Lists.newArrayList(newOk), Lists.newArrayList(newKo), 100, 10);

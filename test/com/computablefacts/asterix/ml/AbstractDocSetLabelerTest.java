@@ -5,6 +5,7 @@ import static com.computablefacts.asterix.ml.AbstractDocSetLabeler.counts;
 import com.computablefacts.asterix.DocumentTest;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.JsonCodec;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.google.re2j.Pattern;
@@ -14,7 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -332,47 +332,6 @@ public class AbstractDocSetLabelerTest {
     File file = new File(path + File.separator + "papers.jsonl.gz");
     DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, false, true);
 
-    for (int i = 1; i < 7; i++) {
-      String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK",
-          Integer.toString(i, 10)};
-      Vocabulary.main(args);
-    }
-
-    File funigrams = new File(String.format("%svocabulary-1grams.tsv.gz", file.getParent() + File.separator));
-    File fbigrams = new File(String.format("%svocabulary-2grams.tsv.gz", file.getParent() + File.separator));
-    File ftrigrams = new File(String.format("%svocabulary-3grams.tsv.gz", file.getParent() + File.separator));
-    File fquadgrams = new File(String.format("%svocabulary-4grams.tsv.gz", file.getParent() + File.separator));
-    File fquintgrams = new File(String.format("%svocabulary-5grams.tsv.gz", file.getParent() + File.separator));
-    File fsextgrams = new File(String.format("%svocabulary-6grams.tsv.gz", file.getParent() + File.separator));
-
-    Assert.assertTrue(funigrams.exists());
-    Assert.assertTrue(fbigrams.exists());
-    Assert.assertTrue(ftrigrams.exists());
-    Assert.assertTrue(fquadgrams.exists());
-    Assert.assertTrue(fquintgrams.exists());
-    Assert.assertTrue(fsextgrams.exists());
-
-    Vocabulary unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
-    Vocabulary bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
-    Vocabulary trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
-    Vocabulary quadgrams = fquadgrams.exists() ? new Vocabulary(fquadgrams) : null;
-    Vocabulary quintgrams = fquintgrams.exists() ? new Vocabulary(fquintgrams) : null;
-    Vocabulary sextgrams = fsextgrams.exists() ? new Vocabulary(fsextgrams) : null;
-
-    Assert.assertNotNull(unigrams);
-    Assert.assertNotNull(bigrams);
-    Assert.assertNotNull(trigrams);
-    Assert.assertNotNull(quadgrams);
-    Assert.assertNotNull(quintgrams);
-    Assert.assertNotNull(sextgrams);
-
-    Assert.assertEquals(1000, unigrams.size());
-    Assert.assertEquals(1000, bigrams.size());
-    Assert.assertEquals(1000, trigrams.size());
-    Assert.assertEquals(1000, quadgrams.size());
-    Assert.assertEquals(1000, quintgrams.size());
-    Assert.assertEquals(1000, sextgrams.size());
-
     Set<String> ok = new HashSet<>();
     Set<String> ko = new HashSet<>();
 
@@ -388,8 +347,14 @@ public class AbstractDocSetLabelerTest {
           }
         });
 
-    List<Entry<String, Double>> terms = AbstractDocSetLabeler.findInterestingNGrams(unigrams, bigrams, trigrams,
-        quadgrams, quintgrams, sextgrams, View.of(ok).toList(), View.of(ko).sample(500));
+    Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK");
+    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", Joiner.on(',').join(includeTags), "1"};
+    Vocabulary.main(args);
+
+    File fngrams = new File(String.format("%svocabulary-1grams.tsv.gz", file.getParent() + File.separator));
+    Vocabulary ngrams = new Vocabulary(fngrams);
+    List<Map.Entry<String, Double>> terms = AbstractDocSetLabeler.findInterestingNGrams(
+        Vocabulary.tokenizer(includeTags, 1), ngrams, View.of(ok).toList(), View.of(ko).sample(500));
 
     Assert.assertEquals("crowdsourcing", terms.get(0).getKey());
   }
