@@ -79,7 +79,7 @@ final public class Span implements Comparable<Span> {
   @Generated
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("text", text_).add("begin", begin_).add("end", end_)
+    return MoreObjects.toStringHelper(this).add("span", text()).add("begin", begin_).add("end", end_)
         .add("features", features_).add("tags", tags_).omitNullValues().toString();
   }
 
