@@ -416,10 +416,10 @@ final public class Model extends AbstractStack {
 
     if (!classifier_.isTrained()) {
 
-      List<FeatureVector> vectors = texts.stream().map(featurizer).collect(Collectors.toList());
+      FeatureMatrix matrix = new FeatureMatrix(texts.stream().map(featurizer).collect(Collectors.toList()));
       int[] actuals = categories.stream().mapToInt(x -> x).toArray();
 
-      classifier_.train(vectors, actuals);
+      classifier_.train(matrix, actuals);
       return;
     }
 

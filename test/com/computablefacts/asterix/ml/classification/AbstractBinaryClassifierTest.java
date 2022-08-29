@@ -3,6 +3,7 @@ package com.computablefacts.asterix.ml.classification;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
+import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ public abstract class AbstractBinaryClassifierTest {
     }
 
     AbstractBinaryClassifier classifier = classifier();
-    classifier.train(train, actuals);
+    classifier.train(new FeatureMatrix(train), actuals);
 
     Assert.assertTrue(classifier.isTrained());
 
@@ -54,7 +55,7 @@ public abstract class AbstractBinaryClassifierTest {
     }
 
     AbstractBinaryClassifier classifier = classifier();
-    classifier.train(train, actuals);
+    classifier.train(new FeatureMatrix(train), actuals);
 
     Assert.assertTrue(classifier.isTrained());
 

@@ -1,9 +1,9 @@
 package com.computablefacts.asterix.ml.classification;
 
+import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
-import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
 import smile.classification.RandomForest;
 import smile.data.DataFrame;
@@ -40,28 +40,28 @@ final public class RandomForestClassifier implements AbstractBinaryClassifier {
   }
 
   @Override
-  public void train(List<FeatureVector> vectors, int[] actuals) {
+  public void train(FeatureMatrix matrix, int[] actuals) {
 
-    Preconditions.checkNotNull(vectors, "vectors should not be null");
+    Preconditions.checkNotNull(matrix, "matrix should not be null");
     Preconditions.checkNotNull(actuals, "actuals should not be null");
-    Preconditions.checkArgument(vectors.size() == actuals.length,
-        "mismatch between the number of vectors and the number of actuals");
+    Preconditions.checkArgument(matrix.nbRows() == actuals.length,
+        "mismatch between the number of rows and the number of actuals");
     Preconditions.checkState(forest_ == null, "classifier has already been trained");
 
-    int[][] vects = new int[vectors.size()][vectors.get(0).length() + 1];
+    int[][] newMatrix = new int[matrix.nbRows()][matrix.nbColumns() + 1];
 
-    for (int i = 0; i < vectors.size(); i++) {
+    for (int rowIdx = 0; rowIdx < matrix.nbRows(); rowIdx++) {
 
-      FeatureVector vector = vectors.get(i);
-      vects[i] = new int[vector.length() + 1];
-      vects[i][0] = actuals[i]; // V1
+      FeatureVector row = matrix.row(rowIdx);
+      newMatrix[rowIdx] = new int[row.length() + 1];
+      newMatrix[rowIdx][0] = actuals[rowIdx]; // V1
 
-      for (int j : vector.nonZeroEntries()) {
-        vects[i][j + 1] = (int) vector.get(j);
+      for (int j : row.nonZeroEntries()) {
+        newMatrix[rowIdx][j + 1] = (int) row.get(j);
       }
     }
 
-    DataFrame df = DataFrame.of(vects);
+    DataFrame df = DataFrame.of(newMatrix);
     forest_ = RandomForest.fit(Formula.lhs("V1"), df);
   }
 

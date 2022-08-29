@@ -1,9 +1,9 @@
 package com.computablefacts.asterix.ml.classification;
 
+import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
-import java.util.List;
 import smile.classification.DiscreteNaiveBayes;
 import smile.classification.DiscreteNaiveBayes.Model;
 import smile.util.SparseArray;
@@ -40,23 +40,23 @@ final public class DiscreteNaiveBayesClassifier implements AbstractBinaryClassif
   }
 
   @Override
-  public void train(List<FeatureVector> vectors, int[] actuals) {
+  public void train(FeatureMatrix matrix, int[] actuals) {
 
-    Preconditions.checkNotNull(vectors, "vectors should not be null");
+    Preconditions.checkNotNull(matrix, "matrix should not be null");
     Preconditions.checkNotNull(actuals, "actuals should not be null");
-    Preconditions.checkArgument(vectors.size() == actuals.length,
-        "mismatch between the number of vectors and the number of actuals");
+    Preconditions.checkArgument(matrix.nbRows() == actuals.length,
+        "mismatch between the number of rows and the number of actuals");
     Preconditions.checkState(model_ != null, "model should be defined first");
     Preconditions.checkState(classifier_ == null, "classifier has already been trained");
 
-    SparseArray[] array = new SparseArray[vectors.size()];
+    SparseArray[] newMatrix = new SparseArray[matrix.nbRows()];
 
-    for (int i = 0; i < vectors.size(); i++) {
-      array[i] = vectors.get(i).sparseArray();
+    for (int rowIdx = 0; rowIdx < matrix.nbRows(); rowIdx++) {
+      newMatrix[rowIdx] = matrix.row(rowIdx).sparseArray();
     }
 
-    classifier_ = new DiscreteNaiveBayes(model_, 2, vectors.get(0).length());
-    classifier_.update(array, actuals);
+    classifier_ = new DiscreteNaiveBayes(model_, 2, matrix.nbColumns());
+    classifier_.update(newMatrix, actuals);
   }
 
   @Override

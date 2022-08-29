@@ -3,6 +3,7 @@ package com.computablefacts.asterix.ml.stacking;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
+import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifier;
 import com.google.common.collect.Lists;
@@ -31,11 +32,11 @@ public class StackTest {
 
     // Train model to detect numbers divisible by 2
     IsDivisibleByTwo isDivisibleByTwo = new IsDivisibleByTwo();
-    isDivisibleByTwo.train(dataset, actuals2);
+    isDivisibleByTwo.train(new FeatureMatrix(dataset), actuals2);
 
     // Train model to detect numbers divisible by 5
     IsDivisibleByFive isDivisibleByFive = new IsDivisibleByFive();
-    isDivisibleByFive.train(dataset, actuals5);
+    isDivisibleByFive.train(new FeatureMatrix(dataset), actuals5);
 
     // Create stack to detect number divisible by 10 i.e. both 2 and 5
     isDivisibleByTwo.init(dataset, actuals10);
@@ -71,15 +72,15 @@ public class StackTest {
 
     // Train model to detect numbers divisible by 2
     IsDivisibleByTwo isDivisibleByTwo = new IsDivisibleByTwo();
-    isDivisibleByTwo.train(dataset, actuals2);
+    isDivisibleByTwo.train(new FeatureMatrix(dataset), actuals2);
 
     // Train model to detect numbers divisible by 3
     IsDivisibleByThree isDivisibleByThree = new IsDivisibleByThree();
-    isDivisibleByThree.train(dataset, actuals3);
+    isDivisibleByThree.train(new FeatureMatrix(dataset), actuals3);
 
     // Train model to detect numbers divisible by 5
     IsDivisibleByFive isDivisibleByFive = new IsDivisibleByFive();
-    isDivisibleByFive.train(dataset, actuals5);
+    isDivisibleByFive.train(new FeatureMatrix(dataset), actuals5);
 
     // Create stack to detect number divisible by 3 or 10
     isDivisibleByTwo.init(dataset, actuals3Or10);
@@ -124,8 +125,8 @@ public class StackTest {
       return classifier_.predict(vector);
     }
 
-    public void train(List<FeatureVector> vectors, int[] actuals) {
-      classifier_.train(vectors, actuals);
+    public void train(FeatureMatrix matrix, int[] actuals) {
+      classifier_.train(matrix, actuals);
     }
   }
 
@@ -147,8 +148,8 @@ public class StackTest {
       return classifier_.predict(vector);
     }
 
-    public void train(List<FeatureVector> vectors, int[] actuals) {
-      classifier_.train(vectors, actuals);
+    public void train(FeatureMatrix matrix, int[] actuals) {
+      classifier_.train(matrix, actuals);
     }
   }
 
@@ -170,8 +171,8 @@ public class StackTest {
       return classifier_.predict(vector);
     }
 
-    public void train(List<FeatureVector> vectors, int[] actuals) {
-      classifier_.train(vectors, actuals);
+    public void train(FeatureMatrix matrix, int[] actuals) {
+      classifier_.train(matrix, actuals);
     }
   }
 }
