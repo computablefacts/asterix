@@ -120,6 +120,19 @@ public class FeatureVectorTest {
   }
 
   @Test
+  public void testAppend() {
+
+    double[] array = new double[]{1.0, 0.0, 3.0, 0.0};
+    FeatureVector vector = new FeatureVector(array);
+
+    Assert.assertEquals(Sets.newHashSet(0, 2), vector.nonZeroEntries());
+
+    vector.append(5.0);
+    
+    Assert.assertEquals(Sets.newHashSet(0, 2, 4), vector.nonZeroEntries());
+  }
+
+  @Test
   public void testNormalizeUsingEuclideanNorm() {
 
     double[] src = new double[]{0.0, 0.640, 0.0, 0.0, 0.845};

@@ -17,7 +17,7 @@ import smile.util.SparseArray;
 final public class FeatureVector {
 
   private final Map<Integer, Double> nonZeroEntries_;
-  private final int length_;
+  private int length_;
 
   public FeatureVector(int length) {
     length_ = length;
@@ -112,6 +112,11 @@ final public class FeatureVector {
     } else {
       nonZeroEntries_.put(pos, value);
     }
+  }
+
+  public void append(double value) {
+    length_++;
+    set(length_ - 1, value);
   }
 
   public Set<Integer> nonZeroEntries() {

@@ -242,16 +242,15 @@ final public class FeatureMatrix {
     for (int rowIdx = 0; rowIdx < rows_.size(); rowIdx++) {
 
       FeatureVector row = rows_.get(rowIdx);
-      FeatureVector newRow = new FeatureVector(row.length() + 1);
 
-      if (prepend) {
+      if (!prepend) {
+        row.append(column.get(rowIdx));
+      } else {
+        FeatureVector newRow = new FeatureVector(row.length() + 1);
         row.nonZeroEntries().forEach(colIdx -> newRow.set(colIdx + 1, row.get(colIdx)));
         newRow.set(0, column.get(rowIdx));
-      } else {
-        row.nonZeroEntries().forEach(colIdx -> newRow.set(colIdx, row.get(colIdx)));
-        newRow.set(row.length(), column.get(rowIdx));
+        rows_.set(rowIdx, newRow);
       }
-      rows_.set(rowIdx, newRow);
     }
   }
 
@@ -264,16 +263,15 @@ final public class FeatureMatrix {
     for (int rowIdx = 0; rowIdx < rows_.size(); rowIdx++) {
 
       FeatureVector row = rows_.get(rowIdx);
-      FeatureVector newRow = new FeatureVector(row.length() + 1);
 
-      if (prepend) {
+      if (!prepend) {
+        row.append(column[rowIdx]);
+      } else {
+        FeatureVector newRow = new FeatureVector(row.length() + 1);
         row.nonZeroEntries().forEach(colIdx -> newRow.set(colIdx + 1, row.get(colIdx)));
         newRow.set(0, column[rowIdx]);
-      } else {
-        row.nonZeroEntries().forEach(colIdx -> newRow.set(colIdx, row.get(colIdx)));
-        newRow.set(row.length(), column[rowIdx]);
+        rows_.set(rowIdx, newRow);
       }
-      rows_.set(rowIdx, newRow);
     }
   }
 }
