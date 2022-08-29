@@ -7,14 +7,17 @@ import com.computablefacts.asterix.Generated;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.GoldLabel;
+import com.computablefacts.asterix.ml.Model;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +32,30 @@ final public class TextCategorizer {
   private final List<Fingerprint> fingerprints_ = new ArrayList<>();
 
   public TextCategorizer() {
+  }
+
+  public static TextCategorizer trainTextCategorizer(List<String> texts, List<Integer> categories) {
+
+    Preconditions.checkNotNull(texts, "texts should not be null");
+    Preconditions.checkNotNull(categories, "categories should not be null");
+    Preconditions.checkArgument(texts.size() == categories.size(),
+        "mismatch between the number of texts and the number of categories");
+
+    Fingerprint ok = new Fingerprint();
+    ok.category("OK");
+
+    Fingerprint ko = new Fingerprint();
+    ko.category("KO");
+
+    TextCategorizer categorizer = new TextCategorizer();
+    categorizer.add(ok);
+    categorizer.add(ko);
+
+    View.of(texts).zip(categories)
+        .peek(entry -> entry.getValue() == OK, entry -> ok.add(entry.getKey()), entry -> ko.add(entry.getKey()))
+        .forEachRemaining(entry -> Preconditions.checkState(entry.getValue() == KO || entry.getValue() == OK,
+            "invalid prediction: should be either 1 (in class) or 0 (not in class)"));
+    return categorizer;
   }
 
   /**
@@ -54,55 +81,59 @@ final public class TextCategorizer {
       System.out.println("================================================================================");
       System.out.printf("== Label is %s\n", label);
       System.out.println("================================================================================");
-      System.out.println("Creating fingerprints...");
-
+      System.out.println("Assembling dataset...");
       Stopwatch stopwatch = Stopwatch.createStarted();
-      Map<String, Fingerprint> categories = new HashMap<>();
 
-      GoldLabel.load(file, label).displayProgress(5000).filter(gl -> gl.isTruePositive() || gl.isFalseNegative())
-          .forEachRemaining(gl -> {
-
-            String lbl = gl.label();
-
-            if (!categories.containsKey(lbl)) {
-
-              Fingerprint fingerprint = new Fingerprint();
-              fingerprint.category(lbl);
-
-              categories.put(lbl, fingerprint);
-            }
-            categories.get(lbl).add(gl.data());
-          });
+      Map.Entry<List<String>, List<Integer>> dataset = GoldLabel.load(file, label).displayProgress(5000)
+          .unzip(gl -> new SimpleImmutableEntry<>(gl.data(), gl.isTruePositive() || gl.isFalseNegative() ? OK : KO));
 
       stopwatch.stop();
+      System.out.printf("Dataset assembled in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
 
-      System.out.printf("Fingerprints created in %d seconds for %d categories.\n", stopwatch.elapsed(TimeUnit.SECONDS),
-          categories.size());
-      System.out.println("Initializing text categorizer...");
+      if (dataset.getKey().size() < 10) {
+        System.out.println("ERROR: dataset size has less than 10 entries.");
+        continue;
+      }
 
-      TextCategorizer categorizer = new TextCategorizer();
-      categories.values().forEach(categorizer::add);
+      Multiset<Integer> count = HashMultiset.create(dataset.getValue());
 
-      System.out.println("Text categorizer initialized.");
+      if (count.count(OK) < 5 || count.count(KO) < 5) {
+        System.out.println("ERROR: dataset must contain at least 5 positive and 5 negative entries.");
+        continue;
+      }
+
+      System.out.printf("The number of POSITIVE entries is %d.\n", count.count(OK));
+      System.out.printf("The number of NEGATIVE entries is %d.\n", count.count(KO));
+      System.out.println("Training text categorizer...");
+      stopwatch.reset().start();
+
+      TextCategorizer categorizer = trainTextCategorizer(dataset.getKey(), dataset.getValue());
+
+      stopwatch.stop();
+      System.out.printf("Text categorizer trained in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+      System.out.println("Testing text categorizer...");
+      stopwatch.reset().start();
 
       ConfusionMatrix confusionMatrix = new ConfusionMatrix();
 
-      View<GoldLabel> sample = View.of(GoldLabel.load(file).filter(gl -> !label.equals(gl.label())).sample(5000));
+      View.of(dataset.getKey()).zip(dataset.getValue()).forEachRemaining(entry -> {
 
-      GoldLabel.load(file, label).concat(sample).displayProgress(5000).forEachRemaining(gl -> {
-
-        String actualLabel = gl.label();
-        int actual = gl.isTruePositive() || gl.isFalseNegative() ? OK : KO;
-
-        String predictedLabel = categorizer.categorize(gl.data());
-        int prediction =
-            (actual == OK && predictedLabel.equals(actualLabel)) || (actual == KO && !predictedLabel.equals(
-                actualLabel)) ? OK : KO;
+        String category = categorizer.categorize(entry.getKey());
+        int actual = entry.getValue();
+        int prediction = "OK".equals(category) ? OK : KO;
 
         confusionMatrix.add(actual, prediction);
       });
 
+      stopwatch.stop();
       System.out.println(confusionMatrix);
+      System.out.printf("Text categorizer tested in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+      System.out.println("Saving text categorizer...");
+
+      Model.save(new File(String.format("%stext-categorizer-%s.xml.gz", file.getParent() + File.separator, label)),
+          categorizer);
+
+      System.out.println("Text categorizer saved.");
     }
   }
 
