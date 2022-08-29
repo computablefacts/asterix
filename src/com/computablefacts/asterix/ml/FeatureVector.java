@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import smile.util.SparseArray;
 
 @CheckReturnValue
@@ -66,12 +67,12 @@ final public class FeatureVector {
       return false;
     }
     FeatureVector fv = (FeatureVector) obj;
-    return Objects.equals(nonZeroEntries_, fv.nonZeroEntries_) && length_ == fv.length_;
+    return length_ == fv.length_ && Objects.equals(nonZeroEntries_, fv.nonZeroEntries_);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(nonZeroEntries_, length_);
+    return Objects.hash(length_, nonZeroEntries_);
   }
 
   @Generated
@@ -133,22 +134,12 @@ final public class FeatureVector {
     return ImmutableSet.copyOf(nonZeroEntries_.keySet());
   }
 
-  public void normalizeUsingEuclideanNorm() {
+  public void mapValues(Function<Double, Double> function) {
 
-    double normalizer = Math.sqrt(nonZeroEntries_.values().stream().mapToDouble(x -> x * x).sum());
+    Preconditions.checkNotNull(function, "function should not be null");
 
-    for (Map.Entry<Integer, Double> entry : nonZeroEntries_.entrySet()) {
-      entry.setValue(entry.getValue() / normalizer);
-    }
-  }
-
-  public void normalizeUsingMinMax() {
-
-    double min = nonZeroEntries_.values().stream().mapToDouble(x -> x).min().orElse(0.0);
-    double max = nonZeroEntries_.values().stream().mapToDouble(x -> x).max().orElse(min);
-
-    for (Map.Entry<Integer, Double> entry : nonZeroEntries_.entrySet()) {
-      entry.setValue((entry.getValue() - min) / (max - min));
+    for (int idx = 0; idx < length_; idx++) {
+      set(idx, function.apply(get(idx)));
     }
   }
 }

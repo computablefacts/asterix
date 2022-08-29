@@ -213,33 +213,4 @@ public class FeatureMatrixTest {
 
     Assert.assertArrayEquals(new double[][]{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}, matrix2.denseArray());
   }
-
-  @Test
-  public void testNormalizeColumnUsingEuclideanNorm() {
-
-    FeatureMatrix matrix = new FeatureMatrix();
-    matrix.addRow(new double[]{0.0, 0.0, 0.0});
-    matrix.addRow(new double[]{0.0, 0.640, 0.0});
-    matrix.addRow(new double[]{0.0, 0.0, 0.0});
-    matrix.addRow(new double[]{0.0, 0.0, 0.0});
-    matrix.addRow(new double[]{0.0, 0.845, 0.0});
-
-    matrix.normalizeColumnUsingEuclideanNorm(1);
-
-    Assert.assertArrayEquals(new double[]{0.0, 0.604, 0.0, 0.0, 0.79}, matrix.column(1).denseArray(), 0.01);
-  }
-
-  @Test
-  public void testNormalizeColumnUsingMinMax() {
-
-    FeatureMatrix matrix = new FeatureMatrix();
-    matrix.addRow(new double[]{0.0, 8.0, 0.0});
-    matrix.addRow(new double[]{0.0, 10.0, 0.0});
-    matrix.addRow(new double[]{0.0, 15.0, 0.0});
-    matrix.addRow(new double[]{0.0, 20.0, 0.0});
-
-    matrix.normalizeColumnUsingMinMax(1);
-
-    Assert.assertArrayEquals(new double[]{0.0, 0.16, 0.58, 1.0}, matrix.column(1).denseArray(), 0.01);
-  }
 }

@@ -200,28 +200,6 @@ final public class FeatureMatrix {
     return array;
   }
 
-  public void normalizeColumnUsingEuclideanNorm(int colIdx) {
-
-    Preconditions.checkArgument(0 <= colIdx && colIdx < nbColumns(),
-        "index must be such as 0 <= colIdx < " + nbColumns());
-
-    FeatureVector column = column(colIdx);
-    double normalizer = Math.sqrt(
-        column.nonZeroEntries().stream().mapToDouble(idx -> column.get(idx) * column.get(idx)).sum());
-    mapColumnValues(colIdx, value -> value / normalizer);
-  }
-
-  public void normalizeColumnUsingMinMax(int colIdx) {
-
-    Preconditions.checkArgument(0 <= colIdx && colIdx < nbColumns(),
-        "index must be such as 0 <= colIdx < " + nbColumns());
-
-    FeatureVector column = column(colIdx);
-    double min = column.nonZeroEntries().stream().mapToDouble(column::get).min().orElse(0.0);
-    double max = column.nonZeroEntries().stream().mapToDouble(column::get).max().orElse(min);
-    mapColumnValues(colIdx, value -> (value - min) / (max - min));
-  }
-
   public void mapColumnValues(int colIdx, Function<Double, Double> function) {
 
     Preconditions.checkArgument(0 <= colIdx && colIdx < nbColumns(),

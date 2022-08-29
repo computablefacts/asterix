@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
 import org.junit.Test;
 import smile.util.SparseArray;
@@ -12,7 +13,7 @@ public class FeatureVectorTest {
 
   @Test
   public void testEqualsAndHashcode() {
-    EqualsVerifier.forClass(FeatureVector.class).verify();
+    EqualsVerifier.forClass(FeatureVector.class).suppress(Warning.NONFINAL_FIELDS).verify();
   }
 
   @Test
@@ -143,25 +144,5 @@ public class FeatureVectorTest {
     vector.prepend(1.0);
 
     Assert.assertEquals(Sets.newHashSet(0, 2, 4), vector.nonZeroEntries());
-  }
-
-  @Test
-  public void testNormalizeUsingEuclideanNorm() {
-
-    double[] src = new double[]{0.0, 0.640, 0.0, 0.0, 0.845};
-    FeatureVector vector = new FeatureVector(src);
-    vector.normalizeUsingEuclideanNorm();
-
-    Assert.assertArrayEquals(new double[]{0.0, 0.604, 0.0, 0.0, 0.79}, vector.denseArray(), 0.01);
-  }
-
-  @Test
-  public void testNormalizeUsingMinMax() {
-
-    double[] src = new double[]{8, 10, 15, 20};
-    FeatureVector vector = new FeatureVector(src);
-    vector.normalizeUsingMinMax();
-
-    Assert.assertArrayEquals(new double[]{0.0, 0.16, 0.58, 1.0}, vector.denseArray(), 0.01);
   }
 }
