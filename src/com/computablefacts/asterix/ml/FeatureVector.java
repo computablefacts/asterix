@@ -119,6 +119,16 @@ final public class FeatureVector {
     set(length_ - 1, value);
   }
 
+  public void prepend(double value) {
+    Map<Integer, Double> nonZeroEntries = new HashMap<>(nonZeroEntries_);
+    nonZeroEntries_.clear();
+    length_++;
+    set(0, value);
+    for (Map.Entry<Integer, Double> entry : nonZeroEntries.entrySet()) {
+      set(entry.getKey() + 1, entry.getValue());
+    }
+  }
+
   public Set<Integer> nonZeroEntries() {
     return ImmutableSet.copyOf(nonZeroEntries_.keySet());
   }

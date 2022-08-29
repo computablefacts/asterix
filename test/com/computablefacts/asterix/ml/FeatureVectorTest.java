@@ -128,7 +128,20 @@ public class FeatureVectorTest {
     Assert.assertEquals(Sets.newHashSet(0, 2), vector.nonZeroEntries());
 
     vector.append(5.0);
-    
+
+    Assert.assertEquals(Sets.newHashSet(0, 2, 4), vector.nonZeroEntries());
+  }
+
+  @Test
+  public void testPrepend() {
+
+    double[] array = new double[]{0.0, 3.0, 0.0, 5.0};
+    FeatureVector vector = new FeatureVector(array);
+
+    Assert.assertEquals(Sets.newHashSet(1, 3), vector.nonZeroEntries());
+
+    vector.prepend(1.0);
+
     Assert.assertEquals(Sets.newHashSet(0, 2, 4), vector.nonZeroEntries());
   }
 
