@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -929,6 +930,63 @@ public class ViewTest {
   }
 
   @Test
+  public void testPeekIfTrue() {
+
+    List<Integer> evenNumbers = new ArrayList<>();
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Consumer<Integer> ifTrue = element -> evenNumbers.add(element);
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).peekIfTrue(isEven, ifTrue).toList();
+
+    Assert.assertEquals(5, list.size());
+    Assert.assertEquals(1, (long) list.get(0));
+    Assert.assertEquals(2, (long) list.get(1));
+    Assert.assertEquals(3, (long) list.get(2));
+    Assert.assertEquals(4, (long) list.get(3));
+    Assert.assertEquals(5, (long) list.get(4));
+
+    Assert.assertEquals(Lists.newArrayList(2, 4), evenNumbers);
+  }
+
+  @Test
+  public void testPeekIfFalse() {
+
+    List<Integer> oddNumbers = new ArrayList<>();
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Consumer<Integer> ifFalse = element -> oddNumbers.add(element);
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).peekIfFalse(isEven, ifFalse).toList();
+
+    Assert.assertEquals(5, list.size());
+    Assert.assertEquals(1, (long) list.get(0));
+    Assert.assertEquals(2, (long) list.get(1));
+    Assert.assertEquals(3, (long) list.get(2));
+    Assert.assertEquals(4, (long) list.get(3));
+    Assert.assertEquals(5, (long) list.get(4));
+
+    Assert.assertEquals(Lists.newArrayList(1, 3, 5), oddNumbers);
+  }
+
+  @Test
+  public void testPeekIfTrueAndIfFalse() {
+
+    List<Integer> oddNumbers = new ArrayList<>();
+    List<Integer> evenNumbers = new ArrayList<>();
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Consumer<Integer> ifTrue = element -> evenNumbers.add(element);
+    Consumer<Integer> ifFalse = element -> oddNumbers.add(element);
+    List<Integer> list = View.iterate(1, x -> x + 1).take(5).peek(isEven, ifTrue, ifFalse).toList();
+
+    Assert.assertEquals(5, list.size());
+    Assert.assertEquals(1, (long) list.get(0));
+    Assert.assertEquals(2, (long) list.get(1));
+    Assert.assertEquals(3, (long) list.get(2));
+    Assert.assertEquals(4, (long) list.get(3));
+    Assert.assertEquals(5, (long) list.get(4));
+
+    Assert.assertEquals(Lists.newArrayList(2, 4), evenNumbers);
+    Assert.assertEquals(Lists.newArrayList(1, 3, 5), oddNumbers);
+  }
+
+  @Test
   public void testFirst() {
 
     View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
@@ -1063,46 +1121,5 @@ public class ViewTest {
 
     Assert.assertEquals(1, sample.size());
     Assert.assertTrue(1 <= sample.get(0) && sample.get(0) <= 5);
-  }
-
-  @Test
-  public void testDispatchIfTrueOnly() {
-
-    Predicate<Integer> isEven = x -> x % 2 == 0;
-    Function<Integer, Optional<Integer>> ifTrue = Optional::of;
-    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, null).toList();
-
-    Assert.assertEquals(2, list.size());
-    Assert.assertEquals(2, (long) list.get(0));
-    Assert.assertEquals(4, (long) list.get(1));
-  }
-
-  @Test
-  public void testDispatchIfFalseOnly() {
-
-    Predicate<Integer> isEven = x -> x % 2 == 0;
-    Function<Integer, Optional<Integer>> ifFalse = Optional::of;
-    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, null, ifFalse).toList();
-
-    Assert.assertEquals(3, list.size());
-    Assert.assertEquals(1, (long) list.get(0));
-    Assert.assertEquals(3, (long) list.get(1));
-    Assert.assertEquals(5, (long) list.get(2));
-  }
-
-  @Test
-  public void testDispatchIfTrueAndIfFalse() {
-
-    Predicate<Integer> isEven = x -> x % 2 == 0;
-    Function<Integer, Optional<Integer>> ifTrue = Optional::of;
-    Function<Integer, Optional<Integer>> ifFalse = Optional::of;
-    List<Integer> list = View.iterate(1, x -> x + 1).take(5).dispatch(isEven, ifTrue, ifFalse).toList();
-
-    Assert.assertEquals(5, list.size());
-    Assert.assertEquals(1, (long) list.get(0));
-    Assert.assertEquals(2, (long) list.get(1));
-    Assert.assertEquals(3, (long) list.get(2));
-    Assert.assertEquals(4, (long) list.get(3));
-    Assert.assertEquals(5, (long) list.get(4));
   }
 }

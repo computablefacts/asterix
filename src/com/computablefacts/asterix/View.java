@@ -101,6 +101,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return new View<>(iterable.iterator());
   }
 
+  @Generated
   public static <T> View<T> of(Enumeration<T> enumeration) {
     return new View<>(Iterators.forEnumeration(enumeration));
   }
@@ -112,6 +113,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return of(map.entrySet());
   }
 
+  @Generated
   public static <T> View<T> of(ResultSet rs, Function<ResultSet, T> fn) {
 
     Preconditions.checkNotNull(rs, "rs should not be null");
@@ -464,6 +466,54 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       groups.get(key).add(value);
     }
     return groups;
+  }
+
+  /**
+   * Assemble two lists into one by combining the elements of the same index.
+   *
+   * @param elements the other elements.
+   * @param <U>
+   * @return a new {@link View} of the combined views.
+   */
+  @Generated
+  public <U> View<Map.Entry<T, U>> zip(U... elements) {
+    return zip(View.of(elements));
+  }
+
+  /**
+   * Assemble two lists into one by combining the elements of the same index.
+   *
+   * @param stream the other elements.
+   * @param <U>
+   * @return a new {@link View} of the combined views.
+   */
+  @Generated
+  public <U> View<Map.Entry<T, U>> zip(Stream<U> stream) {
+    return zip(View.of(stream));
+  }
+
+  /**
+   * Assemble two lists into one by combining the elements of the same index.
+   *
+   * @param iterable the other elements.
+   * @param <U>
+   * @return a new {@link View} of the combined views.
+   */
+  @Generated
+  public <U> View<Map.Entry<T, U>> zip(Iterable<U> iterable) {
+    return zip(View.of(iterable));
+  }
+
+  /**
+   * Assemble two lists into one by combining the elements of the same index.
+   *
+   * @param enumeration the other elements.
+   * @param <U>
+   * @return a new {@link View} of the combined views.
+   */
+  @Generated
+  public <U> View<Map.Entry<T, U>> zip(Enumeration<U> enumeration) {
+    return zip(View.of(enumeration));
   }
 
   /**
@@ -829,32 +879,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a view where all the elements have been processed according to the predicate.
-   *
-   * @param predicate the predicate to satisfy.
-   * @param ifTrue    the function to apply if the predicate is satisfied. If this parameter is null or the
-   *                  {@link Optional} returned is `empty`, all the elements that satisfies the predicate will be
-   *                  dropped.
-   * @param ifFalse   the function to apply if the predicate is not satisfied. If this parameter is null or the
-   *                  {@link Optional} returned is `empty`, all the elements that does not satisfy the predicate will be
-   *                  dropped.
-   * @param <U>
-   * @return a new {@link View}.
-   */
-  public <U> View<U> dispatch(Predicate<? super T> predicate, Function<? super T, Optional<U>> ifTrue,
-      Function<? super T, Optional<U>> ifFalse) {
-
-    Preconditions.checkNotNull(predicate, "predicate should not be null");
-
-    return map(element -> {
-      if (predicate.test(element)) {
-        return ifTrue == null ? Optional.<U>empty() : ifTrue.apply(element);
-      }
-      return ifFalse == null ? Optional.<U>empty() : ifFalse.apply(element);
-    }).filter(Optional::isPresent).map(Optional::get);
-  }
-
-  /**
    * Returns a view consisting of the results of applying the given function to the elements of this view.
    *
    * @param fn  the function to apply.
@@ -975,6 +999,101 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       consumer.accept(x);
       return x;
     });
+  }
+
+  /**
+   * Peek each element and process them according to the predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @param ifTrue    the function to apply if the predicate is satisfied.
+   * @return a new {@link View}.
+   */
+  public View<T> peekIfTrue(Predicate<? super T> predicate, Consumer<? super T> ifTrue) {
+    return peek(predicate, ifTrue, null);
+  }
+
+  /**
+   * Peek each element and process them according to the predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @param ifFalse   the function to apply if the predicate is not satisfied.
+   * @return a new {@link View}.
+   */
+  public View<T> peekIfFalse(Predicate<? super T> predicate, Consumer<? super T> ifFalse) {
+    return peek(predicate, null, ifFalse);
+  }
+
+  /**
+   * Peek each element and process them according to the predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @param ifTrue    the function to apply if the predicate is satisfied.
+   * @param ifFalse   the function to apply if the predicate is not satisfied.
+   * @return a new {@link View}.
+   */
+  public View<T> peek(Predicate<? super T> predicate, Consumer<? super T> ifTrue, Consumer<? super T> ifFalse) {
+
+    Preconditions.checkNotNull(predicate, "predicate should not be null");
+
+    return peek(element -> {
+      if (predicate.test(element)) {
+        if (ifTrue != null) {
+          ifTrue.accept(element);
+        }
+      } else {
+        if (ifFalse != null) {
+          ifFalse.accept(element);
+        }
+      }
+    });
+  }
+
+  /**
+   * Combines two views into a single view. The returned view iterates across the elements of the current view, followed
+   * by the elements of the other view.
+   *
+   * @param elements the other elements.
+   * @return a new {@link View}.
+   */
+  @Generated
+  public View<T> concat(T... elements) {
+    return concat(View.of(elements));
+  }
+
+  /**
+   * Combines two views into a single view. The returned view iterates across the elements of the current view, followed
+   * by the elements of the other view.
+   *
+   * @param stream the other elements.
+   * @return a new {@link View}.
+   */
+  @Generated
+  public View<T> concat(Stream<T> stream) {
+    return concat(View.of(stream));
+  }
+
+  /**
+   * Combines two views into a single view. The returned view iterates across the elements of the current view, followed
+   * by the elements of the other view.
+   *
+   * @param iterable the other elements.
+   * @return a new {@link View}.
+   */
+  @Generated
+  public View<T> concat(Iterable<T> iterable) {
+    return concat(View.of(iterable));
+  }
+
+  /**
+   * Combines two views into a single view. The returned view iterates across the elements of the current view, followed
+   * by the elements of the other view.
+   *
+   * @param enumeration the other elements.
+   * @return a new {@link View}.
+   */
+  @Generated
+  public View<T> concat(Enumeration<T> enumeration) {
+    return concat(View.of(enumeration));
   }
 
   /**
