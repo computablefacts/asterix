@@ -1,12 +1,10 @@
 package com.computablefacts.asterix.ml;
 
+import static com.computablefacts.asterix.ml.AbstractDocSetLabeler.findInterestingNGrams;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
-import com.computablefacts.asterix.Document;
 import com.computablefacts.asterix.IO;
-import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier;
 import com.computablefacts.asterix.ml.classification.AdaBoostClassifier;
@@ -26,12 +24,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import com.google.re2j.Pattern;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.NoTypePermission;
 import com.thoughtworks.xstream.security.NullPermission;
@@ -56,11 +55,7 @@ import java.util.stream.Collectors;
 final public class Model extends AbstractStack {
 
   private final String label_;
-  private Function<String, String> normalizer_;
-  private Function<String, SpanSequence> tokenizer_;
-  private List<Function<SpanSequence, FeatureVector>> vectorizers_;
-  private List<Function<FeatureVector, FeatureVector>> normalizers_;
-  private VectorsReducer reducer_;
+  private List<? extends Function<String, FeatureVector>> vectorizers_;
   private AbstractBinaryClassifier classifier_;
 
   public Model(String label) {
@@ -81,8 +76,7 @@ final public class Model extends AbstractStack {
 
     File documents = new File(args[0]);
     File goldLabels = new File(args[1]);
-    List<String> labels = Splitter.on(',').trimResults().omitEmptyStrings()
-        .splitToList(args.length < 3 ? "" : args[2]);
+    List<String> labels = Splitter.on(',').trimResults().omitEmptyStrings().splitToList(args.length < 3 ? "" : args[2]);
     List<String> classifiers = Splitter.on(',').trimResults().omitEmptyStrings()
         .splitToList(args.length < 4 ? "logit" : args[3]);
 
@@ -95,121 +89,35 @@ final public class Model extends AbstractStack {
     System.out.printf("Labels to consider are [%s].\n", Joiner.on(", ").join(labels));
     System.out.printf("Classifiers to consider are [%s].\n", Joiner.on(", ").join(classifiers));
 
-    TextNormalizer normalizer = new TextNormalizer();
-    TextTokenizer tokenizer = new TextTokenizer();
+    // Load vocabulary: unigrams, bigrams and trigrams, etc.
+    File funigrams = new File(String.format("%svocabulary-1grams.tsv.gz", goldLabels.getParent() + File.separator));
+    File fbigrams = new File(String.format("%svocabulary-2grams.tsv.gz", goldLabels.getParent() + File.separator));
+    File ftrigrams = new File(String.format("%svocabulary-3grams.tsv.gz", goldLabels.getParent() + File.separator));
+    File fquadgrams = new File(String.format("%svocabulary-4grams.tsv.gz", goldLabels.getParent() + File.separator));
+    File fquintgrams = new File(String.format("%svocabulary-5grams.tsv.gz", goldLabels.getParent() + File.separator));
+    File fsextgrams = new File(String.format("%svocabulary-6grams.tsv.gz", goldLabels.getParent() + File.separator));
 
-    // Build vocabulary: unigrams, bigrams and trigrams
-    double minDocFreq = 0.01; // TODO : move as parameter?
-    double maxDocFreq = 0.99; // TODO : move as parameter?
-    int maxVocabSize = 100_000; // TODO : move as parameter?
-    Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER",
-        "TERMINAL_MARK"); // TODO : move as parameter?
-
-    @Var Vocabulary unigrams = null;
-    @Var Vocabulary bigrams = null;
-    @Var Vocabulary trigrams = null;
-    @Var Vocabulary quadgrams = null;
-
-    File funigrams = new File(
-        String.format("%svocabulary-unigrams.tsv.gz", goldLabels.getParent() + File.separator));
-    File fbigrams = new File(
-        String.format("%svocabulary-bigrams.tsv.gz", goldLabels.getParent() + File.separator));
-    File ftrigrams = new File(
-        String.format("%svocabulary-trigrams.tsv.gz", goldLabels.getParent() + File.separator));
-    File fquadgrams = new File(
-        String.format("%svocabulary-quadgrams.tsv.gz", goldLabels.getParent() + File.separator));
-
-    boolean exists = funigrams.exists() /* && fbigrams.exists() && ftrigrams.exists() && fquadgrams.exists() */;
-
-    if (exists) {
-      unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
-      bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
-      trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
-      quadgrams = fquadgrams.exists() ? new Vocabulary(fquadgrams) : null;
-    } else {
-      for (int i = 0; i < 4; i++) {
-
-        int length = i + 1;
-
-        View<List<String>> tokens = Document.of(documents, true).map(doc -> (String) doc.text())
-            .map(normalizer).map(tokenizer).map(spans -> View.of(spans)
-                .filter(span -> !Sets.intersection(includeTags, span.tags()).isEmpty())
-                .map(Span::text).overlappingWindowWithStrictLength(length)
-                .map(tks -> Joiner.on('_').join(tks)).toList()).displayProgress(10_000);
-
-        if (length == 1 && !funigrams.exists()) {
-
-          System.out.println("Building vocabulary for unigrams...");
-          Stopwatch stopwatch = Stopwatch.createStarted();
-
-          unigrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
-          unigrams.save(funigrams);
-          unigrams = null;
-
-          stopwatch.stop();
-          System.out.printf("Vocabulary for unigrams built in %d seconds.\n",
-              stopwatch.elapsed(TimeUnit.SECONDS));
-        } else if (length == 2 && !fbigrams.exists()) {
-
-          System.out.println("Building vocabulary for bigrams...");
-          Stopwatch stopwatch = Stopwatch.createStarted();
-
-          bigrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
-          bigrams.save(fbigrams);
-          bigrams = null;
-
-          stopwatch.stop();
-          System.out.printf("Vocabulary for bigrams built in %d seconds.\n",
-              stopwatch.elapsed(TimeUnit.SECONDS));
-        } else if (length == 3 && !ftrigrams.exists()) {
-
-          System.out.println("Building vocabulary for trigrams...");
-          Stopwatch stopwatch = Stopwatch.createStarted();
-
-          trigrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
-          trigrams.save(ftrigrams);
-          trigrams = null;
-
-          stopwatch.stop();
-          System.out.printf("Vocabulary for trigrams built in %d seconds.\n",
-              stopwatch.elapsed(TimeUnit.SECONDS));
-        } else if (length == 4 && !fquadgrams.exists()) {
-
-          System.out.println("Building vocabulary for quadgrams...");
-          Stopwatch stopwatch = Stopwatch.createStarted();
-
-          quadgrams = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
-          quadgrams.save(fquadgrams);
-          quadgrams = null;
-
-          stopwatch.stop();
-          System.out.printf("Vocabulary for quadgrams built in %d seconds.\n",
-              stopwatch.elapsed(TimeUnit.SECONDS));
-        }
-      }
-
-      unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
-      bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
-      trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
-      quadgrams = fquadgrams.exists() ? new Vocabulary(fquadgrams) : null;
-    }
+    Vocabulary unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
+    Vocabulary bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
+    Vocabulary trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
+    Vocabulary quadgrams = fquadgrams.exists() ? new Vocabulary(fquadgrams) : null;
+    Vocabulary quintgrams = fquintgrams.exists() ? new Vocabulary(fquintgrams) : null;
+    Vocabulary sextgrams = fsextgrams.exists() ? new Vocabulary(fsextgrams) : null;
 
     // Train/test model
     double trainSizeInPercent = 0.75; // TODO : move as parameter?
 
     for (String label : labels) {
 
-      System.out.println(
-          "================================================================================");
+      System.out.println("================================================================================");
       System.out.printf("== %s\n", label);
-      System.out.println(
-          "================================================================================");
+      System.out.println("================================================================================");
 
       System.out.println("Assembling dataset...");
       Stopwatch stopwatch = Stopwatch.createStarted();
 
-      Map.Entry<List<String>, List<Integer>> dataset = GoldLabel.load(goldLabels, label)
-          .displayProgress(1000).unzip(goldLabel -> new SimpleImmutableEntry<>(goldLabel.data(),
+      Map.Entry<List<String>, List<Integer>> dataset = GoldLabel.load(goldLabels, label).displayProgress(1000).unzip(
+          goldLabel -> new SimpleImmutableEntry<>(goldLabel.data(),
               goldLabel.isTruePositive() || goldLabel.isFalseNegative() ? OK : KO));
 
       stopwatch.stop();
@@ -223,65 +131,94 @@ final public class Model extends AbstractStack {
       Multiset<Integer> count = HashMultiset.create(dataset.getValue());
 
       if (count.count(OK) < 5 || count.count(KO) < 5) {
-        System.out.println(
-            "ERROR: dataset must contain at least 5 positive and 5 negative entries.");
+        System.out.println("ERROR: dataset must contain at least 5 positive and 5 negative entries.");
         continue;
       }
 
       System.out.printf("The number of POSITIVE entries is %d.\n", count.count(OK));
       System.out.printf("The number of NEGATIVE entries is %d.\n", count.count(KO));
+      System.out.println("Running DocSetLabeler...");
+      stopwatch.reset().start();
+
+      List<String> ok = View.of(dataset.getKey()).zip(View.of(dataset.getValue())).filter(e -> e.getValue() == OK)
+          .map(Entry::getKey).toList();
+      List<String> ko = View.of(dataset.getKey()).zip(View.of(dataset.getValue())).filter(e -> e.getValue() == KO)
+          .map(Entry::getKey).toList();
+
+      Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK"); // TODO : move as parameter?
+      List<String> patterns = new ArrayList<>();
+      List<List<Double>> weights = new ArrayList<>();
+
+      if (unigrams != null) {
+        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 1);
+        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, unigrams, ok, ko);
+        String pattern = "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()))) + ")";
+        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
+        patterns.add(pattern);
+        weights.add(vector);
+        System.out.printf("Labeling functions for unigrams are : %s\n", pattern);
+      }
+      if (bigrams != null) {
+        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 2);
+        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, bigrams, ok, ko);
+        String pattern =
+            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
+        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
+        patterns.add(pattern);
+        weights.add(vector);
+        System.out.printf("Labeling functions for bigrams are : %s\n", pattern);
+      }
+      if (trigrams != null) {
+        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 3);
+        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, trigrams, ok, ko);
+        String pattern =
+            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
+        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
+        patterns.add(pattern);
+        weights.add(vector);
+        System.out.printf("Labeling functions for trigrams are : %s\n", pattern);
+      }
+      if (quadgrams != null) {
+        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 4);
+        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, quadgrams, ok, ko);
+        String pattern =
+            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
+        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
+        patterns.add(pattern);
+        weights.add(vector);
+        System.out.printf("Labeling functions for quadgrams are : %s\n", pattern);
+      }
+      if (quintgrams != null) {
+        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 5);
+        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, quintgrams, ok, ko);
+        String pattern =
+            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
+        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
+        patterns.add(pattern);
+        weights.add(vector);
+        System.out.printf("Labeling functions for quintgrams are : %s\n", pattern);
+      }
+      if (sextgrams != null) {
+        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 6);
+        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, sextgrams, ok, ko);
+        String pattern =
+            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
+        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
+        patterns.add(pattern);
+        weights.add(vector);
+        System.out.printf("Labeling functions for sextgrams are : %s\n", pattern);
+      }
+
+      stopwatch.stop();
+      System.out.printf("DocSetLabeler ran in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
 
       List<Model> models = new ArrayList<>();
 
       for (String classifier : classifiers) {
 
         Model model = new Model(label + "/" + classifier);
-        model.normalizer_ = normalizer;
-        model.tokenizer_ = tokenizer;
-        model.vectorizers_ = new ArrayList<>();
-        model.normalizers_ = new ArrayList<>();
-        model.reducer_ = new VectorsReducer();
-
-        if (unigrams != null) {
-          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
-              || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(unigrams));
-            model.normalizers_.add(Function.identity());
-          } else {
-            model.vectorizers_.add(new TfIdfVectorizer(unigrams));
-            model.normalizers_.add(new EuclideanNormNormalizer());
-          }
-        }
-        if (bigrams != null) {
-          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
-              || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(bigrams));
-            model.normalizers_.add(Function.identity());
-          } else {
-            model.vectorizers_.add(new TfIdfVectorizer(bigrams));
-            model.normalizers_.add(new EuclideanNormNormalizer());
-          }
-        }
-        if (trigrams != null) {
-          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
-              || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(trigrams));
-            model.normalizers_.add(Function.identity());
-          } else {
-            model.vectorizers_.add(new TfIdfVectorizer(trigrams));
-            model.normalizers_.add(new EuclideanNormNormalizer());
-          }
-        }
-        if (quadgrams != null) {
-          if ("rf".equals(classifier) || "dt".equals(classifier) || "gbt".equals(classifier)
-              || "ab".equals(classifier)) {
-            model.vectorizers_.add(new ExistentialVectorizer(quadgrams));
-            model.normalizers_.add(Function.identity());
-          } else {
-            model.vectorizers_.add(new TfIdfVectorizer(quadgrams));
-            model.normalizers_.add(new EuclideanNormNormalizer());
-          }
-        }
+        model.vectorizers_ = View.of(patterns).map(pattern -> new RegexVectorizer(
+            Pattern.compile(pattern, Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE))).toList();
 
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
@@ -324,34 +261,29 @@ final public class Model extends AbstractStack {
 
           int trainSize = (int) (batch.size() * trainSizeInPercent);
 
-          Map.Entry<List<String>, List<Integer>> train = View.of(batch).take(trainSize)
-              .unzip(Function.identity());
-          Map.Entry<List<String>, List<Integer>> test = View.of(batch).drop(trainSize)
-              .unzip(Function.identity());
+          Map.Entry<List<String>, List<Integer>> train = View.of(batch).take(trainSize).unzip(Function.identity());
+          Map.Entry<List<String>, List<Integer>> test = View.of(batch).drop(trainSize).unzip(Function.identity());
 
           model.train(train.getKey(), train.getValue());
 
           testDataset.addAll(test.getKey());
           testCategories.addAll(test.getValue());
         } else {
-          View.of(texts).zip(View.of(categories)).partition(1000 /* batch size */)
-              .forEachRemaining(list -> {
+          View.of(texts).zip(View.of(categories)).partition(1000 /* batch size */).forEachRemaining(list -> {
 
-                List<Map.Entry<String, Integer>> batch = new ArrayList<>(list);
-                Collections.shuffle(batch);
+            List<Map.Entry<String, Integer>> batch = new ArrayList<>(list);
+            Collections.shuffle(batch);
 
-                int trainSize = (int) (batch.size() * trainSizeInPercent);
+            int trainSize = (int) (batch.size() * trainSizeInPercent);
 
-                Map.Entry<List<String>, List<Integer>> train = View.of(batch).take(trainSize)
-                    .unzip(Function.identity());
-                Map.Entry<List<String>, List<Integer>> test = View.of(batch).drop(trainSize)
-                    .unzip(Function.identity());
+            Map.Entry<List<String>, List<Integer>> train = View.of(batch).take(trainSize).unzip(Function.identity());
+            Map.Entry<List<String>, List<Integer>> test = View.of(batch).drop(trainSize).unzip(Function.identity());
 
-                model.train(train.getKey(), train.getValue());
+            model.train(train.getKey(), train.getValue());
 
-                testDataset.addAll(test.getKey());
-                testCategories.addAll(test.getValue());
-              });
+            testDataset.addAll(test.getKey());
+            testCategories.addAll(test.getValue());
+          });
         }
 
         stopwatch.stop();
@@ -370,8 +302,7 @@ final public class Model extends AbstractStack {
         // Save model
         System.out.printf("Saving model for classifier %s...\n", classifier);
 
-        List<FeatureVector> vectors = texts.stream().map(model.featurizer())
-            .collect(Collectors.toList());
+        List<FeatureVector> vectors = texts.stream().map(model.featurizer()).collect(Collectors.toList());
 
         model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
 
@@ -381,8 +312,9 @@ final public class Model extends AbstractStack {
         model.actuals_ = null;
         model.predictions_ = null;
 
-        save(new File(String.format("%smodel-%s-%s.xml.gz", goldLabels.getParent() + File.separator,
-            classifier, label)), model);
+        save(
+            new File(String.format("%smodel-%s-%s.xml.gz", goldLabels.getParent() + File.separator, classifier, label)),
+            model);
 
         System.out.println("Model saved.");
 
@@ -395,20 +327,17 @@ final public class Model extends AbstractStack {
       System.out.println("Building ensemble model...");
       stopwatch.reset().start();
 
-      Stack stack = new Stack(
-          models.stream().map(model -> (AbstractStack) model).collect(Collectors.toList()));
+      Stack stack = new Stack(models.stream().map(model -> (AbstractStack) model).collect(Collectors.toList()));
 
       System.out.printf("Ensemble model is %s.\n", stack);
       System.out.println(stack.confusionMatrix());
-      System.out.printf("Ensemble model built in %d seconds.\n",
-          stopwatch.elapsed(TimeUnit.SECONDS));
+      System.out.printf("Ensemble model built in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
 
       // Save ensemble model
       System.out.println("Saving ensemble model...");
 
-      save(new File(
-          String.format("%sensemble-model-%s.xml.gz", goldLabels.getParent() + File.separator,
-              label)), stack);
+      save(new File(String.format("%sensemble-model-%s.xml.gz", goldLabels.getParent() + File.separator, label)),
+          stack);
 
       System.out.println("Ensemble model saved.");
     }
@@ -419,8 +348,8 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkNotNull(model, "model should not be null");
 
-    Preconditions.checkState(IO.writeCompressedText(file, xStream().toXML(model), false),
-        "%s cannot be written", file.getAbsolutePath());
+    Preconditions.checkState(IO.writeCompressedText(file, xStream().toXML(model), false), "%s cannot be written",
+        file.getAbsolutePath());
   }
 
   @SuppressWarnings("unchecked")
@@ -439,8 +368,8 @@ final public class Model extends AbstractStack {
     xStream.addPermission(PrimitiveTypePermission.PRIMITIVES);
     xStream.allowTypeHierarchy(Collection.class);
     xStream.allowTypesByWildcard(
-        new String[]{"com.computablefacts.asterix.**", "com.google.common.collect.**",
-            "java.lang.**", "java.util.**", "smile.classification.**"});
+        new String[]{"com.computablefacts.asterix.**", "com.google.common.collect.**", "java.lang.**", "java.util.**",
+            "smile.classification.**"});
 
     return xStream;
   }
@@ -452,41 +381,26 @@ final public class Model extends AbstractStack {
 
   @Override
   public int predict(FeatureVector vector) {
-    return classifier_.predict(reduce(vector));
+    return classifier_.predict(vector);
   }
 
   private Function<String, FeatureVector> featurizer() {
 
-    Preconditions.checkState(normalizer_ != null, "missing normalizer");
-    Preconditions.checkState(tokenizer_ != null, "missing tokenizer");
     Preconditions.checkState(vectorizers_ != null, "missing vectorizer");
-    Preconditions.checkState(normalizers_ != null, "missing normalizer");
-    Preconditions.checkState(vectorizers_.size() == normalizers_.size(),
-        "mismatch between the number of vectorizers and normalizers");
 
+    TextNormalizer normalizer = new TextNormalizer(true);
     VectorsMerger merger = new VectorsMerger();
-    return (text) -> {
+    return text -> {
 
-      SpanSequence spans = tokenizer_.apply(normalizer_.apply(text));
+      String newText = normalizer.apply(Strings.nullToEmpty(text));
       List<FeatureVector> vectors = new ArrayList<>(vectorizers_.size());
 
       for (int i = 0; i < vectorizers_.size(); i++) {
-
-        Function<SpanSequence, FeatureVector> vectorizer = vectorizers_.get(i);
-        Function<FeatureVector, FeatureVector> normalizer = normalizers_.get(i);
-
-        vectors.add(normalizer.apply(vectorizer.apply(spans)));
+        Function<String, FeatureVector> vectorizer = vectorizers_.get(i);
+        vectors.add(vectorizer.apply(newText));
       }
       return merger.apply(vectors);
     };
-  }
-
-  private FeatureVector reduce(FeatureVector vector) {
-    return reducer_ == null ? vector : reducer_.apply(Lists.newArrayList(vector)).get(0);
-  }
-
-  private List<FeatureVector> reduce(List<FeatureVector> vectors) {
-    return reducer_ == null ? vectors : reducer_.apply(vectors);
   }
 
   private void train(List<String> texts, List<Integer> categories) {
@@ -495,7 +409,6 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(categories, "categories should not be null");
     Preconditions.checkArgument(texts.size() == categories.size(),
         "mismatch between the number of texts entries and the number of categories");
-    Preconditions.checkState(tokenizer_ != null, "missing tokenizer");
     Preconditions.checkState(vectorizers_ != null && vectorizers_.size() > 0, "missing vectorizer");
     Preconditions.checkState(classifier_ != null, "missing classifier");
 
@@ -506,7 +419,7 @@ final public class Model extends AbstractStack {
       List<FeatureVector> vectors = texts.stream().map(featurizer).collect(Collectors.toList());
       int[] actuals = categories.stream().mapToInt(x -> x).toArray();
 
-      classifier_.train(reduce(vectors), actuals);
+      classifier_.train(vectors, actuals);
       return;
     }
 
@@ -518,7 +431,7 @@ final public class Model extends AbstractStack {
       FeatureVector vector = featurizer.apply(e.getKey());
       int category = e.getValue();
 
-      return new SimpleImmutableEntry<>(reduce(vector), category);
+      return new SimpleImmutableEntry<>(vector, category);
     }).forEachRemaining(e -> classifier_.update(e.getKey(), e.getValue()));
   }
 
@@ -528,7 +441,6 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(categories, "categories should not be null");
     Preconditions.checkArgument(texts.size() == categories.size(),
         "mismatch between the number of texts entries and the number of categories");
-    Preconditions.checkState(tokenizer_ != null, "missing tokenizer");
     Preconditions.checkState(vectorizers_ != null && vectorizers_.size() > 0, "missing vectorizer");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
@@ -544,7 +456,7 @@ final public class Model extends AbstractStack {
           "invalid class: should be either 1 (in class) or 0 (not in class)");
 
       FeatureVector vector = featurizer.apply(text);
-      int prediction = classifier_.predict(reduce(vector));
+      int prediction = classifier_.predict(vector);
 
       if (actual == OK) {
         if (prediction == OK) {
