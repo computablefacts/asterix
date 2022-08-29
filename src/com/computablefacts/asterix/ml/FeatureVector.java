@@ -92,9 +92,7 @@ final public class FeatureVector {
 
   public double[] denseArray() {
     double[] array = new double[length_];
-    for (int i = 0; i < length_; i++) {
-      array[i] = get(i);
-    }
+    nonZeroEntries().forEach(i -> array[i] = get(i));
     return array;
   }
 
