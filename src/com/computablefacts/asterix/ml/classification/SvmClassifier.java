@@ -11,9 +11,14 @@ import smile.classification.SVM;
 @CheckReturnValue
 final public class SvmClassifier implements AbstractBinaryClassifier {
 
+  private final AbstractScaler scaler_;
   private Classifier<double[]> classifier_;
 
-  public SvmClassifier() {
+  public SvmClassifier(AbstractScaler scaler) {
+
+    Preconditions.checkNotNull(scaler, "scaler should not be null");
+
+    scaler_ = scaler;
   }
 
   @Override
@@ -27,7 +32,7 @@ final public class SvmClassifier implements AbstractBinaryClassifier {
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
-    return classifier_.predict(vector.denseArray()) == -1 ? KO : OK;
+    return classifier_.predict(scaler_.predict(vector).denseArray()) == -1 ? KO : OK;
   }
 
   @Override
@@ -45,7 +50,7 @@ final public class SvmClassifier implements AbstractBinaryClassifier {
       newActuals[i] = actuals[i] == KO ? -1 : +1;
     }
 
-    classifier_ = SVM.fit(matrix.denseArray(), newActuals, 1.0, 0.01);
+    classifier_ = SVM.fit(scaler_.train(matrix).denseArray(), newActuals, 1.0, 0.01);
   }
 
   @Override

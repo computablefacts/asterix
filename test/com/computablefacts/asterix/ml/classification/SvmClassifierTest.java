@@ -12,6 +12,6 @@ public class SvmClassifierTest extends AbstractBinaryClassifierTest {
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new SvmClassifier();
+    return new SvmClassifier(new NopScaler());
   }
 }

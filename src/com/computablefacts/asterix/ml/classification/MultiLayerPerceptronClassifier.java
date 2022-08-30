@@ -12,20 +12,23 @@ import smile.math.TimeFunction;
 
 @CheckReturnValue
 final public class MultiLayerPerceptronClassifier implements AbstractBinaryClassifier {
-
+  
+  private final AbstractScaler scaler_;
   private final int nbEpochs_;
   private final int nbHiddenNeurons_;
   private MLP classifier_;
 
-  public MultiLayerPerceptronClassifier() {
-    this(10, 3);
+  public MultiLayerPerceptronClassifier(AbstractScaler scaler) {
+    this(scaler, 10, 3);
   }
 
-  public MultiLayerPerceptronClassifier(int nbEpochs, int nbHiddenNeurons) {
+  public MultiLayerPerceptronClassifier(AbstractScaler scaler, int nbEpochs, int nbHiddenNeurons) {
 
+    Preconditions.checkNotNull(scaler, "scaler should not be null");
     Preconditions.checkArgument(nbEpochs > 0, "the number of epochs must be > 0");
     Preconditions.checkArgument(nbHiddenNeurons > 0, "the number of hidden neurons must be > 0");
 
+    scaler_ = scaler;
     nbEpochs_ = nbEpochs;
     nbHiddenNeurons_ = nbHiddenNeurons;
   }
@@ -40,7 +43,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
 
     Preconditions.checkNotNull(vector, "vector should not be null");
 
-    return classifier_.predict(vector.denseArray());
+    return classifier_.predict(scaler_.predict(vector).denseArray());
   }
 
   @Override
@@ -52,7 +55,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
         "mismatch between the number of rows and the number of actuals");
     Preconditions.checkState(classifier_ == null, "classifier has already been trained");
 
-    double[][] newMatrix = matrix.denseArray();
+    double[][] newMatrix = scaler_.train(matrix).denseArray();
 
     classifier_ = new MLP(newMatrix[0].length, Layer.sigmoid(nbHiddenNeurons_), Layer.mle(1, OutputFunction.SIGMOID));
     classifier_.setLearningRate(TimeFunction.linear(0.02, 10000, 0.01));
@@ -73,7 +76,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
         "invalid class: should be either 1 (in class) or 0 (not in class)");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
-    classifier_.update(vector.denseArray(), actual);
+    classifier_.update(scaler_.predict(vector).denseArray(), actual);
   }
 
   @Override

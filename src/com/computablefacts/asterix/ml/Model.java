@@ -7,6 +7,7 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import com.computablefacts.asterix.IO;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier;
+import com.computablefacts.asterix.ml.classification.AbstractScaler;
 import com.computablefacts.asterix.ml.classification.AdaBoostClassifier;
 import com.computablefacts.asterix.ml.classification.DecisionTreeClassifier;
 import com.computablefacts.asterix.ml.classification.DiscreteNaiveBayesClassifier;
@@ -17,6 +18,7 @@ import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifie
 import com.computablefacts.asterix.ml.classification.MultiLayerPerceptronClassifier;
 import com.computablefacts.asterix.ml.classification.RandomForestClassifier;
 import com.computablefacts.asterix.ml.classification.SvmClassifier;
+import com.computablefacts.asterix.ml.classification.ZScoreScaler;
 import com.computablefacts.asterix.ml.stacking.AbstractStack;
 import com.computablefacts.asterix.ml.stacking.Stack;
 import com.computablefacts.asterix.ml.textcategorization.TextCategorizer;
@@ -58,6 +60,7 @@ final public class Model extends AbstractStack {
   private final String label_;
   private List<? extends Function<String, FeatureVector>> vectorizers_;
   private AbstractBinaryClassifier classifier_;
+  private AbstractScaler scaler_;
 
   public Model(String label) {
     label_ = Preconditions.checkNotNull(label, "label should not be null");
@@ -226,11 +229,14 @@ final public class Model extends AbstractStack {
         } else if ("fld".equals(classifier)) {
           model.classifier_ = new FisherLinearDiscriminantClassifier();
         } else if ("knn".equals(classifier)) {
-          model.classifier_ = new KNearestNeighborClassifier();
+          model.scaler_ = new ZScoreScaler();
+          model.classifier_ = new KNearestNeighborClassifier(model.scaler_);
         } else if ("mlp".equals(classifier)) {
-          model.classifier_ = new MultiLayerPerceptronClassifier();
+          model.scaler_ = new ZScoreScaler();
+          model.classifier_ = new MultiLayerPerceptronClassifier(model.scaler_);
         } else if ("svm".equals(classifier)) {
-          model.classifier_ = new SvmClassifier();
+          model.scaler_ = new ZScoreScaler();
+          model.classifier_ = new SvmClassifier(model.scaler_);
         } else if ("rf".equals(classifier)) {
           model.classifier_ = new RandomForestClassifier();
         } else if ("dt".equals(classifier)) {
@@ -240,7 +246,8 @@ final public class Model extends AbstractStack {
         } else if ("ab".equals(classifier)) {
           model.classifier_ = new AdaBoostClassifier();
         } else {
-          model.classifier_ = new LogisticRegressionClassifier();
+          model.scaler_ = new ZScoreScaler();
+          model.classifier_ = new LogisticRegressionClassifier(model.scaler_);
         }
 
         List<String> texts = dataset.getKey();

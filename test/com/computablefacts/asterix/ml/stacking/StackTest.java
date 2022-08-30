@@ -6,6 +6,7 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifier;
+import com.computablefacts.asterix.ml.classification.NopScaler;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.ArrayList;
@@ -110,7 +111,7 @@ public class StackTest {
   @CheckReturnValue
   private static class IsDivisibleByFive extends AbstractStack {
 
-    private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
+    private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier(new NopScaler());
 
     public IsDivisibleByFive() {
     }
@@ -133,7 +134,7 @@ public class StackTest {
   @CheckReturnValue
   private static class IsDivisibleByThree extends AbstractStack {
 
-    private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
+    private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier(new NopScaler());
 
     public IsDivisibleByThree() {
     }
@@ -156,7 +157,7 @@ public class StackTest {
   @CheckReturnValue
   private static class IsDivisibleByTwo extends AbstractStack {
 
-    private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier();
+    private final LogisticRegressionClassifier classifier_ = new LogisticRegressionClassifier(new NopScaler());
 
     public IsDivisibleByTwo() {
     }

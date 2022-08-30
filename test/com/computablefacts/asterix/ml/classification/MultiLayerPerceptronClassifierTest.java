@@ -12,6 +12,6 @@ public class MultiLayerPerceptronClassifierTest extends AbstractBinaryClassifier
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new MultiLayerPerceptronClassifier();
+    return new MultiLayerPerceptronClassifier(new NopScaler());
   }
 }

@@ -12,6 +12,6 @@ public class KNearestNeighborsClassifierTest extends AbstractBinaryClassifierTes
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new KNearestNeighborClassifier();
+    return new KNearestNeighborClassifier(new NopScaler());
   }
 }

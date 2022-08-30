@@ -12,6 +12,6 @@ public class LogisticRegressionClassifierTest extends AbstractBinaryClassifierTe
 
   @Override
   protected AbstractBinaryClassifier classifier() {
-    return new LogisticRegressionClassifier();
+    return new LogisticRegressionClassifier(new NopScaler());
   }
 }
