@@ -25,6 +25,30 @@ public class FeatureMatrixTest {
   }
 
   @Test
+  public void testCopyConstructor() {
+
+    FeatureMatrix matrix = new FeatureMatrix();
+    matrix.addRow(new double[]{1.0, 0.0, 0.0});
+    matrix.addRow(new double[]{0.0, 1.0, 0.0});
+    matrix.addRow(new double[]{0.0, 0.0, 1.0});
+
+    FeatureMatrix matrixCopy1 = new FeatureMatrix(matrix);
+    FeatureMatrix matrixCopy2 = new FeatureMatrix(matrix);
+
+    Assert.assertEquals(matrix, matrixCopy1);
+    Assert.assertEquals(matrix, matrixCopy2);
+
+    matrix.mapColumnValues(0, x -> 0.0);
+    matrix.mapColumnValues(1, x -> 1.0);
+    matrix.mapColumnValues(2, x -> 2.0);
+
+    Assert.assertNotEquals(matrix, matrixCopy1);
+    Assert.assertNotEquals(matrix, matrixCopy2);
+
+    Assert.assertEquals(matrixCopy1, matrixCopy2);
+  }
+
+  @Test
   public void testGetRows() {
 
     List<FeatureVector> vectors = Lists.newArrayList(new FeatureVector(new double[]{0.0, 0.0, 0.0}),

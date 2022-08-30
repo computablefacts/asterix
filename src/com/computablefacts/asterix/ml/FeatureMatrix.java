@@ -8,20 +8,37 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @CheckReturnValue
 final public class FeatureMatrix {
 
-  private final List<FeatureVector> rows_ = new ArrayList<>();
+  private final List<FeatureVector> rows_;
 
   public FeatureMatrix() {
+    rows_ = new ArrayList<>();
+  }
+
+  public FeatureMatrix(FeatureMatrix matrix) {
+
+    Preconditions.checkNotNull(matrix, "matrix should not be null");
+
+    rows_ = matrix.rows_.stream().map(FeatureVector::new).collect(Collectors.toList());
   }
 
   public FeatureMatrix(List<FeatureVector> vectors) {
+
+    Preconditions.checkNotNull(vectors, "vectors should not be null");
+
+    rows_ = new ArrayList<>(vectors.size());
     addRows(vectors);
   }
 
   public FeatureMatrix(double[][] array) {
+
+    Preconditions.checkNotNull(array, "array should not be null");
+
+    rows_ = new ArrayList<>(array.length);
     addRows(array);
   }
 

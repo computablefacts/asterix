@@ -25,6 +25,14 @@ final public class FeatureVector {
     nonZeroEntries_ = new HashMap<>(length_ / 3);
   }
 
+  public FeatureVector(FeatureVector vector) {
+
+    Preconditions.checkNotNull(vector, "vector should not be null");
+
+    length_ = vector.length();
+    nonZeroEntries_ = new HashMap<>(vector.nonZeroEntries_);
+  }
+  
   public FeatureVector(double[] vector) {
 
     Preconditions.checkNotNull(vector, "vector should not be null");

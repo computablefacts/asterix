@@ -17,6 +17,26 @@ public class FeatureVectorTest {
   }
 
   @Test
+  public void testCopyConstructor() {
+
+    double[] array = new double[]{1.0, 0.0, 3.0, 0.0, 5.0};
+    FeatureVector vector = new FeatureVector(array);
+
+    FeatureVector vectorCopy1 = new FeatureVector(array);
+    FeatureVector vectorCopy2 = new FeatureVector(array);
+
+    Assert.assertEquals(vector, vectorCopy1);
+    Assert.assertEquals(vector, vectorCopy2);
+
+    vector.mapValues(x -> 0.0);
+
+    Assert.assertNotEquals(vector, vectorCopy1);
+    Assert.assertNotEquals(vector, vectorCopy2);
+
+    Assert.assertEquals(vectorCopy1, vectorCopy2);
+  }
+
+  @Test
   public void testCreateEmptyVector() {
 
     FeatureVector vector = new FeatureVector(10);
