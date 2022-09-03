@@ -36,7 +36,8 @@ final public class DiscreteNaiveBayesClassifier implements AbstractBinaryClassif
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
-    return classifier_.predict(vector.sparseArray());
+    int prediction = classifier_.predict(vector.sparseArray());
+    return prediction == Integer.MIN_VALUE ? KO : prediction;
   }
 
   @Override
