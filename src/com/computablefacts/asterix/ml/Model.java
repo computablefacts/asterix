@@ -35,6 +35,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import com.google.re2j.Pattern;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.security.ArrayTypePermission;
 import com.thoughtworks.xstream.security.NoTypePermission;
 import com.thoughtworks.xstream.security.NullPermission;
 import com.thoughtworks.xstream.security.PrimitiveTypePermission;
@@ -56,6 +57,8 @@ import java.util.stream.Collectors;
  */
 @CheckReturnValue
 final public class Model extends AbstractStack {
+
+  private static final long serialVersionUID = 42L;
 
   private final String label_;
   private List<? extends Function<String, FeatureVector>> vectorizers_;
@@ -272,34 +275,59 @@ final public class Model extends AbstractStack {
 
         if (!model.classifier_.supportsIncrementalTraining()) {
 
-          List<Entry<String, Integer>> batch = View.of(texts).zip(categories).toList();
+          List<Entry<String, Integer>> batchOk = View.of(texts).zip(categories).filter(b -> b.getValue() == OK)
+              .toList();
+          List<Entry<String, Integer>> batchKo = View.of(texts).zip(categories).filter(b -> b.getValue() == KO)
+              .toList();
 
-          Collections.shuffle(batch);
+          Collections.shuffle(batchOk);
+          Collections.shuffle(batchKo);
 
-          int trainSize = (int) (batch.size() * trainSizeInPercent);
+          int trainSizeOk = (int) (batchOk.size() * trainSizeInPercent);
+          int trainSizeKo = (int) (batchKo.size() * trainSizeInPercent);
 
-          Map.Entry<List<String>, List<Integer>> train = View.of(batch).take(trainSize).unzip(Function.identity());
-          Map.Entry<List<String>, List<Integer>> test = View.of(batch).drop(trainSize).unzip(Function.identity());
+          List<Entry<String, Integer>> train = View.of(batchOk).take(trainSizeOk)
+              .concat(View.of(batchKo).take(trainSizeKo)).toList();
+          List<Entry<String, Integer>> test = View.of(batchOk).drop(trainSizeOk)
+              .concat(View.of(batchKo).drop(trainSizeKo)).toList();
 
-          model.train(train.getKey(), train.getValue(), categorizer);
+          Collections.shuffle(train);
+          Collections.shuffle(test);
 
-          testDataset.addAll(test.getKey());
-          testCategories.addAll(test.getValue());
+          Map.Entry<List<String>, List<Integer>> trainn = View.of(train).unzip(Function.identity());
+          Map.Entry<List<String>, List<Integer>> testt = View.of(test).unzip(Function.identity());
+
+          model.train(trainn.getKey(), trainn.getValue(), categorizer);
+
+          testDataset.addAll(testt.getKey());
+          testCategories.addAll(testt.getValue());
         } else {
           View.of(texts).zip(categories).partition(1000 /* batch size */).forEachRemaining(list -> {
 
-            List<Map.Entry<String, Integer>> batch = new ArrayList<>(list);
-            Collections.shuffle(batch);
+            List<Entry<String, Integer>> batchOk = View.of(list).filter(b -> b.getValue() == OK).toList();
+            List<Entry<String, Integer>> batchKo = View.of(list).filter(b -> b.getValue() == KO).toList();
 
-            int trainSize = (int) (batch.size() * trainSizeInPercent);
+            Collections.shuffle(batchOk);
+            Collections.shuffle(batchKo);
 
-            Map.Entry<List<String>, List<Integer>> train = View.of(batch).take(trainSize).unzip(Function.identity());
-            Map.Entry<List<String>, List<Integer>> test = View.of(batch).drop(trainSize).unzip(Function.identity());
+            int trainSizeOk = (int) (batchOk.size() * trainSizeInPercent);
+            int trainSizeKo = (int) (batchKo.size() * trainSizeInPercent);
 
-            model.train(train.getKey(), train.getValue(), categorizer);
+            List<Entry<String, Integer>> train = View.of(batchOk).take(trainSizeOk)
+                .concat(View.of(batchKo).take(trainSizeKo)).toList();
+            List<Entry<String, Integer>> test = View.of(batchOk).drop(trainSizeOk)
+                .concat(View.of(batchKo).drop(trainSizeKo)).toList();
 
-            testDataset.addAll(test.getKey());
-            testCategories.addAll(test.getValue());
+            Collections.shuffle(train);
+            Collections.shuffle(test);
+
+            Map.Entry<List<String>, List<Integer>> trainn = View.of(train).unzip(Function.identity());
+            Map.Entry<List<String>, List<Integer>> testt = View.of(test).unzip(Function.identity());
+
+            model.train(trainn.getKey(), trainn.getValue(), categorizer);
+
+            testDataset.addAll(testt.getKey());
+            testCategories.addAll(testt.getValue());
           });
         }
 
@@ -346,17 +374,16 @@ final public class Model extends AbstractStack {
 
       Stack stack = new Stack(models.stream().map(model -> (AbstractStack) model).collect(Collectors.toList()));
 
-      System.out.printf("Ensemble model is %s.\n", stack);
+      System.out.printf("Stack is %s.\n", stack);
       System.out.println(stack.confusionMatrix());
-      System.out.printf("Ensemble model built in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+      System.out.printf("Stack built in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
 
       // Save ensemble model
-      System.out.println("Saving ensemble model...");
+      System.out.println("Saving stack...");
 
-      save(new File(String.format("%sensemble-model-%s.xml.gz", goldLabels.getParent() + File.separator, label)),
-          stack);
+      save(new File(String.format("%sstack-%s.xml.gz", goldLabels.getParent() + File.separator, label)), stack);
 
-      System.out.println("Ensemble model saved.");
+      System.out.println("Stack saved.");
     }
   }
 
@@ -383,10 +410,11 @@ final public class Model extends AbstractStack {
     xStream.addPermission(NoTypePermission.NONE);
     xStream.addPermission(NullPermission.NULL);
     xStream.addPermission(PrimitiveTypePermission.PRIMITIVES);
+    xStream.addPermission(ArrayTypePermission.ARRAYS);
     xStream.allowTypeHierarchy(Collection.class);
     xStream.allowTypesByWildcard(
-        new String[]{"com.computablefacts.asterix.**", "com.google.common.collect.**", "java.lang.**", "java.util.**",
-            "smile.classification.**"});
+        new String[]{"com.computablefacts.asterix.**", "com.google.common.collect.**", "java.io.**", "java.lang.**",
+            "java.util.**", "smile.classification.**", "smile.math.**", "smile.base.**", "smile.data.**"});
 
     return xStream;
   }
