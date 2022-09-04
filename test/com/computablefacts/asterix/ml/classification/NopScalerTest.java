@@ -18,12 +18,12 @@ public class NopScalerTest {
     matrix.addRow(new double[]{4.0, 0.1});
 
     AbstractScaler scaler = new NopScaler();
-    FeatureMatrix newMatrix = scaler.train(matrix);
+    FeatureMatrix newMatrix = scaler.fitAndTransform(matrix);
 
     Assert.assertEquals(matrix, newMatrix);
 
     FeatureVector vector = new FeatureVector(new double[]{1.0, 1.0});
-    FeatureVector newVector = scaler.predict(vector);
+    FeatureVector newVector = scaler.transform(vector);
 
     Assert.assertEquals(vector, newVector);
   }

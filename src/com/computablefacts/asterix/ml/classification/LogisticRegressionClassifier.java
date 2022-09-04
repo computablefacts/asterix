@@ -32,7 +32,7 @@ final public class LogisticRegressionClassifier implements AbstractBinaryClassif
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
-    return classifier_.predict(scaler_.predict(vector).sparseArray());
+    return classifier_.predict(scaler_.transform(vector).sparseArray());
   }
 
   @Override
@@ -48,7 +48,7 @@ final public class LogisticRegressionClassifier implements AbstractBinaryClassif
     properties.setProperty("smile.logit.max.iterations", "1000");
 
     classifier_ = SparseLogisticRegression.binomial(
-        SparseDataset.of(scaler_.train(matrix).rows().stream().map(FeatureVector::sparseArray)), actuals, properties);
+        SparseDataset.of(scaler_.fitAndTransform(matrix).rows().stream().map(FeatureVector::sparseArray)), actuals, properties);
   }
 
   @Override
@@ -59,7 +59,7 @@ final public class LogisticRegressionClassifier implements AbstractBinaryClassif
         "invalid class: should be either 1 (in class) or 0 (not in class)");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
-    classifier_.update(scaler_.predict(vector).sparseArray(), actual);
+    classifier_.update(scaler_.transform(vector).sparseArray(), actual);
   }
 
   @Override

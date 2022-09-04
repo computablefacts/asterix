@@ -19,7 +19,7 @@ public final class MinMaxScaler implements AbstractScaler {
   }
 
   @Override
-  public FeatureVector predict(FeatureVector vector) {
+  public FeatureVector transform(FeatureVector vector) {
 
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(mins_.size() == maxs_.size(), "mismatch between the number of min and max values");
@@ -41,7 +41,7 @@ public final class MinMaxScaler implements AbstractScaler {
   }
 
   @Override
-  public FeatureMatrix train(FeatureMatrix matrix) {
+  public FeatureMatrix fitAndTransform(FeatureMatrix matrix) {
 
     Preconditions.checkNotNull(matrix, "matrix should not be null");
     Preconditions.checkState(mins_.size() == 0 && maxs_.size() == 0,

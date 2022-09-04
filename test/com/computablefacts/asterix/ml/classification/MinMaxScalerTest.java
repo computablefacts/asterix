@@ -18,7 +18,7 @@ public class MinMaxScalerTest {
     matrix.addRow(new double[]{4.0, 0.1});
 
     AbstractScaler scaler = new MinMaxScaler();
-    FeatureMatrix newMatrix = scaler.train(matrix);
+    FeatureMatrix newMatrix = scaler.fitAndTransform(matrix);
 
     Assert.assertArrayEquals(new double[]{1.0, 0.0}, newMatrix.denseArray()[0], 0.000001);
     Assert.assertArrayEquals(new double[]{0.04166667, 0.49494949}, newMatrix.denseArray()[1], 0.000001);
@@ -27,7 +27,7 @@ public class MinMaxScalerTest {
     Assert.assertArrayEquals(new double[]{0.0, 1.0}, newMatrix.denseArray()[4], 0.000001);
 
     FeatureVector vector = new FeatureVector(new double[]{1.0, 1.0});
-    FeatureVector newVector = scaler.predict(vector);
+    FeatureVector newVector = scaler.transform(vector);
 
     Assert.assertArrayEquals(new double[]{-0.03125, 10.090909}, newVector.denseArray(), 0.000001);
   }

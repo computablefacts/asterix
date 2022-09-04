@@ -7,11 +7,11 @@ import com.google.errorprone.annotations.CheckReturnValue;
 @CheckReturnValue
 public interface AbstractScaler {
 
-  default FeatureVector predict(FeatureVector vector) {
+  default FeatureVector transform(FeatureVector vector) {
     return vector;
   }
 
-  default FeatureMatrix train(FeatureMatrix matrix) {
+  default FeatureMatrix fitAndTransform(FeatureMatrix matrix) {
     return matrix;
   }
 }

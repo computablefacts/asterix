@@ -43,7 +43,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
 
     Preconditions.checkNotNull(vector, "vector should not be null");
 
-    return classifier_.predict(scaler_.predict(vector).denseArray());
+    return classifier_.predict(scaler_.transform(vector).denseArray());
   }
 
   @Override
@@ -55,7 +55,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
         "mismatch between the number of rows and the number of actuals");
     Preconditions.checkState(classifier_ == null, "classifier has already been trained");
 
-    double[][] newMatrix = scaler_.train(matrix).denseArray();
+    double[][] newMatrix = scaler_.fitAndTransform(matrix).denseArray();
 
     classifier_ = new MLP(newMatrix[0].length, Layer.sigmoid(nbHiddenNeurons_), Layer.mle(1, OutputFunction.SIGMOID));
     classifier_.setLearningRate(TimeFunction.linear(0.02, 10000, 0.01));
@@ -76,7 +76,7 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
         "invalid class: should be either 1 (in class) or 0 (not in class)");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
-    classifier_.update(scaler_.predict(vector).denseArray(), actual);
+    classifier_.update(scaler_.transform(vector).denseArray(), actual);
   }
 
   @Override

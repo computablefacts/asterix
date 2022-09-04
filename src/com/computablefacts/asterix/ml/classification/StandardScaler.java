@@ -18,7 +18,7 @@ public final class StandardScaler implements AbstractScaler {
   }
 
   @Override
-  public FeatureVector predict(FeatureVector vector) {
+  public FeatureVector transform(FeatureVector vector) {
 
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(means_.size() == stdDevs_.size(), "mismatch between the number of mu and sigma values");
@@ -38,7 +38,7 @@ public final class StandardScaler implements AbstractScaler {
   }
 
   @Override
-  public FeatureMatrix train(FeatureMatrix matrix) {
+  public FeatureMatrix fitAndTransform(FeatureMatrix matrix) {
 
     Preconditions.checkNotNull(matrix, "matrix should not be null");
     Preconditions.checkState(means_.size() == 0 && stdDevs_.size() == 0,

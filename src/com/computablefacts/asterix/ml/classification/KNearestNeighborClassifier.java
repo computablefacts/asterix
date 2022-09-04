@@ -31,7 +31,7 @@ final public class KNearestNeighborClassifier implements AbstractBinaryClassifie
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
-    return classifier_.predict(scaler_.predict(vector).denseArray());
+    return classifier_.predict(scaler_.transform(vector).denseArray());
   }
 
   @Override
@@ -43,7 +43,7 @@ final public class KNearestNeighborClassifier implements AbstractBinaryClassifie
         "mismatch between the number of rows and the number of actuals");
     Preconditions.checkState(classifier_ == null, "classifier has already been trained");
 
-    classifier_ = KNN.fit(scaler_.train(matrix).denseArray(), actuals);
+    classifier_ = KNN.fit(scaler_.fitAndTransform(matrix).denseArray(), actuals);
   }
 
   @Override
