@@ -17,8 +17,8 @@ import com.computablefacts.asterix.ml.classification.KNearestNeighborClassifier;
 import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifier;
 import com.computablefacts.asterix.ml.classification.MultiLayerPerceptronClassifier;
 import com.computablefacts.asterix.ml.classification.RandomForestClassifier;
-import com.computablefacts.asterix.ml.classification.SvmClassifier;
 import com.computablefacts.asterix.ml.classification.StandardScaler;
+import com.computablefacts.asterix.ml.classification.SvmClassifier;
 import com.computablefacts.asterix.ml.stacking.AbstractStack;
 import com.computablefacts.asterix.ml.stacking.Stack;
 import com.computablefacts.asterix.ml.textcategorization.TextCategorizer;
@@ -430,7 +430,7 @@ final public class Model extends AbstractStack {
       }
 
       if (categorizer != null) {
-        vector.append("OK".equals(categorizer.categorize(newText)) ? OK : KO);
+        vector.append("OK".equals(categorizer.categorize(Strings.nullToEmpty(text))) ? OK : KO);
       }
       return vector;
     };
