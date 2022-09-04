@@ -18,7 +18,7 @@ import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifie
 import com.computablefacts.asterix.ml.classification.MultiLayerPerceptronClassifier;
 import com.computablefacts.asterix.ml.classification.RandomForestClassifier;
 import com.computablefacts.asterix.ml.classification.SvmClassifier;
-import com.computablefacts.asterix.ml.classification.ZScoreScaler;
+import com.computablefacts.asterix.ml.classification.StandardScaler;
 import com.computablefacts.asterix.ml.stacking.AbstractStack;
 import com.computablefacts.asterix.ml.stacking.Stack;
 import com.computablefacts.asterix.ml.textcategorization.TextCategorizer;
@@ -229,13 +229,13 @@ final public class Model extends AbstractStack {
         } else if ("fld".equals(classifier)) {
           model.classifier_ = new FisherLinearDiscriminantClassifier();
         } else if ("knn".equals(classifier)) {
-          model.scaler_ = new ZScoreScaler();
+          model.scaler_ = new StandardScaler();
           model.classifier_ = new KNearestNeighborClassifier(model.scaler_);
         } else if ("mlp".equals(classifier)) {
-          model.scaler_ = new ZScoreScaler();
+          model.scaler_ = new StandardScaler();
           model.classifier_ = new MultiLayerPerceptronClassifier(model.scaler_);
         } else if ("svm".equals(classifier)) {
-          model.scaler_ = new ZScoreScaler();
+          model.scaler_ = new StandardScaler();
           model.classifier_ = new SvmClassifier(model.scaler_);
         } else if ("rf".equals(classifier)) {
           model.classifier_ = new RandomForestClassifier();
@@ -246,7 +246,7 @@ final public class Model extends AbstractStack {
         } else if ("ab".equals(classifier)) {
           model.classifier_ = new AdaBoostClassifier();
         } else {
-          model.scaler_ = new ZScoreScaler();
+          model.scaler_ = new StandardScaler();
           model.classifier_ = new LogisticRegressionClassifier(model.scaler_);
         }
 
