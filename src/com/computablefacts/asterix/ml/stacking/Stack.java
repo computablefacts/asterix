@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @CheckReturnValue
 final public class Stack {
@@ -35,12 +34,12 @@ final public class Stack {
       newStackz.add(stack);
     }
 
-    newStackz.addAll(
-        stacks.stream().filter(stack -> Double.isFinite(stack.confusionMatrix().matthewsCorrelationCoefficient()))
-            .collect(Collectors.toList()));
+    newStackz.addAll(stacks);
 
-    stack_ = newStackz.stream().max(
-        Comparator.comparingDouble((AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient()));
+    stack_ = newStackz.stream()
+        .filter(stack -> Double.isFinite(stack.confusionMatrix().matthewsCorrelationCoefficient())).max(
+            Comparator.comparingDouble(
+                (AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient()));
   }
 
   @Override
