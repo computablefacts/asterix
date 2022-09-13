@@ -369,7 +369,7 @@ final public class Model extends AbstractStack {
         models.add(model);
       }
 
-      System.out.println("Building ensemble model...");
+      System.out.println("Building stack...");
       stopwatch.reset().start();
 
       Stack stack = new Stack(models.stream().map(model -> (AbstractStack) model).collect(Collectors.toList()));
