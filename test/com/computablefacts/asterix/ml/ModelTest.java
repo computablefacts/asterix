@@ -6,6 +6,7 @@ import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.ml.stacking.Stack;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.re2j.Pattern;
 import java.io.File;
 import java.nio.file.Files;
@@ -115,7 +116,7 @@ public class ModelTest {
       file = new File(documents_.getParent() + File.separator + "stack-crowdsourcing.xml.gz");
     } catch (Exception e) {
       Assert.assertEquals("Cannot read field \"k\" because \"v1\" is null", e.getMessage());
-      testTrainAllClassifiers();
+      System.out.println(Throwables.getStackTraceAsString(Throwables.getRootCause(e)));
       return;
     }
 
