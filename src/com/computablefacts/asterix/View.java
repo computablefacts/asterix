@@ -1049,6 +1049,51 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Iterate and process each element according to the predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @param ifTrue    the function to apply if the predicate is satisfied.
+   */
+  public void forEachRemainingIfTrue(Predicate<? super T> predicate, Consumer<? super T> ifTrue) {
+    forEachRemaining(predicate, ifTrue, null);
+  }
+
+  /**
+   * Iterate and process each element according to the predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @param ifFalse   the function to apply if the predicate is not satisfied.
+   */
+  public void forEachRemainingIfFalse(Predicate<? super T> predicate, Consumer<? super T> ifFalse) {
+    forEachRemaining(predicate, null, ifFalse);
+  }
+
+  /**
+   * Iterate and process each element according to the predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @param ifTrue    the function to apply if the predicate is satisfied.
+   * @param ifFalse   the function to apply if the predicate is not satisfied.
+   */
+  public void forEachRemaining(Predicate<? super T> predicate, Consumer<? super T> ifTrue,
+      Consumer<? super T> ifFalse) {
+
+    Preconditions.checkNotNull(predicate, "predicate should not be null");
+
+    forEachRemaining(element -> {
+      if (predicate.test(element)) {
+        if (ifTrue != null) {
+          ifTrue.accept(element);
+        }
+      } else {
+        if (ifFalse != null) {
+          ifFalse.accept(element);
+        }
+      }
+    });
+  }
+
+  /**
    * Combines two views into a single view. The returned view iterates across the elements of the current view, followed
    * by the elements of the other view.
    *

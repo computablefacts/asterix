@@ -987,6 +987,42 @@ public class ViewTest {
   }
 
   @Test
+  public void testForEachRemainingIfTrue() {
+
+    List<Integer> evenNumbers = new ArrayList<>();
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Consumer<Integer> ifTrue = element -> evenNumbers.add(element);
+    View.iterate(1, x -> x + 1).take(5).forEachRemainingIfTrue(isEven, ifTrue);
+
+    Assert.assertEquals(Lists.newArrayList(2, 4), evenNumbers);
+  }
+
+  @Test
+  public void testForEachRemainingIfFalse() {
+
+    List<Integer> oddNumbers = new ArrayList<>();
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Consumer<Integer> ifFalse = element -> oddNumbers.add(element);
+    View.iterate(1, x -> x + 1).take(5).forEachRemainingIfFalse(isEven, ifFalse);
+
+    Assert.assertEquals(Lists.newArrayList(1, 3, 5), oddNumbers);
+  }
+
+  @Test
+  public void testForEachRemainingIfTrueAndIfFalse() {
+
+    List<Integer> oddNumbers = new ArrayList<>();
+    List<Integer> evenNumbers = new ArrayList<>();
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    Consumer<Integer> ifTrue = element -> evenNumbers.add(element);
+    Consumer<Integer> ifFalse = element -> oddNumbers.add(element);
+    View.iterate(1, x -> x + 1).take(5).forEachRemaining(isEven, ifTrue, ifFalse);
+
+    Assert.assertEquals(Lists.newArrayList(2, 4), evenNumbers);
+    Assert.assertEquals(Lists.newArrayList(1, 3, 5), oddNumbers);
+  }
+
+  @Test
   public void testFirst() {
 
     View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
