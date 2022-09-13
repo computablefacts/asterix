@@ -1,168 +1,178 @@
 package com.computablefacts.asterix;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.errorprone.annotations.CheckReturnValue;
-import java.util.function.Supplier;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-@Generated
 @CheckReturnValue
-public abstract class Result<T> {
+public interface Result<T> {
 
-  public static <T> Result<T> failure(Exception e) {
-    return new Failure<>(e);
+  Empty<?> EMPTY = new Empty<>();
+
+  @SuppressWarnings("unchecked")
+  static <T> Result<T> empty() {
+    return (Result<T>) EMPTY;
   }
 
-  public static <T> Result<T> success(T value) {
+  static <T> Result<T> success(T value) {
     return new Success<>(value);
   }
 
-  public static <T> Result<T> empty() {
-    return new Empty<>();
+  static <T> Result<T> failure(String message) {
+    return new Failure<>(message);
   }
 
-  public static <T> Result<T> of(T value) {
-    return value != null ? new Success<>(value) : new Failure<>(new IllegalStateException("value must not be null"));
+  static <T> Result<T> failure(Exception exception) {
+    return new Failure<>(exception);
   }
 
-  public abstract boolean isSuccess();
-
-  public abstract boolean isFailure();
-
-  public abstract boolean isEmpty();
-
-  public abstract T getOrElse(T defaultValue);
-
-  public abstract T getOrElse(Supplier<T> defaultValue);
-
-  public abstract T successValue();
-
-  public abstract Exception failureValue();
-
-  private static class Empty<T> extends Result<T> {
-
-    public Empty() {
-    }
-
-    @Override
-    public boolean isSuccess() {
-      return false;
-    }
-
-    @Override
-    public boolean isFailure() {
-      return false;
-    }
-
-    @Override
-    public boolean isEmpty() {
-      return true;
-    }
-
-    @Override
-    public T getOrElse(T defaultValue) {
-      return defaultValue;
-    }
-
-    @Override
-    public T getOrElse(Supplier<T> defaultValue) {
-      return defaultValue.get();
-    }
-
-    @Override
-    public T successValue() {
-      throw new IllegalStateException("Method successValue() called on an Empty result");
-    }
-
-    @Override
-    public Exception failureValue() {
-      throw new IllegalStateException("Method failureValue() called on an Empty result");
-    }
+  static <T> Result<T> of(T value) {
+    return of(value, "value is null");
   }
 
-  private static final class Failure<T> extends Empty<T> {
+  static <T> Result<T> of(T value, String message) {
+    return value == null ? failure(message) : success(value);
+  }
 
-    private final Exception exception_;
+  static <T> Result<T> of(T value, Exception exception) {
+    return value == null ? failure(exception) : success(value);
+  }
 
-    public Failure(Exception exception) {
-      exception_ = exception;
+  default boolean isEmpty() {
+    return this == EMPTY;
+  }
+
+  default boolean isSuccess() {
+    return this instanceof Success;
+  }
+
+  default boolean isFailure() {
+    return this instanceof Failure;
+  }
+
+  default Result<T> filter(Predicate<T> pred) {
+    return isEmpty() || isFailure() || pred.test(successValue().get()) ? this : empty();
+  }
+
+  default <U> Result<U> map(Function<T, U> fn) {
+    return flatMap(x -> of(fn.apply(x)));
+  }
+
+  default <U> Result<U> flatMap(Function<T, Result<U>> fn) {
+    return isEmpty() ? empty() : isFailure() ? failure(errorValue().get()) : fn.apply(successValue().get());
+  }
+
+  Optional<T> successValue();
+
+  Optional<String> errorValue();
+
+  @CheckReturnValue
+  final class Empty<T> implements Result<T> {
+
+    private Empty() {
     }
 
     @Override
-    public boolean isSuccess() {
-      return false;
+    public boolean equals(Object obj) {
+      return obj instanceof Empty;
     }
 
     @Override
-    public boolean isFailure() {
-      return true;
+    public int hashCode() {
+      return 0;
     }
 
     @Override
-    public boolean isEmpty() {
-      return false;
+    public Optional<T> successValue() {
+      return Optional.empty();
     }
 
     @Override
-    public T getOrElse(T defaultValue) {
-      return defaultValue;
-    }
-
-    @Override
-    public T getOrElse(Supplier<T> defaultValue) {
-      return defaultValue.get();
-    }
-
-    @Override
-    public T successValue() {
-      throw new IllegalStateException("Method successValue() called on a Failure result");
-    }
-
-    @Override
-    public Exception failureValue() {
-      return exception_;
+    public Optional<String> errorValue() {
+      return Optional.empty();
     }
   }
 
-  private static final class Success<T> extends Result<T> {
+  @CheckReturnValue
+  final class Success<T> implements Result<T> {
 
-    private final T t_;
+    private final T value_;
 
-    public Success(T t) {
-      t_ = t;
+    private Success(T value) {
+      value_ = Preconditions.checkNotNull(value, "value should not be null");
     }
 
     @Override
-    public boolean isSuccess() {
-      return true;
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      Success<?> other = (Success<?>) obj;
+      return Objects.equals(value_, other.value_);
     }
 
     @Override
-    public boolean isFailure() {
-      return false;
+    public int hashCode() {
+      return Objects.hashCode(value_);
     }
 
     @Override
-    public boolean isEmpty() {
-      return false;
+    public Optional<T> successValue() {
+      return Optional.of(value_);
     }
 
     @Override
-    public T getOrElse(T defaultValue) {
-      return t_;
+    public Optional<String> errorValue() {
+      return Optional.empty();
+    }
+  }
+
+  @CheckReturnValue
+  final class Failure<T> implements Result<T> {
+
+    private final String message_;
+
+    private Failure(String message) {
+      message_ = Preconditions.checkNotNull(message, "message should not be null");
+    }
+
+    private Failure(Exception exception) {
+      message_ = Throwables.getStackTraceAsString(
+          Throwables.getRootCause(Preconditions.checkNotNull(exception, "exception should not be null")));
     }
 
     @Override
-    public T getOrElse(Supplier<T> defaultValue) {
-      return t_;
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      Failure<?> other = (Failure<?>) obj;
+      return Objects.equals(message_, other.message_);
     }
 
     @Override
-    public T successValue() {
-      return t_;
+    public int hashCode() {
+      return Objects.hashCode(message_);
     }
 
     @Override
-    public Exception failureValue() {
-      throw new IllegalStateException("Method failureValue() called on a Success result");
+    public Optional<T> successValue() {
+      return Optional.empty();
+    }
+
+    @Override
+    public Optional<String> errorValue() {
+      return Optional.of(message_);
     }
   }
 }
