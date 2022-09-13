@@ -2,6 +2,7 @@ package com.computablefacts.asterix;
 
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.codecs.StringCodec;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.math.BigDecimal;
@@ -155,10 +156,9 @@ final public class BoxedType<T> {
     return Objects.equals(value(), bt.value());
   }
 
-  @Generated
   @Override
   public String toString() {
-    return asString();
+    return Strings.nullToEmpty(asString());
   }
 
   public T value() {
