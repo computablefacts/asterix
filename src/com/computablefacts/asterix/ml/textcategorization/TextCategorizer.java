@@ -51,7 +51,7 @@ final public class TextCategorizer {
     categorizer.add(ok);
     categorizer.add(ko);
 
-    View.of(texts).zip(categories)
+    View.of(texts).zip(categories).displayProgress(texts.size())
         .peek(entry -> entry.getValue() == OK, entry -> ok.add(entry.getKey()), entry -> ko.add(entry.getKey()))
         .forEachRemaining(entry -> Preconditions.checkState(entry.getValue() == KO || entry.getValue() == OK,
             "invalid prediction: should be either 1 (in class) or 0 (not in class)"));
