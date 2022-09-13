@@ -35,43 +35,83 @@ final public class BoxedType<T> {
     return NULL;
   }
 
+  @Deprecated
   public static BoxedType<?> create(int[] values) {
-    return BoxedType.create(Arrays.stream(values).boxed().collect(Collectors.toList()));
+    return BoxedType.of(values);
   }
 
+  @Deprecated
   public static BoxedType<?> create(long[] values) {
-    return BoxedType.create(Arrays.stream(values).boxed().collect(Collectors.toList()));
+    return BoxedType.of(values);
   }
 
+  @Deprecated
   public static BoxedType<?> create(double[] values) {
-    return BoxedType.create(Arrays.stream(values).boxed().collect(Collectors.toList()));
+    return BoxedType.of(values);
   }
 
+  @Deprecated
   public static BoxedType<?> create(float[] values) {
+    return BoxedType.of(values);
+  }
+
+  @Deprecated
+  public static BoxedType<?> create(boolean[] values) {
+    return BoxedType.of(values);
+  }
+
+  @Deprecated
+  public static BoxedType<?> create(Object[] values) {
+    return of(values);
+  }
+
+  @Deprecated
+  public static BoxedType<?> create(Object value) {
+    return of(value);
+  }
+
+  @Deprecated
+  public static BoxedType<?> create(Object value, boolean interpretStringInScientificNotation) {
+    return of(value, interpretStringInScientificNotation);
+  }
+
+  public static BoxedType<?> of(int[] values) {
+    return BoxedType.of(Arrays.stream(values).boxed().collect(Collectors.toList()));
+  }
+
+  public static BoxedType<?> of(long[] values) {
+    return BoxedType.of(Arrays.stream(values).boxed().collect(Collectors.toList()));
+  }
+
+  public static BoxedType<?> of(double[] values) {
+    return BoxedType.of(Arrays.stream(values).boxed().collect(Collectors.toList()));
+  }
+
+  public static BoxedType<?> of(float[] values) {
     List<Float> floats = new ArrayList<>(values.length);
     for (float f : values) {
       floats.add(f);
     }
-    return BoxedType.create(floats);
+    return BoxedType.of(floats);
   }
 
-  public static BoxedType<?> create(boolean[] values) {
+  public static BoxedType<?> of(boolean[] values) {
     List<Boolean> booleans = new ArrayList<>(values.length);
     for (boolean b : values) {
       booleans.add(b);
     }
-    return BoxedType.create(booleans);
+    return BoxedType.of(booleans);
   }
 
-  public static BoxedType<?> create(Object[] values) {
-    return BoxedType.create(Lists.newArrayList(values));
+  public static BoxedType<?> of(Object[] values) {
+    return BoxedType.of(Lists.newArrayList(values));
   }
 
-  public static BoxedType<?> create(Object value) {
-    return create(value, true);
+  public static BoxedType<?> of(Object value) {
+    return of(value, true);
   }
 
-  public static BoxedType<?> create(Object value, boolean interpretStringInScientificNotation) {
+  public static BoxedType<?> of(Object value, boolean interpretStringInScientificNotation) {
     return value == null ? NULL : value instanceof BoxedType ? (BoxedType<?>) value
         : value instanceof Boolean ? (Boolean) value ? TRUE : FALSE
             : new BoxedType<>(StringCodec.defaultCoercer(value, interpretStringInScientificNotation));
