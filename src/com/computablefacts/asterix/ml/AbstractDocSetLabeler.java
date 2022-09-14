@@ -64,7 +64,7 @@ public abstract class AbstractDocSetLabeler {
         double tfIdfKo = ngramsKo.tfIdf(candidate, count);
 
         // The more common the word is in the ok dataset, the better
-        return tfIdfOk <= tfIdfKo ? 1.0 : 0.0;
+        return tfIdfOk < tfIdfKo ? 1.0 : tfIdfOk == tfIdfKo ? 0.5 : 0.0;
       }
 
       @Override
