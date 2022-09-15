@@ -299,7 +299,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       }
       builder.append(fn.apply(next()));
     }
-    if (suffix != null) {
+    if (builder.length() > 0 && suffix != null) {
       builder.append(suffix);
     }
     return builder.toString();
