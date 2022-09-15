@@ -58,9 +58,8 @@ import java.util.stream.Collectors;
 @CheckReturnValue
 final public class Model extends AbstractStack {
 
-  private static final long serialVersionUID = 42L;
-
   private final String label_;
+  private TextCategorizer categorizer_;
   private List<? extends Function<String, FeatureVector>> vectorizers_;
   private AbstractBinaryClassifier classifier_;
   private AbstractScaler scaler_;
@@ -144,6 +143,17 @@ final public class Model extends AbstractStack {
 
       System.out.printf("The number of POSITIVE entries is %d.\n", count.count(OK));
       System.out.printf("The number of NEGATIVE entries is %d.\n", count.count(KO));
+
+      // Train categorizer
+      System.out.println("Training text categorizer...");
+      stopwatch.reset().start();
+
+      TextCategorizer categorizer = TextCategorizer.trainTextCategorizer(dataset.getKey(), dataset.getValue());
+
+      stopwatch.stop();
+      System.out.printf("Text categorizer trained in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+
+      // Extract interesting ngrams
       System.out.println("Running DocSetLabeler...");
       stopwatch.reset().start();
 
@@ -224,6 +234,7 @@ final public class Model extends AbstractStack {
       for (String classifier : classifiers) {
 
         Model model = new Model(label + "/" + classifier);
+        model.categorizer_ = categorizer;
         model.vectorizers_ = View.of(patterns).map(pattern -> new RegexVectorizer(
             Pattern.compile(pattern, Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE))).toList();
 
@@ -260,15 +271,6 @@ final public class Model extends AbstractStack {
 
         ConfusionMatrix confusionMatrix;
 
-        // Train categorizer
-        System.out.printf("Training text categorizer for classifier %s...\n", classifier);
-        stopwatch.reset().start();
-
-        TextCategorizer categorizer = TextCategorizer.trainTextCategorizer(texts, categories);
-
-        stopwatch.stop();
-        System.out.printf("Text categorizer trained in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-
         // Split data between train and test then train a classifier
         System.out.printf("Training model for classifier %s...\n", classifier);
         stopwatch.reset().start();
@@ -297,7 +299,7 @@ final public class Model extends AbstractStack {
           Map.Entry<List<String>, List<Integer>> trainn = View.of(train).unzip(Function.identity());
           Map.Entry<List<String>, List<Integer>> testt = View.of(test).unzip(Function.identity());
 
-          model.train(trainn.getKey(), trainn.getValue(), categorizer);
+          model.train(trainn.getKey(), trainn.getValue());
 
           testDataset.addAll(testt.getKey());
           testCategories.addAll(testt.getValue());
@@ -324,7 +326,7 @@ final public class Model extends AbstractStack {
             Map.Entry<List<String>, List<Integer>> trainn = View.of(train).unzip(Function.identity());
             Map.Entry<List<String>, List<Integer>> testt = View.of(test).unzip(Function.identity());
 
-            model.train(trainn.getKey(), trainn.getValue(), categorizer);
+            model.train(trainn.getKey(), trainn.getValue());
 
             testDataset.addAll(testt.getKey());
             testCategories.addAll(testt.getValue());
@@ -338,7 +340,7 @@ final public class Model extends AbstractStack {
         System.out.printf("Testing model for classifier %s...\n", classifier);
         stopwatch.reset().start();
 
-        confusionMatrix = model.test(testDataset, testCategories, categorizer);
+        confusionMatrix = model.test(testDataset, testCategories);
 
         stopwatch.stop();
         System.out.println(confusionMatrix);
@@ -347,7 +349,7 @@ final public class Model extends AbstractStack {
         // Save model
         System.out.printf("Saving model for classifier %s...\n", classifier);
 
-        List<FeatureVector> vectors = texts.stream().map(model.featurizer(categorizer)).collect(Collectors.toList());
+        List<FeatureVector> vectors = texts.stream().map(model.featurizer()).collect(Collectors.toList());
 
         model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
 
@@ -414,7 +416,8 @@ final public class Model extends AbstractStack {
     xStream.allowTypeHierarchy(Collection.class);
     xStream.allowTypesByWildcard(
         new String[]{"com.computablefacts.asterix.**", "com.google.common.collect.**", "java.io.**", "java.lang.**",
-            "java.util.**", "smile.classification.**", "smile.math.**", "smile.base.**", "smile.data.**"});
+            "java.util.**", "smile.classification.**", "smile.math.**", "smile.base.**", "smile.data.**",
+            "smile.neighbor.**"});
 
     return xStream;
   }
@@ -429,7 +432,7 @@ final public class Model extends AbstractStack {
     return classifier_.predict(vector);
   }
 
-  private Function<String, FeatureVector> featurizer(TextCategorizer categorizer) {
+  private Function<String, FeatureVector> featurizer() {
 
     Preconditions.checkState(vectorizers_ != null, "missing vectorizer");
 
@@ -457,14 +460,14 @@ final public class Model extends AbstractStack {
         prevLength += vect.length();
       }
 
-      if (categorizer != null) {
-        vector.append("OK".equals(categorizer.categorize(Strings.nullToEmpty(text))) ? OK : KO);
+      if (categorizer_ != null) {
+        vector.append("OK".equals(categorizer_.categorize(Strings.nullToEmpty(text))) ? OK : KO);
       }
       return vector;
     };
   }
 
-  private void train(List<String> texts, List<Integer> categories, TextCategorizer categorizer) {
+  private void train(List<String> texts, List<Integer> categories) {
 
     Preconditions.checkNotNull(texts, "texts should not be null");
     Preconditions.checkNotNull(categories, "categories should not be null");
@@ -473,7 +476,7 @@ final public class Model extends AbstractStack {
     Preconditions.checkState(vectorizers_ != null && vectorizers_.size() > 0, "missing vectorizer");
     Preconditions.checkState(classifier_ != null, "missing classifier");
 
-    Function<String, FeatureVector> featurizer = featurizer(categorizer);
+    Function<String, FeatureVector> featurizer = featurizer();
 
     if (!classifier_.isTrained()) {
 
@@ -497,7 +500,7 @@ final public class Model extends AbstractStack {
     }).forEachRemaining(e -> classifier_.update(e.getKey(), e.getValue()));
   }
 
-  private ConfusionMatrix test(List<String> texts, List<Integer> categories, TextCategorizer categorizer) {
+  private ConfusionMatrix test(List<String> texts, List<Integer> categories) {
 
     Preconditions.checkNotNull(texts, "texts should not be null");
     Preconditions.checkNotNull(categories, "categories should not be null");
@@ -507,7 +510,7 @@ final public class Model extends AbstractStack {
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
     ConfusionMatrix confusionMatrix = new ConfusionMatrix();
-    Function<String, FeatureVector> featurizer = featurizer(categorizer);
+    Function<String, FeatureVector> featurizer = featurizer();
 
     View.of(texts).zip(categories).forEachRemaining(e -> {
 
