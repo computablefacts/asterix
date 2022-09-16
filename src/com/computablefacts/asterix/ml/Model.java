@@ -59,8 +59,7 @@ import java.util.stream.Collectors;
 final public class Model extends AbstractStack {
 
   private final String label_;
-  private TextCategorizer categorizer_;
-  private List<? extends Function<String, FeatureVector>> vectorizers_;
+  private Function<String, FeatureVector> featurizer_;
   private AbstractBinaryClassifier classifier_;
   private AbstractScaler scaler_;
 
@@ -234,9 +233,9 @@ final public class Model extends AbstractStack {
       for (String classifier : classifiers) {
 
         Model model = new Model(label + "/" + classifier);
-        model.categorizer_ = categorizer;
-        model.vectorizers_ = View.of(patterns).map(pattern -> new RegexVectorizer(
-            Pattern.compile(pattern, Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE))).toList();
+        model.featurizer_ = featurizer(View.of(patterns).map(pattern -> new RegexVectorizer(
+                Pattern.compile(pattern, Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE))).toList(),
+            categorizer);
 
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
@@ -349,7 +348,7 @@ final public class Model extends AbstractStack {
         // Save model
         System.out.printf("Saving model for classifier %s...\n", classifier);
 
-        List<FeatureVector> vectors = texts.stream().map(model.featurizer()).collect(Collectors.toList());
+        List<FeatureVector> vectors = texts.stream().map(model.featurizer_).collect(Collectors.toList());
 
         model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
 
@@ -422,6 +421,49 @@ final public class Model extends AbstractStack {
     return xStream;
   }
 
+  private static Function<String, FeatureVector> featurizer(List<? extends Function<String, FeatureVector>> vectorizers,
+      TextCategorizer categorizer) {
+
+    Preconditions.checkState(vectorizers != null, "missing vectorizer");
+
+    return new Function<String, FeatureVector>() {
+
+      private final TextNormalizer normalizer_ = new TextNormalizer(true);
+      private final List<? extends Function<String, FeatureVector>> vectorizers_ = vectorizers;
+      private final TextCategorizer categorizer_ = categorizer;
+
+      @Override
+      public FeatureVector apply(String text) {
+
+        // Vectorize text
+        String newText = normalizer_.apply(Strings.nullToEmpty(text));
+        List<FeatureVector> vectors = new ArrayList<>(vectorizers_.size());
+
+        for (int i = 0; i < vectorizers_.size(); i++) {
+          vectors.add(vectorizers_.get(i).apply(newText));
+        }
+
+        // Concat vectors
+        int length = vectors.stream().mapToInt(FeatureVector::length).sum();
+        FeatureVector vector = new FeatureVector(length);
+
+        @Var int prevLength = 0;
+
+        for (FeatureVector vect : vectors) {
+          for (int i = 0; i < vect.length(); i++) {
+            vector.set(prevLength + i, vect.get(i));
+          }
+          prevLength += vect.length();
+        }
+
+        if (categorizer_ != null) {
+          vector.append("OK".equals(categorizer_.categorize(Strings.nullToEmpty(text))) ? OK : KO);
+        }
+        return vector;
+      }
+    };
+  }
+
   @Override
   public String toString() {
     return label_;
@@ -432,55 +474,18 @@ final public class Model extends AbstractStack {
     return classifier_.predict(vector);
   }
 
-  private Function<String, FeatureVector> featurizer() {
-
-    Preconditions.checkState(vectorizers_ != null, "missing vectorizer");
-
-    TextNormalizer normalizer = new TextNormalizer(true);
-    return text -> {
-
-      // Vectorize text
-      String newText = normalizer.apply(Strings.nullToEmpty(text));
-      List<FeatureVector> vectors = new ArrayList<>(vectorizers_.size());
-
-      for (int i = 0; i < vectorizers_.size(); i++) {
-        vectors.add(vectorizers_.get(i).apply(newText));
-      }
-
-      // Concat vectors
-      int length = vectors.stream().mapToInt(FeatureVector::length).sum();
-      FeatureVector vector = new FeatureVector(length);
-
-      @Var int prevLength = 0;
-
-      for (FeatureVector vect : vectors) {
-        for (int i = 0; i < vect.length(); i++) {
-          vector.set(prevLength + i, vect.get(i));
-        }
-        prevLength += vect.length();
-      }
-
-      if (categorizer_ != null) {
-        vector.append("OK".equals(categorizer_.categorize(Strings.nullToEmpty(text))) ? OK : KO);
-      }
-      return vector;
-    };
-  }
-
   private void train(List<String> texts, List<Integer> categories) {
 
     Preconditions.checkNotNull(texts, "texts should not be null");
     Preconditions.checkNotNull(categories, "categories should not be null");
     Preconditions.checkArgument(texts.size() == categories.size(),
         "mismatch between the number of texts and the number of categories");
-    Preconditions.checkState(vectorizers_ != null && vectorizers_.size() > 0, "missing vectorizer");
+    Preconditions.checkState(featurizer_ != null, "missing featurizer");
     Preconditions.checkState(classifier_ != null, "missing classifier");
-
-    Function<String, FeatureVector> featurizer = featurizer();
 
     if (!classifier_.isTrained()) {
 
-      FeatureMatrix matrix = new FeatureMatrix(texts.stream().map(featurizer).collect(Collectors.toList()));
+      FeatureMatrix matrix = new FeatureMatrix(texts.stream().map(featurizer_).collect(Collectors.toList()));
       int[] actuals = categories.stream().mapToInt(x -> x).toArray();
 
       classifier_.train(matrix, actuals);
@@ -494,7 +499,7 @@ final public class Model extends AbstractStack {
 
       String text = e.getKey();
       int category = e.getValue();
-      FeatureVector vector = featurizer.apply(text);
+      FeatureVector vector = featurizer_.apply(text);
 
       return new SimpleImmutableEntry<>(vector, category);
     }).forEachRemaining(e -> classifier_.update(e.getKey(), e.getValue()));
@@ -506,11 +511,10 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(categories, "categories should not be null");
     Preconditions.checkArgument(texts.size() == categories.size(),
         "mismatch between the number of texts entries and the number of categories");
-    Preconditions.checkState(vectorizers_ != null && vectorizers_.size() > 0, "missing vectorizer");
+    Preconditions.checkState(featurizer_ != null, "missing featurizer");
     Preconditions.checkState(classifier_ != null, "classifier should be trained first");
 
     ConfusionMatrix confusionMatrix = new ConfusionMatrix();
-    Function<String, FeatureVector> featurizer = featurizer();
 
     View.of(texts).zip(categories).forEachRemaining(e -> {
 
@@ -520,7 +524,7 @@ final public class Model extends AbstractStack {
       Preconditions.checkState(actual == KO || actual == OK,
           "invalid class: should be either 1 (in class) or 0 (not in class)");
 
-      FeatureVector vector = featurizer.apply(text);
+      FeatureVector vector = featurizer_.apply(text);
       int prediction = classifier_.predict(vector);
 
       confusionMatrix.add(actual, prediction);
