@@ -44,6 +44,8 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -162,67 +164,43 @@ final public class Model extends AbstractStack {
           .map(Entry::getKey).toList();
 
       Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK"); // TODO : move as parameter?
-      List<String> patterns = new ArrayList<>();
-      List<List<Double>> weights = new ArrayList<>();
+      Map<Integer, List<Map.Entry<String, Double>>> labelingFunctions = new HashMap<>();
 
       if (unigrams != null) {
         Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 1);
         List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, unigrams, ok, ko);
-        String pattern = "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()))) + ")";
-        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
-        patterns.add(pattern);
-        weights.add(vector);
-        System.out.printf("Labeling functions for unigrams are : %s\n", pattern);
+        labelingFunctions.put(1, lfs);
+        System.out.printf("Labeling functions for unigrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
       }
       if (bigrams != null) {
         Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 2);
         List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, bigrams, ok, ko);
-        String pattern =
-            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
-        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
-        patterns.add(pattern);
-        weights.add(vector);
-        System.out.printf("Labeling functions for bigrams are : %s\n", pattern);
+        labelingFunctions.put(2, lfs);
+        System.out.printf("Labeling functions for bigrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
       }
       if (trigrams != null) {
         Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 3);
         List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, trigrams, ok, ko);
-        String pattern =
-            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
-        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
-        patterns.add(pattern);
-        weights.add(vector);
-        System.out.printf("Labeling functions for trigrams are : %s\n", pattern);
+        labelingFunctions.put(3, lfs);
+        System.out.printf("Labeling functions for trigrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
       }
       if (quadgrams != null) {
         Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 4);
         List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, quadgrams, ok, ko);
-        String pattern =
-            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
-        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
-        patterns.add(pattern);
-        weights.add(vector);
-        System.out.printf("Labeling functions for quadgrams are : %s\n", pattern);
+        labelingFunctions.put(4, lfs);
+        System.out.printf("Labeling functions for quadgrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
       }
       if (quintgrams != null) {
         Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 5);
         List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, quintgrams, ok, ko);
-        String pattern =
-            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
-        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
-        patterns.add(pattern);
-        weights.add(vector);
-        System.out.printf("Labeling functions for quintgrams are : %s\n", pattern);
+        labelingFunctions.put(5, lfs);
+        System.out.printf("Labeling functions for quintgrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
       }
       if (sextgrams != null) {
         Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 6);
         List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, sextgrams, ok, ko);
-        String pattern =
-            "(" + Joiner.on(")|(").join(View.of(lfs).map(lf -> Pattern.quote(lf.getKey()).replace("_", ".*"))) + ")";
-        List<Double> vector = View.of(lfs).map(Entry::getValue).toList();
-        patterns.add(pattern);
-        weights.add(vector);
-        System.out.printf("Labeling functions for sextgrams are : %s\n", pattern);
+        labelingFunctions.put(6, lfs);
+        System.out.printf("Labeling functions for sextgrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
       }
 
       stopwatch.stop();
@@ -233,9 +211,7 @@ final public class Model extends AbstractStack {
       for (String classifier : classifiers) {
 
         Model model = new Model(label + "/" + classifier);
-        model.featurizer_ = featurizer(View.of(patterns).map(pattern -> new RegexVectorizer(
-                Pattern.compile(pattern, Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE))).toList(),
-            categorizer);
+        model.featurizer_ = featurizer(labelingFunctions, categorizer);
 
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
@@ -419,6 +395,52 @@ final public class Model extends AbstractStack {
             "smile.neighbor.**"});
 
     return xStream;
+  }
+
+  private static Function<String, FeatureVector> featurizer(
+      Map<Integer, List<Map.Entry<String, Double>>> labelingFunctions, TextCategorizer categorizer) {
+
+    Preconditions.checkNotNull(labelingFunctions, "missing labelingFunctions");
+
+    // Reduce the number of overlapping labeling functions
+    List<Entry<Integer, Entry<String, Double>>> newLabelingFunctions = View.of(View.of(labelingFunctions.entrySet())
+        .flatten(e1 -> View.of(e1.getValue())
+            .map(e2 -> (Entry<Integer, Entry<String, Double>>) new SimpleImmutableEntry<>(e1.getKey(), e2)))
+        .toSortedList(
+            Comparator.comparingDouble((Entry<Integer, Entry<String, Double>> o) -> o.getValue().getValue()).reversed()
+                .thenComparingInt(Entry::getKey))).reduce(new ArrayList<>(), (carry, lf) -> {
+
+      int length = lf.getKey();
+      String ngram = lf.getValue().getKey();
+      double weight = lf.getValue().getValue();
+
+      String pattern = Pattern.quote(ngram).replace("_", ".*");
+
+      if (!View.of(carry).map(e -> e.getValue().getKey()).anyMatch(pattern::contains)) {
+        carry.add(new SimpleImmutableEntry<>(length, new SimpleImmutableEntry<>(pattern, weight)));
+      }
+      return carry;
+    });
+
+    // Map labeling functions to regexs
+    Map<Integer, String> regexes = new HashMap<>();
+
+    labelingFunctions.keySet().forEach(length -> regexes.put(length,
+        View.of(newLabelingFunctions).filter(e -> e.getKey().equals(length)).map(e -> e.getValue().getKey())
+            .toString(x -> x, ")|(", "(", ")")));
+
+    Map<Integer, List<Double>> weights = new HashMap<>();
+
+    labelingFunctions.keySet().forEach(length -> weights.put(length,
+        View.of(newLabelingFunctions).filter(e -> e.getKey().equals(length)).map(e -> e.getValue().getValue())
+            .toList()));
+
+    // Map regexs to vectorizers
+    List<RegexVectorizer> vectorizers = View.of(regexes.entrySet()).map(pattern -> new RegexVectorizer(
+        Pattern.compile(pattern.getValue(), Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE),
+        weights.get(pattern.getKey()))).toList();
+
+    return featurizer(vectorizers, categorizer);
   }
 
   private static Function<String, FeatureVector> featurizer(List<? extends Function<String, FeatureVector>> vectorizers,
