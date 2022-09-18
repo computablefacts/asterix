@@ -60,11 +60,21 @@ public abstract class AbstractDocSetLabeler {
       @Override
       protected double computeX(String text, String candidate, int count) {
 
-        double tfIdfOk = ngramsOk.tfIdf(candidate, count);
-        double tfIdfKo = ngramsKo.tfIdf(candidate, count);
+        if (ngramsKo.index(candidate) == 0 /* UNK */) {
+          return 1.0;
+        }
+        if (ngramsOk.index(candidate) == 0 /* UNK */) {
+          return 0.0;
+        }
+        
+        ConfusionMatrix confusionMatrix = new ConfusionMatrix();
+        confusionMatrix.addTruePositives(ngramsOk.df(candidate));
+        confusionMatrix.addTrueNegatives(ngramsKo.nbDocsSeen() - ngramsKo.df(candidate));
+        confusionMatrix.addFalsePositives(ngramsKo.df(candidate));
+        confusionMatrix.addFalseNegatives(ngramsOk.nbDocsSeen() - ngramsOk.df(candidate));
 
-        // The more common the word is in the ok dataset, the better
-        return tfIdfOk < tfIdfKo ? 1.0 : tfIdfOk == tfIdfKo ? 0.5 : 0.0;
+        // The more the candidate is able to correctly split the input dataset, the better
+        return (confusionMatrix.matthewsCorrelationCoefficient() + 1.0) / 2.0;
       }
 
       @Override

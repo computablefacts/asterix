@@ -221,6 +221,24 @@ final public class Vocabulary {
   }
 
   /**
+   * Returns the number of a documents used to build the vocabulary.
+   *
+   * @return the number of docuemnts seen.
+   */
+  public int nbDocsSeen() {
+    return nbDocsSeen_;
+  }
+
+  /**
+   * Returns the number of a terms used to build the vocabulary.
+   *
+   * @return the number of term seen.
+   */
+  public int nbTermsSeen() {
+    return nbTermsSeen_;
+  }
+
+  /**
    * Returns all the terms in the current vocabulary.
    *
    * @return the terms.
