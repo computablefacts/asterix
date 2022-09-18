@@ -21,7 +21,9 @@ public class TfIdfVectorizerTest {
     Vocabulary vocabulary = Vocabulary.of(tokens, 0.01, 0.99, 100);
     TfIdfVectorizer vectorizer = new TfIdfVectorizer(vocabulary);
 
-    List<FeatureVector> vectors = View.of(sentences()).map(normalizer.andThen(tokenizer).andThen(vectorizer)).toList();
+    List<FeatureVector> vectors = View.of(sentences()).map(
+            normalizer.andThen(tokenizer).andThen(spans -> View.of(spans).map(Span::text).toList()).andThen(vectorizer))
+        .toList();
 
     Assert.assertEquals(vocabulary.size() - 1 /* UNK */, vectors.get(0).length());
     Assert.assertEquals(
