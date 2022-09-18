@@ -127,10 +127,10 @@ public class ModelTest {
 
     ConfusionMatrix confusionMatrix = stack.confusionMatrix();
 
-    Assert.assertEquals(1.0, confusionMatrix.matthewsCorrelationCoefficient(), 0.000001);
-    Assert.assertEquals(1.0, confusionMatrix.f1Score(), 0.000001);
-    Assert.assertEquals(1.0, confusionMatrix.precision(), 0.000001);
-    Assert.assertEquals(1.0, confusionMatrix.recall(), 0.000001);
-    Assert.assertEquals(1.0, confusionMatrix.accuracy(), 0.000001);
+    Assert.assertEquals(1.0, confusionMatrix.matthewsCorrelationCoefficient(), 0.05);
+    Assert.assertEquals(1.0, confusionMatrix.f1Score(), 0.05);
+    Assert.assertEquals(1.0, confusionMatrix.precision(), 0.05);
+    Assert.assertEquals(1.0, confusionMatrix.recall(), 0.05);
+    Assert.assertEquals(1.0, confusionMatrix.accuracy(), 0.05);
   }
 }

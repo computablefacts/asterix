@@ -492,6 +492,11 @@ final public class Model extends AbstractStack {
   }
 
   @Override
+  public int predict(String text) {
+    return predict(featurize(text));
+  }
+
+  @Override
   public int predict(FeatureVector vector) {
     return classifier_.predict(vector);
   }

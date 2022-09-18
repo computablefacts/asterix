@@ -8,6 +8,7 @@ import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
+import org.apache.commons.lang3.NotImplementedException;
 
 @CheckReturnValue
 public abstract class AbstractStack {
@@ -52,6 +53,10 @@ public abstract class AbstractStack {
       predictions_.set(i, prediction);
       confusionMatrix_.add(actual, prediction);
     }
+  }
+
+  public int predict(String text) {
+    throw new NotImplementedException("predict(String) is not implemented");
   }
 
   public abstract int predict(FeatureVector vector);
