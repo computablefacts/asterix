@@ -59,32 +59,32 @@ public class ModelTest {
   }
 
   private static File vocabulary1(File file) {
-    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK", "1"});
+    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "100000", "WORD,NUMBER,TERMINAL_MARK", "1"});
     return new File(file.getParent() + File.separator + "vocabulary-1grams.tsv.gz");
   }
 
   private static File vocabulary2(File file) {
-    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK", "2"});
+    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "100000", "WORD,NUMBER,TERMINAL_MARK", "2"});
     return new File(file.getParent() + File.separator + "vocabulary-2grams.tsv.gz");
   }
 
   private static File vocabulary3(File file) {
-    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK", "3"});
+    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "100000", "WORD,NUMBER,TERMINAL_MARK", "3"});
     return new File(file.getParent() + File.separator + "vocabulary-3grams.tsv.gz");
   }
 
   private static File vocabulary4(File file) {
-    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK", "4"});
+    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "100000", "WORD,NUMBER,TERMINAL_MARK", "4"});
     return new File(file.getParent() + File.separator + "vocabulary-4grams.tsv.gz");
   }
 
   private static File vocabulary5(File file) {
-    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK", "5"});
+    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "100000", "WORD,NUMBER,TERMINAL_MARK", "5"});
     return new File(file.getParent() + File.separator + "vocabulary-5grams.tsv.gz");
   }
 
   private static File vocabulary6(File file) {
-    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK", "6"});
+    Vocabulary.main(new String[]{file.getAbsolutePath(), "0.01", "0.99", "100000", "WORD,NUMBER,TERMINAL_MARK", "6"});
     return new File(file.getParent() + File.separator + "vocabulary-6grams.tsv.gz");
   }
 
@@ -111,12 +111,11 @@ public class ModelTest {
     try {
 
       // Do not test FLD because "covariance matrix (column 23) is close to singular."
-      Model.main(new String[]{documents_.getAbsolutePath(), goldLabels_.getAbsolutePath(), "crowdsourcing",
-          "ab,dt,dnb,gbt,knn,logit,mlp,rf,svm"});
+      Model.main(new String[]{goldLabels_.getAbsolutePath(), "crowdsourcing", "ab,dt,dnb,gbt,knn,logit,mlp,rf,svm"});
       file = new File(documents_.getParent() + File.separator + "stack-crowdsourcing.xml.gz");
     } catch (Exception e) {
-      Assert.assertEquals("Cannot read field \"k\" because \"v1\" is null", e.getMessage());
       System.out.println(Throwables.getStackTraceAsString(Throwables.getRootCause(e)));
+      Assert.assertEquals("Cannot read field \"k\" because \"v1\" is null", e.getMessage());
       return;
     }
 

@@ -6,6 +6,7 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 
 import com.computablefacts.asterix.IO;
 import com.computablefacts.asterix.View;
+import com.computablefacts.asterix.ml.VectorsReducer.eCorrelation;
 import com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier;
 import com.computablefacts.asterix.ml.classification.AbstractScaler;
 import com.computablefacts.asterix.ml.classification.AdaBoostClassifier;
@@ -29,6 +30,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -61,6 +63,8 @@ import java.util.stream.Collectors;
 final public class Model extends AbstractStack {
 
   private final String label_;
+  private final Function<List<FeatureVector>, List<FeatureVector>> reducer_ = new VectorsReducer().andThen(
+      new VectorsReducer(eCorrelation.KENDALL));
   private Function<String, FeatureVector> featurizer_;
   private AbstractBinaryClassifier classifier_;
   private AbstractScaler scaler_;
@@ -72,26 +76,22 @@ final public class Model extends AbstractStack {
   /**
    * Build a model from the ground up using only a given set of gold labels.
    * <ul>
-   *   <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
-   *   <li>{@code args[1]} the gold labels as a gzipped JSONL file.</li>
-   *   <li>{@code args[2]} the list of labels to consider.</li>
-   *   <li>{@code args[3]} the classifier name to train in `{dnb, fld, knn, mlp, svm, logit}`.</li>
+   *   <li>{@code args[0]} the gold labels as a gzipped JSONL file.</li>
+   *   <li>{@code args[1]} the list of labels to consider.</li>
+   *   <li>{@code args[2]} the classifier name to train in `{dnb, fld, knn, mlp, svm, logit}`.</li>
    * </ul>
    */
   @Beta
   public static void main(String[] args) {
 
-    File documents = new File(args[0]);
-    File goldLabels = new File(args[1]);
-    List<String> labels = Splitter.on(',').trimResults().omitEmptyStrings().splitToList(args.length < 3 ? "" : args[2]);
+    File goldLabels = new File(args[0]);
+    List<String> labels = Splitter.on(',').trimResults().omitEmptyStrings().splitToList(args.length < 3 ? "" : args[1]);
     List<String> classifiers = Splitter.on(',').trimResults().omitEmptyStrings()
-        .splitToList(args.length < 4 ? "logit" : args[3]);
+        .splitToList(args.length < 3 ? "logit" : args[2]);
 
-    Preconditions.checkState(documents.exists(), "Missing documents : %s", documents);
     Preconditions.checkState(goldLabels.exists(), "Missing gold labels : %s", goldLabels);
     Preconditions.checkArgument(!labels.isEmpty(), "labels should not be empty");
 
-    System.out.printf("Documents stored in %s.\n", documents);
     System.out.printf("Gold labels stored in %s.\n", goldLabels);
     System.out.printf("Labels to consider are [%s].\n", Joiner.on(", ").join(labels));
     System.out.printf("Classifiers to consider are [%s].\n", Joiner.on(", ").join(classifiers));
@@ -324,7 +324,7 @@ final public class Model extends AbstractStack {
         // Save model
         System.out.printf("Saving model for classifier %s...\n", classifier);
 
-        List<FeatureVector> vectors = texts.stream().map(model.featurizer_).collect(Collectors.toList());
+        List<FeatureVector> vectors = texts.stream().map(model::featurize).collect(Collectors.toList());
 
         model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
 
@@ -507,7 +507,7 @@ final public class Model extends AbstractStack {
 
     if (!classifier_.isTrained()) {
 
-      FeatureMatrix matrix = new FeatureMatrix(texts.stream().map(featurizer_).collect(Collectors.toList()));
+      FeatureMatrix matrix = new FeatureMatrix(featurize(texts));
       int[] actuals = categories.stream().mapToInt(x -> x).toArray();
 
       classifier_.train(matrix, actuals);
@@ -521,7 +521,7 @@ final public class Model extends AbstractStack {
 
       String text = e.getKey();
       int category = e.getValue();
-      FeatureVector vector = featurizer_.apply(text);
+      FeatureVector vector = featurize(text);
 
       return new SimpleImmutableEntry<>(vector, category);
     }).forEachRemaining(e -> classifier_.update(e.getKey(), e.getValue()));
@@ -546,11 +546,19 @@ final public class Model extends AbstractStack {
       Preconditions.checkState(actual == KO || actual == OK,
           "invalid class: should be either 1 (in class) or 0 (not in class)");
 
-      FeatureVector vector = featurizer_.apply(text);
+      FeatureVector vector = featurize(text);
       int prediction = classifier_.predict(vector);
 
       confusionMatrix.add(actual, prediction);
     });
     return confusionMatrix;
+  }
+
+  private FeatureVector featurize(String text) {
+    return reducer_.apply(Lists.newArrayList(featurizer_.apply(text))).get(0);
+  }
+
+  private List<FeatureVector> featurize(List<String> texts) {
+    return reducer_.apply(View.of(texts).map(featurizer_).toList());
   }
 }
