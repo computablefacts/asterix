@@ -1,8 +1,10 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.View;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
@@ -18,7 +20,7 @@ import smile.stat.hypothesis.CorTest;
 final public class VectorsReducer implements Function<List<FeatureVector>, List<FeatureVector>> {
 
   private final eCorrelation correlation_;
-  private List<Integer> commonNonZeroEntries_ = null;
+  private List<Integer> nonZeroEntries_ = null;
 
   /**
    * Reduce a list of vectors by removing entries that are zeroes across all vectors. The reduction is computed on the
@@ -82,7 +84,7 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
 
     Preconditions.checkNotNull(vectors, "vectors should not be null");
 
-    if (commonNonZeroEntries_ == null) {
+    if (nonZeroEntries_ == null) {
       if (correlation_ != null) {
 
         Set<Integer> nonCorrelatedEntries = View.range(0, vectors.get(0).length()).toSet();
@@ -97,8 +99,8 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
           return isCorrelated;
         });
 
-        commonNonZeroEntries_ = new ArrayList<>(nonCorrelatedEntries);
-        Collections.sort(commonNonZeroEntries_);
+        nonZeroEntries_ = new ArrayList<>(nonCorrelatedEntries);
+        Collections.sort(nonZeroEntries_);
       } else {
 
         Set<Integer> nonZeroEntries = new HashSet<>(vectors.get(0).nonZeroEntries());
@@ -107,11 +109,11 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
           nonZeroEntries.addAll(vectors.get(i).nonZeroEntries());
         }
 
-        commonNonZeroEntries_ = new ArrayList<>(nonZeroEntries);
-        Collections.sort(commonNonZeroEntries_);
+        nonZeroEntries_ = new ArrayList<>(nonZeroEntries);
+        Collections.sort(nonZeroEntries_);
       }
     }
-    if (commonNonZeroEntries_.isEmpty()) {
+    if (nonZeroEntries_.isEmpty()) {
       return vectors;
     }
 
@@ -120,14 +122,19 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
     for (FeatureVector vector : vectors) {
 
       @Var int k = 0;
-      FeatureVector newVector = new FeatureVector(commonNonZeroEntries_.size());
+      FeatureVector newVector = new FeatureVector(nonZeroEntries_.size());
 
-      for (int i : commonNonZeroEntries_) {
+      for (int i : nonZeroEntries_) {
         newVector.set(k++, vector.get(i));
       }
       newVectors.add(newVector);
     }
     return newVectors;
+  }
+
+  @Beta
+  public List<Integer> nonZeroEntries() {
+    return nonZeroEntries_ == null ? ImmutableList.of() : ImmutableList.copyOf(nonZeroEntries_);
   }
 
   /**

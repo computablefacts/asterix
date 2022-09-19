@@ -5,7 +5,9 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.Set;
 
 @CheckReturnValue
 final public class OrStack extends AbstractStack {
@@ -52,11 +54,24 @@ final public class OrStack extends AbstractStack {
   }
 
   @Override
+  public int predict(String text) {
+    if (leftStack_.predict(text) == OK) {
+      return OK;
+    }
+    return rightStack_.predict(text);
+  }
+
+  @Override
   public int predict(FeatureVector vector) {
     if (leftStack_.predict(vector) == OK) {
       return OK;
     }
     return rightStack_.predict(vector);
+  }
+
+  @Override
+  public Set<String> snippetBestEffort(String text) {
+    return Sets.union(leftStack_.snippetBestEffort(text), rightStack_.snippetBestEffort(text));
   }
 
   private int reduce(int prediction1, int prediction2) {

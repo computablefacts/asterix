@@ -2,12 +2,16 @@ package com.computablefacts.asterix.ml.stacking;
 
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @CheckReturnValue
 final public class Stack {
@@ -71,6 +75,14 @@ final public class Stack {
     Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
 
     return stack_.get().predict(vector);
+  }
+
+  @Beta
+  public Set<String> snippetBestEffort(String text) {
+
+    Preconditions.checkNotNull(text, "text should not be null");
+
+    return stack_.get().snippetBestEffort(text);
   }
 
   private AbstractStack merge(eStackType stackType, AbstractStack leftNode, List<AbstractStack> rightNodes) {

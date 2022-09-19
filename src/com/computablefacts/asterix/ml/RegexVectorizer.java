@@ -1,12 +1,9 @@
 package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.SnippetExtractor;
 import com.computablefacts.asterix.Span;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
-import com.google.errorprone.annotations.Var;
 import com.google.re2j.Matcher;
 import com.google.re2j.Pattern;
 import java.util.ArrayList;
@@ -62,19 +59,16 @@ final public class RegexVectorizer implements Function<String, FeatureVector> {
     return vector;
   }
 
-  String snippetBestEffort(String text) {
+  List<Set<Span>> matchedGroups(String text) {
+
     String newText = Strings.nullToEmpty(text).replaceAll("([ \n\r])+", "$1");
-    List<String> tokens = Lists.newArrayList(matchedWordBestEffort(newText));
-    return SnippetExtractor.extract(tokens, newText, 300, 50, "");
-  }
-
-  String matchedWordBestEffort(String text) {
-
-    String newText = Strings.nullToEmpty(text);
     Matcher matcher = pattern_.matcher(newText);
 
-    Map<Integer, Set<Span>> matches = new HashMap<>();
+    List<Set<Span>> matches = new ArrayList<>();
 
+    for (int i = 1; i <= matcher.groupCount(); i++) {
+      matches.add(new HashSet<>());
+    }
     while (matcher.find()) {
       for (int i = 1; i <= matcher.groupCount(); i++) {
 
@@ -82,13 +76,10 @@ final public class RegexVectorizer implements Function<String, FeatureVector> {
         int end = matcher.end(i);
 
         if (start >= 0 && end >= 0) {
-          if (!matches.containsKey(i)) {
-            matches.put(i, new HashSet<>());
-          }
-          matches.get(i).add(new Span(newText, start, end));
+          matches.get(i - 1).add(new Span(newText, start, end));
         }
       }
     }
-    return "";
+    return matches;
   }
 }

@@ -5,6 +5,8 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
 import com.computablefacts.asterix.IO;
+import com.computablefacts.asterix.SnippetExtractor;
+import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.VectorsReducer.eCorrelation;
 import com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier;
@@ -48,6 +50,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,9 +66,7 @@ import java.util.stream.Collectors;
 final public class Model extends AbstractStack {
 
   private final String label_;
-  private final Function<List<FeatureVector>, List<FeatureVector>> reducer_ = new VectorsReducer().andThen(
-      new VectorsReducer(eCorrelation.KENDALL));
-  private Function<String, FeatureVector> featurizer_;
+  private Featurizer featurizer_;
   private AbstractBinaryClassifier classifier_;
   private AbstractScaler scaler_;
 
@@ -321,7 +322,7 @@ final public class Model extends AbstractStack {
         System.out.println(confusionMatrix);
         System.out.printf("Model tested in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
 
-        List<FeatureVector> vectors = texts.stream().map(model::featurize).collect(Collectors.toList());
+        List<FeatureVector> vectors = View.of(texts).map(text -> model.featurizer_.transform(text)).toList();
         model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
         models.add(model);
       }
@@ -341,6 +342,25 @@ final public class Model extends AbstractStack {
       save(new File(String.format("%sstack-%s.xml.gz", goldLabels.getParent() + File.separator, label)), stack);
 
       System.out.println("Stack saved.");
+
+      View.of(dataset.getKey()).zip(dataset.getValue()).forEachRemaining(entry -> {
+
+        String text = entry.getKey();
+        int actual = entry.getValue();
+
+        Preconditions.checkState(actual == KO || actual == OK,
+            "invalid class: should be either 1 (in class) or 0 (not in class)");
+
+        int prediction = stack.predict(text);
+
+        if (actual == OK || prediction == OK) {
+          System.out.println("================================================================================");
+          System.out.printf("== %s (actual) vs. %s (prediction)\n", actual == OK ? "OK" : "KO",
+              prediction == OK ? "OK" : "KO");
+          System.out.println("================================================================================");
+          stack.snippetBestEffort(text).forEach(System.out::println);
+        }
+      });
     }
   }
 
@@ -377,8 +397,8 @@ final public class Model extends AbstractStack {
     return xStream;
   }
 
-  private static Function<String, FeatureVector> featurizer(
-      Map<Integer, List<Map.Entry<String, Double>>> labelingFunctions, TextCategorizer categorizer) {
+  private static Featurizer featurizer(Map<Integer, List<Map.Entry<String, Double>>> labelingFunctions,
+      TextCategorizer categorizer) {
 
     Preconditions.checkNotNull(labelingFunctions, "missing labelingFunctions");
 
@@ -416,54 +436,12 @@ final public class Model extends AbstractStack {
             .toList()));
 
     // Map regexs to vectorizers
-    List<RegexVectorizer> vectorizers = View.of(regexes.entrySet()).map(pattern -> new RegexVectorizer(
-        Pattern.compile(pattern.getValue(), Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE),
-        weights.get(pattern.getKey()))).toList();
+    List<RegexVectorizer> vectorizers = View.of(regexes.entrySet())
+        .filter(pattern -> !weights.get(pattern.getKey()).isEmpty()).map(pattern -> new RegexVectorizer(
+            Pattern.compile(pattern.getValue(), Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE),
+            weights.get(pattern.getKey()))).toList();
 
-    return featurizer(vectorizers, categorizer);
-  }
-
-  private static Function<String, FeatureVector> featurizer(List<? extends Function<String, FeatureVector>> vectorizers,
-      TextCategorizer categorizer) {
-
-    Preconditions.checkState(vectorizers != null, "missing vectorizer");
-
-    return new Function<String, FeatureVector>() {
-
-      private final TextNormalizer normalizer_ = new TextNormalizer(true);
-      private final List<? extends Function<String, FeatureVector>> vectorizers_ = vectorizers;
-      private final TextCategorizer categorizer_ = categorizer;
-
-      @Override
-      public FeatureVector apply(String text) {
-
-        // Vectorize text
-        String newText = normalizer_.apply(Strings.nullToEmpty(text));
-        List<FeatureVector> vectors = new ArrayList<>(vectorizers_.size());
-
-        for (int i = 0; i < vectorizers_.size(); i++) {
-          vectors.add(vectorizers_.get(i).apply(newText));
-        }
-
-        // Concat vectors
-        int length = vectors.stream().mapToInt(FeatureVector::length).sum();
-        FeatureVector vector = new FeatureVector(length);
-
-        @Var int prevLength = 0;
-
-        for (FeatureVector vect : vectors) {
-          for (int i = 0; i < vect.length(); i++) {
-            vector.set(prevLength + i, vect.get(i));
-          }
-          prevLength += vect.length();
-        }
-
-        if (categorizer_ != null) {
-          vector.append("OK".equals(categorizer_.categorize(Strings.nullToEmpty(text))) ? OK : KO);
-        }
-        return vector;
-      }
-    };
+    return new Featurizer(vectorizers, categorizer);
   }
 
   @Override
@@ -473,12 +451,23 @@ final public class Model extends AbstractStack {
 
   @Override
   public int predict(String text) {
-    return predict(featurize(text));
+    return predict(featurizer_.transform(text));
   }
 
   @Override
   public int predict(FeatureVector vector) {
     return classifier_.predict(vector);
+  }
+
+  @Override
+  public Set<String> snippetBestEffort(String text) {
+
+    Preconditions.checkNotNull(text, "text should not be null");
+    Preconditions.checkState(featurizer_ != null, "missing featurizer");
+    Preconditions.checkState(classifier_ != null, "missing classifier");
+
+    String snippet = featurizer_.snippetBestEffort(text);
+    return Strings.isNullOrEmpty(snippet) ? Sets.newHashSet() : Sets.newHashSet(snippet);
   }
 
   private void train(List<String> texts, List<Integer> categories) {
@@ -492,7 +481,7 @@ final public class Model extends AbstractStack {
 
     if (!classifier_.isTrained()) {
 
-      FeatureMatrix matrix = new FeatureMatrix(featurize(texts));
+      FeatureMatrix matrix = new FeatureMatrix(featurizer_.fitAndTransform(texts));
       int[] actuals = categories.stream().mapToInt(x -> x).toArray();
 
       classifier_.train(matrix, actuals);
@@ -506,7 +495,7 @@ final public class Model extends AbstractStack {
 
       String text = e.getKey();
       int category = e.getValue();
-      FeatureVector vector = featurize(text);
+      FeatureVector vector = featurizer_.transform(text);
 
       return new SimpleImmutableEntry<>(vector, category);
     }).forEachRemaining(e -> classifier_.update(e.getKey(), e.getValue()));
@@ -531,7 +520,7 @@ final public class Model extends AbstractStack {
       Preconditions.checkState(actual == KO || actual == OK,
           "invalid class: should be either 1 (in class) or 0 (not in class)");
 
-      FeatureVector vector = featurize(text);
+      FeatureVector vector = featurizer_.transform(text);
       int prediction = classifier_.predict(vector);
 
       confusionMatrix.add(actual, prediction);
@@ -539,11 +528,103 @@ final public class Model extends AbstractStack {
     return confusionMatrix;
   }
 
-  private FeatureVector featurize(String text) {
-    return reducer_.apply(Lists.newArrayList(featurizer_.apply(text))).get(0);
+  private static class Featurizer {
+
+    private final TextNormalizer normalizer_ = new TextNormalizer(true);
+    private final List<RegexVectorizer> vectorizers_;
+    private final TextCategorizer categorizer_;
+    private final Reducer reducer_ = new Reducer();
+
+    public Featurizer(List<RegexVectorizer> vectorizers, TextCategorizer categorizer) {
+      vectorizers_ = Preconditions.checkNotNull(vectorizers, "missing vectorizer");
+      categorizer_ = categorizer;
+    }
+
+    public FeatureVector transform(String text) {
+      return reducer_.apply(Lists.newArrayList(apply(text))).get(0);
+    }
+
+    public List<FeatureVector> fitAndTransform(List<String> texts) {
+      return reducer_.apply(View.of(texts).map(this::apply).toList());
+    }
+
+    public String snippetBestEffort(String text) {
+
+      Preconditions.checkNotNull(text, "text should not be null");
+
+      // Vectorize text
+      String newText = normalizer_.apply(Strings.nullToEmpty(text));
+      List<List<Set<Span>>> vectors = new ArrayList<>();
+
+      for (int i = 0; i < vectorizers_.size(); i++) {
+        vectors.add(vectorizers_.get(i).matchedGroups(newText));
+      }
+
+      // Concat vectors
+      int length = vectors.stream().mapToInt(List::size).sum();
+      List<Set<Span>> vector = new ArrayList<>(length);
+
+      for (List<Set<Span>> vect : vectors) {
+        vector.addAll(vect);
+      }
+
+      if (categorizer_ != null) {
+        vector.add(new HashSet<>());
+      }
+
+      // Reduce vector
+      Set<Integer> entries = Sets.newHashSet(reducer_.pruneCorrelatedFeatures_.nonZeroEntries());
+      Set<String> matches = new HashSet<>();
+
+      for (int i = 0; i < vector.size(); i++) {
+        if (entries.contains(i)) {
+          matches.addAll(View.of(vector.get(i)).flatten(View::of).map(Span::text).toSet());
+        }
+      }
+      return matches.isEmpty() ? "" : SnippetExtractor.extract(Lists.newArrayList(matches), newText);
+    }
+
+    private FeatureVector apply(String text) {
+
+      // Vectorize text
+      String newText = normalizer_.apply(Strings.nullToEmpty(text));
+      List<FeatureVector> vectors = new ArrayList<>(vectorizers_.size());
+
+      for (int i = 0; i < vectorizers_.size(); i++) {
+        vectors.add(vectorizers_.get(i).apply(newText));
+      }
+
+      // Concat vectors
+      int length = vectors.stream().mapToInt(FeatureVector::length).sum();
+      FeatureVector vector = new FeatureVector(length);
+
+      @Var int prevLength = 0;
+
+      for (FeatureVector vect : vectors) {
+        for (int i = 0; i < vect.length(); i++) {
+          vector.set(prevLength + i, vect.get(i));
+        }
+        prevLength += vect.length();
+      }
+
+      if (categorizer_ != null) {
+        vector.append("OK".equals(categorizer_.categorize(Strings.nullToEmpty(text))) ? OK : KO);
+      }
+      return vector;
+    }
   }
 
-  private List<FeatureVector> featurize(List<String> texts) {
-    return reducer_.apply(View.of(texts).map(featurizer_).toList());
+  private static class Reducer implements Function<List<FeatureVector>, List<FeatureVector>> {
+
+    private final VectorsReducer pruneMeaninglessFeatures_ = new VectorsReducer();
+    private final VectorsReducer pruneCorrelatedFeatures_ = new VectorsReducer(eCorrelation.KENDALL);
+
+    public Reducer() {
+    }
+
+    @Override
+    public List<FeatureVector> apply(List<FeatureVector> vectors) {
+      return pruneMeaninglessFeatures_.andThen(pruneCorrelatedFeatures_).apply(vectors);
+    }
   }
 }
