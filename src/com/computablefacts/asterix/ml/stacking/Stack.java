@@ -57,8 +57,17 @@ final public class Stack {
     return stack_.get().confusionMatrix();
   }
 
+  public int predict(String text) {
+
+    Preconditions.checkNotNull(text, "text should not be null");
+    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+
+    return stack_.get().predict(text);
+  }
+
   public int predict(FeatureVector vector) {
 
+    Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
 
     return stack_.get().predict(vector);
