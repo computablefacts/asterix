@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -94,7 +95,10 @@ public class AbstractDocSetLabelerTest {
     neg.put("29", Sets.newHashSet("yes"));
     neg.put("30", Sets.newHashSet("no"));
 
-    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+    Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+
+    Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
     double informationGainYes = AbstractDocSetLabeler.informationGain(pos.size(), counts.get("yes").getKey(),
         neg.size(), counts.get("yes").getValue());
@@ -142,7 +146,10 @@ public class AbstractDocSetLabelerTest {
     neg.put("29", Sets.newHashSet("yes"));
     neg.put("30", Sets.newHashSet("no"));
 
-    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+    Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+
+    Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
     double intrinsicValueYes = AbstractDocSetLabeler.intrinsicValue(pos.size(), counts.get("yes").getKey(), neg.size(),
         counts.get("yes").getValue());
@@ -190,7 +197,10 @@ public class AbstractDocSetLabelerTest {
     neg.put("29", Sets.newHashSet("yes"));
     neg.put("30", Sets.newHashSet("no"));
 
-    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+    Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+
+    Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
     double informationGainRatioYes = AbstractDocSetLabeler.informationGainRatio("yes", Sets.newHashSet("yes", "no"),
         counts, pos.size(), neg.size());
@@ -226,7 +236,10 @@ public class AbstractDocSetLabelerTest {
     neg.put("13", Sets.newHashSet("rainy", "mild", "high", "false"));
     neg.put("14", Sets.newHashSet("sunny", "mild", "high", "true"));
 
-    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+    Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+
+    Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
     double informationGainHumidityHigh = AbstractDocSetLabeler.informationGain(pos.size(), counts.get("high").getKey(),
         neg.size(), counts.get("high").getValue());
@@ -266,7 +279,10 @@ public class AbstractDocSetLabelerTest {
     neg.put("13", Sets.newHashSet("rainy", "mild", "high", "false"));
     neg.put("14", Sets.newHashSet("sunny", "mild", "high", "true"));
 
-    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+    Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+
+    Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
     double intrinsicValueHumidityHigh = AbstractDocSetLabeler.intrinsicValue(pos.size(), counts.get("high").getKey(),
         neg.size(), counts.get("high").getValue());
@@ -306,7 +322,10 @@ public class AbstractDocSetLabelerTest {
     neg.put("13", Sets.newHashSet("rainy", "mild", "high", "false"));
     neg.put("14", Sets.newHashSet("sunny", "mild", "high", "true"));
 
-    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
+    Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
+        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+
+    Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
     double informationGainRatioHumidityHigh = AbstractDocSetLabeler.informationGainRatio("high",
         Sets.newHashSet("high", "normal"), counts, pos.size(), neg.size());

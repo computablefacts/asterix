@@ -14,11 +14,12 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -66,7 +67,7 @@ public abstract class AbstractDocSetLabeler {
         if (ngramsOk.index(candidate) == 0 /* UNK */) {
           return 0.0;
         }
-        
+
         ConfusionMatrix confusionMatrix = new ConfusionMatrix();
         confusionMatrix.addTruePositives(ngramsOk.df(candidate));
         confusionMatrix.addTrueNegatives(ngramsKo.nbDocsSeen() - ngramsKo.df(candidate));
@@ -193,14 +194,12 @@ public abstract class AbstractDocSetLabeler {
     return informationGain / intrinsicValue;
   }
 
-  static Map<String, Map.Entry<Double, Double>> counts(Map<String, Set<String>> pos, Map<String, Set<String>> neg) {
+  static Map<String, Map.Entry<Double, Double>> counts(Set<String> contenders, Map<String, Set<String>> pos,
+      Map<String, Set<String>> neg) {
 
-    Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
-        neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+    Map<String, Map.Entry<Double, Double>> counts = new ConcurrentHashMap<>();
 
-    Map<String, Map.Entry<Double, Double>> counts = new HashMap<>();
-
-    for (String contender : contenders) {
+    View.of(contenders).forEachRemainingInParallel(contender -> {
 
       double nbMatchesInPosDocs = pos.values().stream()
           .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(contender)) ? 1.0 : 0.0).sum();
@@ -208,7 +207,7 @@ public abstract class AbstractDocSetLabeler {
           .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(contender)) ? 1.0 : 0.0).sum();
 
       counts.put(contender, new SimpleImmutableEntry<>(nbMatchesInPosDocs, nbMatchesInNegDocs));
-    }
+    });
     return counts;
   }
 
@@ -240,16 +239,16 @@ public abstract class AbstractDocSetLabeler {
             (Map.Entry<String, Double> pair) -> pair.getValue()).thenComparingInt(pair -> pair.getKey().length())
         .thenComparing(Entry::getKey).reversed();
 
-    Map<String, Set<String>> pos = new HashMap<>();
-    Map<String, Set<String>> neg = new HashMap<>();
+    Map<String, Set<String>> pos = new ConcurrentHashMap<>();
+    Map<String, Set<String>> neg = new ConcurrentHashMap<>();
 
     Set<String> corpus = Sets.union(Sets.newHashSet(ok), Sets.newHashSet(ko));
-    @Var int nbTextsProcessed = 0;
+    AtomicInteger nbTextsProcessed = new AtomicInteger(0);
     int nbTexts = corpus.size();
 
-    for (String text : corpus) {
+    View.of(corpus).forEachRemainingInParallel(text -> {
 
-      nbTextsProcessed++;
+      nbTextsProcessed.incrementAndGet();
 
       List<Map.Entry<String, Double>> weights = new ArrayList<>();
       Multiset<String> candidates = candidates(text);
@@ -275,28 +274,28 @@ public abstract class AbstractDocSetLabeler {
       } else {
         neg.put(text, selection);
       }
-    }
+    });
 
-    Preconditions.checkState(nbTexts == nbTextsProcessed);
+    Preconditions.checkState(nbTexts == nbTextsProcessed.get());
 
-    // For each candidate, precompute the number of matches in the pos/neg datasets
-    Map<String, Map.Entry<Double, Double>> counts = counts(pos, neg);
-
-    // For each candidate keyword compute the information gain
     Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
         neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
 
+    // For each candidate, precompute the number of matches in the pos/neg datasets
+    Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
+
+    // For each candidate keyword compute the information gain
     List<Map.Entry<String, Double>> candidates = pos.values().parallelStream().flatMap(Collection::stream).map(
             candidate -> new AbstractMap.SimpleEntry<>(candidate,
                 informationGainRatio(candidate, contenders, counts, pos.size(), neg.size()))).sorted(byScoreDesc).distinct()
         .collect(Collectors.toList());
 
     // Keep the keywords with the highest information gain
-    return filterOutCandidates(candidates).stream().limit(nbLabelsToReturn).collect(Collectors.toList());
+    return filterOutCandidates(candidates).take(nbLabelsToReturn).toList();
   }
 
-  protected List<Map.Entry<String, Double>> filterOutCandidates(List<Map.Entry<String, Double>> candidates) {
-    return candidates;
+  protected View<Map.Entry<String, Double>> filterOutCandidates(List<Map.Entry<String, Double>> candidates) {
+    return View.of(candidates);
   }
 
   protected abstract Multiset<String> candidates(String text);
