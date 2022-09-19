@@ -321,28 +321,8 @@ final public class Model extends AbstractStack {
         System.out.println(confusionMatrix);
         System.out.printf("Model tested in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
 
-        // Save model
-        System.out.printf("Saving model for classifier %s...\n", classifier);
-
         List<FeatureVector> vectors = texts.stream().map(model::featurize).collect(Collectors.toList());
-
         model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
-
-        FeatureVector actuals = model.actuals_;
-        FeatureVector predictions = model.predictions_;
-
-        model.actuals_ = null;
-        model.predictions_ = null;
-
-        save(
-            new File(String.format("%smodel-%s-%s.xml.gz", goldLabels.getParent() + File.separator, classifier, label)),
-            model);
-
-        System.out.println("Model saved.");
-
-        model.actuals_ = actuals;
-        model.predictions_ = predictions;
-
         models.add(model);
       }
 
