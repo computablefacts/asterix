@@ -353,14 +353,14 @@ final public class Model extends AbstractStack {
 
         int prediction = stack.predict(text);
 
-        if (actual == OK || prediction == OK) {
+        if ((actual == OK || prediction == OK) && (actual == KO || prediction == KO)) {
           System.out.println("================================================================================");
           System.out.printf("== %s (actual) vs. %s (prediction)\n", actual == OK ? "OK" : "KO",
               prediction == OK ? "OK" : "KO");
           System.out.println("================================================================================");
           System.out.println(text);
-          System.out.println("================================================================================");
-          stack.snippetBestEffort(text).forEach(System.out::println);
+          // System.out.println("================================================================================");
+          // stack.snippetBestEffort(text).forEach(System.out::println);
         }
       });
     }
