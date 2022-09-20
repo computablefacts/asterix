@@ -173,38 +173,38 @@ public abstract class AbstractDocSetLabeler {
   /**
    * See https://en.wikipedia.org/wiki/Information_gain_ratio#Information_gain_ratio_calculation for details.
    *
-   * @param candidate  the candidate label.
-   * @param contenders the contenders that could be picked as candidate.
-   * @param counts     the precomputed counts for each contender.
-   * @param nbPosDocs  the number of documents in the positive dataset.
-   * @param nbNegDocs  the number of documents in the negative dataset.
+   * @param nbPosDocs         the number of documents in the positive dataset.
+   * @param nbMatchesInPosDoc the number of documents in the positive dataset that contain a given label.
+   * @param nbNegDocs         the number of documents in the negative dataset.
+   * @param nbMatchesInNegDoc the number of documents in the negative dataset that contain a given label.
+   * @param intrinsicValue    the intrinsic value.
    * @return the information gain ratio.
    */
-  static double informationGainRatio(String candidate, Set<String> contenders,
-      Map<String, Map.Entry<Double, Double>> counts, double nbPosDocs, double nbNegDocs) {
-
-    double informationGain = informationGain(nbPosDocs, counts.get(candidate).getKey(), nbNegDocs,
-        counts.get(candidate).getValue());
-    @Var double intrinsicValue = 0.0d;
-
-    for (String contender : contenders) {
-      intrinsicValue += intrinsicValue(nbPosDocs, counts.get(contender).getKey(), nbNegDocs,
-          counts.get(contender).getValue());
-    }
+  static double informationGainRatio(double nbPosDocs, double nbMatchesInPosDoc, double nbNegDocs,
+      double nbMatchesInNegDoc, double intrinsicValue) {
+    double informationGain = informationGain(nbPosDocs, nbMatchesInPosDoc, nbNegDocs, nbMatchesInNegDoc);
     return informationGain / intrinsicValue;
   }
 
+  /**
+   * For each contender, compute the number of occurrences of the keyword in the positive and negative datasets.
+   *
+   * @param contenders the contenders.
+   * @param pos
+   * @param neg
+   * @return
+   */
   static Map<String, Map.Entry<Double, Double>> counts(Set<String> contenders, Map<String, Set<String>> pos,
       Map<String, Set<String>> neg) {
 
+    List<Set<String>> posSets = pos.values().stream().map(Sets::newHashSet).collect(Collectors.toList());
+    List<Set<String>> negSets = neg.values().stream().map(Sets::newHashSet).collect(Collectors.toList());
+
     Map<String, Map.Entry<Double, Double>> counts = new ConcurrentHashMap<>();
+    contenders.forEach(contender -> {
 
-    View.of(contenders).forEachRemainingInParallel(contender -> {
-
-      double nbMatchesInPosDocs = pos.values().stream()
-          .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(contender)) ? 1.0 : 0.0).sum();
-      double nbMatchesInNegDocs = neg.values().stream()
-          .mapToDouble(list -> list.stream().anyMatch(term -> term.equals(contender)) ? 1.0 : 0.0).sum();
+      double nbMatchesInPosDocs = posSets.stream().mapToDouble(set -> set.contains(contender) ? 1.0 : 0.0).sum();
+      double nbMatchesInNegDocs = negSets.stream().mapToDouble(set -> set.contains(contender) ? 1.0 : 0.0).sum();
 
       counts.put(contender, new SimpleImmutableEntry<>(nbMatchesInPosDocs, nbMatchesInNegDocs));
     });
@@ -281,13 +281,24 @@ public abstract class AbstractDocSetLabeler {
     Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
         neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
 
-    // For each candidate, precompute the number of matches in the pos/neg datasets
+    // For each candidate keyword, compute the number of matches in the pos/neg datasets
     Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
-    // For each candidate keyword compute the information gain
-    List<Map.Entry<String, Double>> candidates = pos.values().parallelStream().flatMap(Collection::stream).map(
+    // For each candidate keyword, compute the intrinsic value
+    @Var double intrinsicValue = 0.0d;
+
+    for (String contender : contenders) {
+      intrinsicValue += intrinsicValue(pos.size(), counts.get(contender).getKey(), neg.size(),
+          counts.get(contender).getValue());
+    }
+
+    double newIntrinsicValue = intrinsicValue;
+
+    // For each candidate keyword, compute the information gain ratio
+    List<Map.Entry<String, Double>> candidates = pos.values().stream().flatMap(Collection::stream).map(
             candidate -> new AbstractMap.SimpleEntry<>(candidate,
-                informationGainRatio(candidate, contenders, counts, pos.size(), neg.size()))).sorted(byScoreDesc).distinct()
+                informationGainRatio(pos.size(), counts.get(candidate).getKey(), neg.size(),
+                    counts.get(candidate).getValue(), newIntrinsicValue))).sorted(byScoreDesc).distinct()
         .collect(Collectors.toList());
 
     // Keep the keywords with the highest information gain

@@ -8,6 +8,7 @@ import com.computablefacts.asterix.codecs.JsonCodec;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.Var;
 import com.google.re2j.Pattern;
 import java.io.File;
 import java.nio.file.Files;
@@ -200,12 +201,24 @@ public class AbstractDocSetLabelerTest {
     Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
         neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
 
+    // For each candidate keyword, compute the number of matches in the pos/neg datasets
     Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
-    double informationGainRatioYes = AbstractDocSetLabeler.informationGainRatio("yes", Sets.newHashSet("yes", "no"),
-        counts, pos.size(), neg.size());
-    double informationGainRatioNo = AbstractDocSetLabeler.informationGainRatio("no", Sets.newHashSet("yes", "no"),
-        counts, pos.size(), neg.size());
+    // For each candidate keyword, compute the intrinsic value
+    @Var double intrinsicValue = 0.0d;
+
+    for (String contender : contenders) {
+      intrinsicValue += AbstractDocSetLabeler.intrinsicValue(pos.size(), counts.get(contender).getKey(), neg.size(),
+          counts.get(contender).getValue());
+    }
+
+    double newIntrinsicValue = intrinsicValue;
+
+    // For each candidate keyword, compute the information gain ratio
+    double informationGainRatioYes = AbstractDocSetLabeler.informationGainRatio(pos.size(), counts.get("yes").getKey(),
+        neg.size(), counts.get("yes").getValue(), newIntrinsicValue);
+    double informationGainRatioNo = AbstractDocSetLabeler.informationGainRatio(pos.size(), counts.get("no").getKey(),
+        neg.size(), counts.get("no").getValue(), newIntrinsicValue);
 
     Assert.assertEquals(0.38244, informationGainRatioYes, 0.00001);
     Assert.assertEquals(0.38244, informationGainRatioNo, 0.00001);
@@ -325,20 +338,40 @@ public class AbstractDocSetLabelerTest {
     Set<String> contenders = Sets.union(pos.values().stream().flatMap(Set::stream).collect(Collectors.toSet()),
         neg.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
 
+    // For each candidate keyword, compute the number of matches in the pos/neg datasets
     Map<String, Map.Entry<Double, Double>> counts = counts(contenders, pos, neg);
 
-    double informationGainRatioHumidityHigh = AbstractDocSetLabeler.informationGainRatio("high",
-        Sets.newHashSet("high", "normal"), counts, pos.size(), neg.size());
-    double informationGainRatioHumidityNormal = AbstractDocSetLabeler.informationGainRatio("normal",
-        Sets.newHashSet("high", "normal"), counts, pos.size(), neg.size());
+    // For each candidate keyword, compute the intrinsic value
+    @Var double intrinsicValueHighNormal = 0.0d;
+    @Var double intrinsicValueTrueFalse = 0.0d;
+
+    for (String contender : contenders) {
+      if (Sets.newHashSet("high", "normal").contains(contender)) {
+        intrinsicValueHighNormal += AbstractDocSetLabeler.intrinsicValue(pos.size(), counts.get(contender).getKey(),
+            neg.size(), counts.get(contender).getValue());
+      }
+      if (Sets.newHashSet("true", "false").contains(contender)) {
+        intrinsicValueTrueFalse += AbstractDocSetLabeler.intrinsicValue(pos.size(), counts.get(contender).getKey(),
+            neg.size(), counts.get(contender).getValue());
+      }
+    }
+
+    double newIntrinsicValueHighNormal = intrinsicValueHighNormal;
+    double newIntrinsicValueTrueFalse = intrinsicValueTrueFalse;
+
+    // For each candidate keyword, compute the information gain ratio
+    double informationGainRatioHumidityHigh = AbstractDocSetLabeler.informationGainRatio(pos.size(),
+        counts.get("high").getKey(), neg.size(), counts.get("high").getValue(), newIntrinsicValueHighNormal);
+    double informationGainRatioHumidityNormal = AbstractDocSetLabeler.informationGainRatio(pos.size(),
+        counts.get("normal").getKey(), neg.size(), counts.get("normal").getValue(), newIntrinsicValueHighNormal);
 
     Assert.assertEquals(0.15183, informationGainRatioHumidityHigh, 0.00001);
     Assert.assertEquals(0.15183, informationGainRatioHumidityNormal, 0.00001);
 
-    double informationGainRatioWindyTrue = AbstractDocSetLabeler.informationGainRatio("true",
-        Sets.newHashSet("true", "false"), counts, pos.size(), neg.size());
-    double informationGainRatioWindyFalse = AbstractDocSetLabeler.informationGainRatio("false",
-        Sets.newHashSet("true", "false"), counts, pos.size(), neg.size());
+    double informationGainRatioWindyTrue = AbstractDocSetLabeler.informationGainRatio(pos.size(),
+        counts.get("true").getKey(), neg.size(), counts.get("true").getValue(), newIntrinsicValueTrueFalse);
+    double informationGainRatioWindyFalse = AbstractDocSetLabeler.informationGainRatio(pos.size(),
+        counts.get("false").getKey(), neg.size(), counts.get("false").getValue(), newIntrinsicValueTrueFalse);
 
     Assert.assertEquals(0.04884, informationGainRatioWindyTrue, 0.00001);
     Assert.assertEquals(0.04884, informationGainRatioWindyFalse, 0.00001);
