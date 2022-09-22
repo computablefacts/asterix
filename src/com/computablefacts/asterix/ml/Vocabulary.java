@@ -36,8 +36,8 @@ import javax.annotation.concurrent.NotThreadSafe;
 @CheckReturnValue
 final public class Vocabulary {
 
-  private final String tokenUnk_ = "<UNK>";
-  private final int idxUnk_ = 0;
+  private final static String tokenUnk_ = "<UNK>";
+  private final static int idxUnk_ = 0;
   private final Map<String, Integer> tf_ = new HashMap<>(); // normalized term -> term frequency
   private final Map<String, Integer> df_ = new HashMap<>(); // normalized term -> document frequency
   private final BiMap<String, Integer> idx_ = HashBiMap.create(); // one-hot encoding
@@ -62,6 +62,7 @@ final public class Vocabulary {
    * <li>{@code args[3]} the maximum size of the {@link Vocabulary}.</li>
    * <li>{@code args[4]} the types of tokens to keep: WORD, PUNCTUATION, etc.</li>
    * <li>{@code args[5]} the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.</li>
+   * <li>{@code args[6]} the prefix length after which a token must be chopped (optional, default is 6).</li>
    * </ul>
    */
   @Beta
@@ -73,6 +74,7 @@ final public class Vocabulary {
     int maxVocabSize = Integer.parseInt(args[3], 10);
     Set<String> includeTags = Sets.newHashSet(Splitter.on(',').trimResults().omitEmptyStrings().split(args[4]));
     int ngramsLength = Integer.parseInt(args[5], 10);
+    int chopAt = args.length < 7 ? 6 : Integer.parseInt(args[6], 10);
 
     Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
         "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
@@ -87,6 +89,7 @@ final public class Vocabulary {
 
       observations.add(String.format("Dataset is %s.", file));
       observations.add(String.format("NGrams length is %d.", ngramsLength));
+      observations.add(String.format("Chopping tokens after %d characters.", chopAt));
       observations.add(String.format("Min. document freq. is %.01f%% of all documents.", minDocFreq * 100));
       observations.add(String.format("Max. document freq. is %.01f%% of all documents.", maxDocFreq * 100));
       observations.add(String.format("Max. vocab size is %d.", maxVocabSize));
@@ -95,7 +98,7 @@ final public class Vocabulary {
 
       Stopwatch stopwatch = Stopwatch.createStarted();
       View<List<String>> tokens = Document.of(file, true)
-          .map(doc -> tokenizer(includeTags, ngramsLength).apply((String) doc.text())).displayProgress(10_000);
+          .map(doc -> tokenizer(includeTags, ngramsLength, chopAt).apply((String) doc.text())).displayProgress(10_000);
       Vocabulary vocabulary = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
       vocabulary.save(
           new File(String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator, ngramsLength)));
@@ -157,7 +160,7 @@ final public class Vocabulary {
     Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
         "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
     Preconditions.checkArgument(minDocFreq <= maxDocFreq && maxDocFreq <= 1.0,
-        "minDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
+        "maxDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
     Preconditions.checkArgument(maxVocabSize == -1 || maxVocabSize > 0, "maxVocabSize must be = -1 or > 0");
 
     Vocabulary vocabulary = new Vocabulary();
@@ -173,9 +176,10 @@ final public class Vocabulary {
    *
    * @param tagsToKeep the types of tokens to keep: WORD, PUNCTUATION, etc.
    * @param length     the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.
+   * @param chopAt     only keep the first `chopAt` characters of each token.
    * @return the tokenized text.
    */
-  static Function<String, List<String>> tokenizer(Set<String> tagsToKeep, int length) {
+  static Function<String, List<String>> tokenizer(Set<String> tagsToKeep, int length, int chopAt) {
 
     Preconditions.checkArgument(length >= 1, "length must be >= 1");
 
@@ -184,12 +188,12 @@ final public class Vocabulary {
     Predicate<Span> filter = span -> tagsToKeep == null || !Sets.intersection(tagsToKeep, span.tags()).isEmpty();
 
     if (length == 1) {
-      return text -> normalizer.andThen(tokenizer).andThen(seq -> View.of(seq).filter(filter).map(Span::text).toList())
-          .apply(text);
+      return text -> normalizer.andThen(tokenizer).andThen(seq -> View.of(seq).filter(filter).map(Span::text)
+          .map(tkn -> chopAt <= 0 ? tkn : tkn.substring(0, Math.min(chopAt, tkn.length()))).toList()).apply(text);
     }
-    return text -> normalizer.andThen(tokenizer).andThen(
-        seq -> View.of(seq).filter(filter).map(Span::text).overlappingWindowWithStrictLength(length)
-            .map(tks -> Joiner.on('_').join(tks)).toList()).apply(text);
+    return text -> normalizer.andThen(tokenizer).andThen(seq -> View.of(seq).filter(filter).map(Span::text)
+        .map(tkn -> chopAt <= 0 ? tkn : tkn.substring(0, Math.min(chopAt, tkn.length())))
+        .overlappingWindowWithStrictLength(length).map(tks -> Joiner.on('_').join(tks)).toList()).apply(text);
   }
 
   @Override
