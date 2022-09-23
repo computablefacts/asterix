@@ -6,6 +6,7 @@ import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.console.Observations;
 import com.google.common.annotations.Beta;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -15,10 +16,15 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.io.File;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -50,6 +57,97 @@ final public class Vocabulary {
 
   public Vocabulary(File file) {
     load(Preconditions.checkNotNull(file, "file should not be null"));
+  }
+
+  /**
+   * An implementation of the RAKE algorithm.
+   *
+   * @param texts      the source texts.
+   * @param isStopword a function that returns true iif a token must be considered as a stopword and false otherwise
+   *                   (optional).
+   * @return the tokens and ngrams weights.
+   */
+  @Beta
+  public static Map.Entry<Map<String, Double>, Map<String, Double>> rake(View<List<String>> texts,
+      Predicate<String> isStopword) {
+
+    Preconditions.checkNotNull(texts, "texts should not be null");
+
+    Map<String, Multiset<String>> matrix = new HashMap<>();
+
+    texts.forEachRemaining(tokens -> {
+
+      List<String> subTokens = isStopword == null ? tokens : new ArrayList<>();
+
+      for (int k = isStopword == null ? tokens.size() : 0; k < tokens.size(); k++) {
+        if (!isStopword.test(tokens.get(k))) {
+          subTokens.add(tokens.get(k));
+        } else {
+          String ngram = Joiner.on('_').join(subTokens);
+          for (String tkn : subTokens) {
+            if (!matrix.containsKey(tkn)) {
+              matrix.put(tkn, HashMultiset.create());
+            }
+            matrix.get(tkn).add(ngram);
+          }
+          subTokens.clear();
+        }
+      }
+      if (!subTokens.isEmpty()) {
+        String ngram = Joiner.on('_').join(subTokens);
+        for (String tkn : subTokens) {
+          if (!matrix.containsKey(tkn)) {
+            matrix.put(tkn, HashMultiset.create());
+          }
+          matrix.get(tkn).add(ngram);
+        }
+      }
+    });
+
+    AtomicDouble minTokenWeight = new AtomicDouble(Double.MAX_VALUE);
+    AtomicDouble maxTokenWeight = new AtomicDouble(Double.MIN_VALUE);
+    Map<String, Double> weightedTokens = new HashMap<>();
+
+    matrix.keySet().forEach(tkn -> {
+
+      double deg = matrix.get(tkn).size() + matrix.get(tkn).elementSet().stream()
+          .mapToDouble(ngram -> CharMatcher.is('_').countIn(ngram)).sum();
+      double freq = matrix.get(tkn).size();
+      double score = deg / freq;
+
+      if (score < minTokenWeight.doubleValue()) {
+        minTokenWeight.set(score);
+      }
+      if (score > maxTokenWeight.doubleValue()) {
+        maxTokenWeight.set(score);
+      }
+      weightedTokens.put(tkn, score);
+    });
+
+    AtomicDouble minNGramWeight = new AtomicDouble(Double.MAX_VALUE);
+    AtomicDouble maxNGramWeight = new AtomicDouble(Double.MIN_VALUE);
+    Map<String, Double> weightedNGrams = new HashMap<>();
+
+    View.of(matrix.values()).flatten(ngrams -> View.of(ngrams.elementSet())).forEachRemaining(ngram -> {
+
+      double score = Splitter.on('_').splitToStream(ngram).mapToDouble(weightedTokens::get).sum();
+
+      if (score < minNGramWeight.doubleValue()) {
+        minNGramWeight.set(score);
+      }
+      if (score > maxNGramWeight.doubleValue()) {
+        maxNGramWeight.set(score);
+      }
+      weightedNGrams.put(ngram, score);
+    });
+/*
+    weightedTokens.entrySet().forEach(e -> e.setValue(
+        (e.getValue() - minTokenWeight.doubleValue()) / (maxTokenWeight.doubleValue() - minTokenWeight.doubleValue())));
+
+    weightedNGrams.entrySet().forEach(e -> e.setValue(
+        (e.getValue() - minNGramWeight.doubleValue()) / (maxNGramWeight.doubleValue() - minNGramWeight.doubleValue())));
+*/
+    return new SimpleImmutableEntry<>(weightedTokens, weightedNGrams);
   }
 
   /**
@@ -95,17 +193,41 @@ final public class Vocabulary {
       observations.add(String.format("Max. vocab size is %d.", maxVocabSize));
       observations.add(String.format("Included tags are %s.", includeTags));
       observations.add("Building vocabulary...");
-
       Stopwatch stopwatch = Stopwatch.createStarted();
+
       View<List<String>> tokens = Document.of(file, true)
           .map(doc -> tokenizer(includeTags, ngramsLength, chopAt).apply((String) doc.text())).displayProgress(10_000);
-      Vocabulary vocabulary = Vocabulary.of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
+      Vocabulary vocabulary = of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
       vocabulary.save(
           new File(String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator, ngramsLength)));
-      stopwatch.stop();
 
+      stopwatch.stop();
       observations.add(String.format("Vocabulary built in %d seconds.", stopwatch.elapsed(TimeUnit.SECONDS)));
       observations.add(String.format("Vocabulary size is %d.", vocabulary.size()));
+
+      if (ngramsLength == 1) {
+
+        observations.add("Extracting keywords...");
+        stopwatch.reset().start();
+
+        Set<String> stopwords = Sets.newHashSet(vocabulary.stopwords(50));
+        Predicate<String> isStopword = tkn -> tkn.length() == 1 || stopwords.contains(tkn);
+        Function<String, List<String>> tokenizer = tokenizer(includeTags, ngramsLength, chopAt);
+        Map.Entry<Map<String, Double>, Map<String, Double>> rake = rake(
+            Document.of(file, true).map(doc -> tokenizer.apply((String) doc.text())).displayProgress(10_000),
+            isStopword);
+
+        List<Map.Entry<String, Double>> keywords = View.of(rake.getValue().entrySet()).toSortedList(
+            Comparator.comparingDouble((Map.Entry<String, Double> e) -> e.getValue()).reversed()
+                .thenComparing(Map.Entry::getKey));
+
+        View.of(keywords).toFile(keyword -> keyword.getKey() + "\t" + keyword.getValue(),
+            new File(String.format("%sweighted-keywords.tsv.gz", file.getParent() + File.separator)), false, true);
+
+        stopwatch.stop();
+        observations.add(String.format("Keywords extracted in %d seconds.", stopwatch.elapsed(TimeUnit.SECONDS)));
+        observations.add(String.format("The number of extracted keywords is %d.", keywords.size()));
+      }
     }
   }
 
@@ -387,7 +509,8 @@ final public class Vocabulary {
   }
 
   /**
-   * Returns the inverse document frequency which measures how common a word is among all documents.
+   * Returns the inverse document frequency which measures how common a word is among all documents. The fewer documents
+   * the term appears in, the higher the idf value.
    *
    * @param term the term.
    * @return the inverse document frequency.
@@ -426,6 +549,16 @@ final public class Vocabulary {
    */
   public double tfIdf(int index, int count) {
     return count * idf(index);
+  }
+
+  /**
+   * Compiles a list of possible stopwords from the current vocabulary.
+   *
+   * @param max the maximum number of words to return.
+   * @return a list of stopwords.
+   */
+  public List<String> stopwords(int max) {
+    return terms().stream().sorted(Comparator.comparing(this::idf)).limit(max).collect(Collectors.toList());
   }
 
   /**

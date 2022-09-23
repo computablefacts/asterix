@@ -7,9 +7,13 @@ import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.Var;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
@@ -297,6 +301,10 @@ public class VocabularyTest {
         String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator, ngramLength));
     File vocabDecompressed = new File(
         String.format("%svocabulary-%dgrams.tsv", file.getParent() + File.separator, ngramLength));
+    File weightedKeywordsCompressed = new File(
+        String.format("%sweighted-keywords.tsv.gz", file.getParent() + File.separator));
+    File weightedKeywordsDecompressed = new File(
+        String.format("%sweighted-keywords.tsv", file.getParent() + File.separator));
 
     if (vocabCompressed.exists()) {
       Assert.assertTrue(vocabCompressed.delete());
@@ -304,17 +312,24 @@ public class VocabularyTest {
     if (vocabDecompressed.exists()) {
       Assert.assertTrue(vocabDecompressed.delete());
     }
+    if (weightedKeywordsCompressed.exists()) {
+      Assert.assertTrue(weightedKeywordsCompressed.delete());
+    }
+    if (weightedKeywordsDecompressed.exists()) {
+      Assert.assertTrue(weightedKeywordsDecompressed.delete());
+    }
 
     String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", "WORD,NUMBER,TERMINAL_MARK",
         Integer.toString(ngramLength, 10)};
     Vocabulary.main(args);
 
+    // Check vocabulary
     Assert.assertTrue(vocabCompressed.exists());
     Assert.assertFalse(vocabDecompressed.exists());
     Assert.assertTrue(IO.gunzip(vocabCompressed, vocabDecompressed));
     Assert.assertTrue(vocabDecompressed.exists());
 
-    List<String> lines = IO.readLines(vocabDecompressed);
+    @Var List<String> lines = IO.readLines(vocabDecompressed);
 
     Assert.assertEquals(1002, lines.size());
     Assert.assertTrue(lines.get(0).matches("^# \\d+ \\d+$"));
@@ -326,6 +341,23 @@ public class VocabularyTest {
       String line = lines.get(i);
 
       Assert.assertTrue(line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+$"));
+    }
+
+    // Check keywords
+    Assert.assertTrue(weightedKeywordsCompressed.exists());
+    Assert.assertFalse(weightedKeywordsDecompressed.exists());
+    Assert.assertTrue(IO.gunzip(weightedKeywordsCompressed, weightedKeywordsDecompressed));
+    Assert.assertTrue(weightedKeywordsDecompressed.exists());
+
+    lines = IO.readLines(weightedKeywordsDecompressed);
+
+    Assert.assertEquals(21_2661, lines.size());
+
+    for (int i = 0; i < lines.size(); i++) {
+
+      String line = lines.get(i);
+
+      Assert.assertTrue(line.matches("^.*\t\\d+(\\.\\d+)?$"));
     }
   }
 
@@ -372,6 +404,26 @@ public class VocabularyTest {
 
       Assert.assertTrue(line.matches((i - 1 /* comment */ - 1 /* header */) + "\t.*\t\\d+\t\\d+$"));
     }
+  }
+
+  @Test
+  public void testRake() {
+
+    Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK");
+    Set<String> stopwords = Sets.newHashSet("out", "a", "new", "way", "for", "to", "and", "they", "like", ",", "it",
+        "already", "on", "your", ".", "got", "the", "this", "is", "taken", "from");
+    Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 1, -1);
+    List<String> texts = Lists.newArrayList(
+        "Google quietly rolled out a new way for Android users to listen to podcasts and subscribe to shows they like, and it already works on your phone. Podcast production company Pacific Content got the exclusive on it.This text is taken from Google news.");
+    Map.Entry<Map<String, Double>, Map<String, Double>> rake = Vocabulary.rake(View.of(texts).map(tokenizer),
+        stopwords::contains);
+
+    Map<String, Double> weightedNGrams = rake.getValue();
+
+    Assert.assertEquals(25.0, weightedNGrams.get("podcast_production_company_pacific_content"), 0.000001);
+    Assert.assertEquals(8.5, weightedNGrams.get("google_quietly_rolled"), 0.000001);
+    Assert.assertEquals(4.5, weightedNGrams.get("google_news"), 0.000001);
+    Assert.assertEquals(4.0, weightedNGrams.get("android_users"), 0.000001);
   }
 
   private Vocabulary vocabularyFilteredByValues() {
