@@ -5,6 +5,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
@@ -58,7 +59,7 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
       matrix.add(vector);
     }
 
-    // Compute correlation coefficient between each token
+    // Compute correlation coefficient between each feature
     Table<Integer, Integer, CorTest> correlations = HashBasedTable.create();
 
     for (int i = 0; i < matrix.size(); i++) {
@@ -87,17 +88,9 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
     if (nonZeroEntries_ == null) {
       if (correlation_ != null) {
 
-        Set<Integer> nonCorrelatedEntries = View.range(0, vectors.get(0).length()).toSet();
-
-        Table<Integer, Integer, CorTest> correlations = correlations(vectors, correlation_);
-        correlations.cellSet().removeIf(cell -> {
-          boolean isCorrelated =
-              cell.getRowKey() > cell.getColumnKey() && cell.getValue().cor >= 0.7 /* strong correlation */;
-          if (isCorrelated) {
-            nonCorrelatedEntries.remove(cell.getColumnKey());
-          }
-          return isCorrelated;
-        });
+        Set<Integer> correlatedFeatures = highlyCorrelatedFeatures(vectors, correlation_);
+        Set<Integer> nonCorrelatedEntries = Sets.difference(View.range(0, vectors.get(0).length()).toSet(),
+            correlatedFeatures);
 
         nonZeroEntries_ = new ArrayList<>(nonCorrelatedEntries);
         Collections.sort(nonZeroEntries_);
@@ -135,6 +128,56 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
   @Beta
   public List<Integer> nonZeroEntries() {
     return nonZeroEntries_ == null ? ImmutableList.of() : ImmutableList.copyOf(nonZeroEntries_);
+  }
+
+  private Set<Integer> highlyCorrelatedFeatures(List<FeatureVector> vectors, eCorrelation correlation) {
+
+    Preconditions.checkNotNull(vectors, "vectors should not be null");
+    Preconditions.checkNotNull(correlation, "correlation should not be null");
+
+    // Transpose
+    int length = vectors.get(0).length();
+    List<double[]> matrix = new ArrayList<>(length);
+
+    for (int i = 0; i < length; i++) {
+
+      double[] vector = new double[vectors.size()];
+
+      for (int j = 0; j < vectors.size(); j++) {
+        vector[j] = vectors.get(j).get(i);
+      }
+
+      matrix.add(vector);
+    }
+
+    // Compute correlation coefficient between each feature
+    Set<Integer> correlatedFeatures = new HashSet<>();
+
+    for (int i = 0; i < matrix.size(); i++) {
+
+      double[] v1 = matrix.get(i);
+
+      for (int j = 0; j < i; j++) {
+        if (correlatedFeatures.contains(j)) {
+          continue;
+        }
+
+        double[] v2 = matrix.get(j);
+        CorTest test;
+
+        if (eCorrelation.KENDALL.equals(correlation)) {
+          test = CorTest.kendall(v1, v2);
+        } else if (eCorrelation.SPEARMAN.equals(correlation)) {
+          test = CorTest.spearman(v1, v2);
+        } else { // PEARSON
+          test = CorTest.pearson(v1, v2);
+        }
+        if (test.cor >= 0.7 /* strong correlation */) {
+          correlatedFeatures.add(j);
+        }
+      }
+    }
+    return correlatedFeatures;
   }
 
   /**
