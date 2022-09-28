@@ -172,7 +172,7 @@ final public class VectorsReducer implements Function<List<FeatureVector>, List<
         } else { // PEARSON
           test = CorTest.pearson(v1, v2);
         }
-        if (test.cor >= 0.7 /* strong correlation */) {
+        if (test.cor >= 0.8 /* strong correlation */) {
           correlatedFeatures.add(j);
         }
       }
