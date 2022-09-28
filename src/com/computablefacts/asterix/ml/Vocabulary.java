@@ -11,11 +11,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AtomicDouble;
@@ -62,14 +64,13 @@ final public class Vocabulary {
   /**
    * An implementation of the RAKE algorithm.
    *
-   * @param texts      the source texts.
-   * @param isStopword a function that returns true iif a token must be considered as a stopword and false otherwise
-   *                   (optional).
+   * @param texts     the source texts.
+   * @param keepToken a function that returns true iif a token must be kept and false otherwise (optional).
    * @return the tokens and ngrams weights.
    */
   @Beta
   public static Map.Entry<Map<String, Double>, Map<String, Double>> rake(View<List<String>> texts,
-      Predicate<String> isStopword) {
+      Predicate<String> keepToken) {
 
     Preconditions.checkNotNull(texts, "texts should not be null");
 
@@ -77,10 +78,10 @@ final public class Vocabulary {
 
     texts.forEachRemaining(tokens -> {
 
-      List<String> subTokens = isStopword == null ? tokens : new ArrayList<>();
+      List<String> subTokens = keepToken == null ? tokens : new ArrayList<>();
 
-      for (int k = isStopword == null ? tokens.size() : 0; k < tokens.size(); k++) {
-        if (!isStopword.test(tokens.get(k))) {
+      for (int k = keepToken == null ? tokens.size() : 0; k < tokens.size(); k++) {
+        if (keepToken.test(tokens.get(k))) {
           subTokens.add(tokens.get(k));
         } else {
           String ngram = Joiner.on('_').join(subTokens);
@@ -195,8 +196,11 @@ final public class Vocabulary {
       observations.add("Building vocabulary...");
       Stopwatch stopwatch = Stopwatch.createStarted();
 
-      View<List<String>> tokens = Document.of(file, true)
-          .map(doc -> tokenizer(includeTags, ngramsLength, chopAt).apply((String) doc.text())).displayProgress(10_000);
+      Predicate<Span> keepSpan = span -> !Sets.intersection(span.tags(), includeTags).isEmpty();
+      Function<String, List<String>> tokenizer = tokenizer(keepSpan, ngramsLength, chopAt);
+      View<List<String>> tokens = Document.of(file, true).displayProgress(10_000)
+          .flatten(doc -> View.of(Splitter.on('\f').splitToStream((String) doc.text())))
+          .filter(page -> !Strings.isNullOrEmpty(page)).map(tokenizer);
       Vocabulary vocabulary = of(tokens, minDocFreq, maxDocFreq, maxVocabSize);
       vocabulary.save(
           new File(String.format("%svocabulary-%dgrams.tsv.gz", file.getParent() + File.separator, ngramsLength)));
@@ -211,11 +215,11 @@ final public class Vocabulary {
         stopwatch.reset().start();
 
         Set<String> stopwords = Sets.newHashSet(vocabulary.stopwords(50));
-        Predicate<String> isStopword = tkn -> tkn.length() == 1 || stopwords.contains(tkn);
-        Function<String, List<String>> tokenizer = tokenizer(includeTags, ngramsLength, chopAt);
-        Map.Entry<Map<String, Double>, Map<String, Double>> rake = rake(
-            Document.of(file, true).map(doc -> tokenizer.apply((String) doc.text())).displayProgress(10_000),
-            isStopword);
+        Predicate<String> isStopword = tkn -> tkn.length() == 1 || stopwords.contains(tkn)
+            || vocabulary.index(tkn) == idxUnk_;
+        Map.Entry<Map<String, Double>, Map<String, Double>> rake = rake(Document.of(file, true).displayProgress(10_000)
+            .flatten(doc -> View.of(Splitter.on('\f').splitToStream((String) doc.text())))
+            .filter(page -> !Strings.isNullOrEmpty(page)).map(tokenizer), isStopword);
 
         List<Map.Entry<String, Double>> keywords = View.of(rake.getValue().entrySet()).toSortedList(
             Comparator.comparingDouble((Map.Entry<String, Double> e) -> e.getValue()).reversed()
@@ -296,26 +300,49 @@ final public class Vocabulary {
   /**
    * A pipeline that maps a single text to a list of tokens.
    *
-   * @param tagsToKeep the types of tokens to keep: WORD, PUNCTUATION, etc.
-   * @param length     the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.
-   * @param chopAt     only keep the first `chopAt` characters of each token.
+   * @param keepSpan the types of tokens to keep: WORD, PUNCTUATION, etc. (optional)
+   * @param length   the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.
+   * @param chopAt   only keep the first `chopAt` characters of each token. (optional)
    * @return the tokenized text.
    */
-  static Function<String, List<String>> tokenizer(Set<String> tagsToKeep, int length, int chopAt) {
+  @Deprecated
+  static Function<String, List<String>> tokenizer(Predicate<Span> keepSpan, int length, int chopAt) {
+    return tokenizer(keepSpan, null, null, length, chopAt);
+  }
+
+  /**
+   * A pipeline that maps a single text to a list of tokens.
+   *
+   * @param keepSpan  the types of tokens to keep: WORD, PUNCTUATION, etc. (optional)
+   * @param keepToken the tokens to keep: stopwords, etc. (optional)
+   * @param keepNGram the ngrams to keep (optional)
+   * @param length    the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc.
+   * @param chopAt    only keep the first `chopAt` characters of each token. (optional)
+   * @return the tokenized text.
+   */
+  static Function<String, List<String>> tokenizer(Predicate<Span> keepSpan, Predicate<String> keepToken,
+      Predicate<List<String>> keepNGram, int length, int chopAt) {
 
     Preconditions.checkArgument(length >= 1, "length must be >= 1");
 
     TextNormalizer normalizer = new TextNormalizer(true);
     TextTokenizer tokenizer = new TextTokenizer();
-    Predicate<Span> filter = span -> tagsToKeep == null || !Sets.intersection(tagsToKeep, span.tags()).isEmpty();
+    Function<String, String> chopToken = tkn -> chopAt <= 0 ? tkn : tkn.substring(0, Math.min(chopAt, tkn.length()));
+    Predicate<Span> newKeepTag = span -> keepSpan == null || keepSpan.test(span);
+    Predicate<String> newKeepToken = tkn -> keepToken == null || keepToken.test(tkn);
+    Predicate<List<String>> newKeepNGram = tkns -> keepNGram == null || keepNGram.test(tkns);
 
     if (length == 1) {
-      return text -> normalizer.andThen(tokenizer).andThen(seq -> View.of(seq).filter(filter).map(Span::text)
-          .map(tkn -> chopAt <= 0 ? tkn : tkn.substring(0, Math.min(chopAt, tkn.length()))).toList()).apply(text);
+      return text -> normalizer.andThen(tokenizer).andThen(seq -> {
+        List<String> ngram = View.of(seq).filter(newKeepTag).map(Span::text).map(chopToken).filter(newKeepToken)
+            .toList();
+        return newKeepNGram.test(ngram) ? ngram : Lists.<String>newArrayList();
+      }).apply(text);
     }
-    return text -> normalizer.andThen(tokenizer).andThen(seq -> View.of(seq).filter(filter).map(Span::text)
-        .map(tkn -> chopAt <= 0 ? tkn : tkn.substring(0, Math.min(chopAt, tkn.length())))
-        .overlappingWindowWithStrictLength(length).map(tks -> Joiner.on('_').join(tks)).toList()).apply(text);
+    return text -> normalizer.andThen(tokenizer).andThen(
+        seq -> View.of(seq).filter(newKeepTag).map(Span::text).map(chopToken).filter(newKeepToken)
+            .overlappingWindowWithStrictLength(length).filter(newKeepNGram).map(tks -> Joiner.on('_').join(tks))
+            .toList()).apply(text);
   }
 
   @Override

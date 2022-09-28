@@ -1,10 +1,7 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.View;
-import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -20,7 +17,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -31,61 +27,6 @@ import java.util.stream.Collectors;
 public abstract class AbstractDocSetLabeler {
 
   protected AbstractDocSetLabeler() {
-  }
-
-  @Beta
-  public static List<Map.Entry<String, Double>> findInterestingNGrams(Function<String, List<String>> tokenizer,
-      Vocabulary ngrams, List<String> ok, List<String> ko) {
-
-    Preconditions.checkNotNull(tokenizer, "tokenizer should not be null");
-    Preconditions.checkNotNull(ngrams, "ngrams should not be null");
-    Preconditions.checkNotNull(ok, "ok should not be null");
-    Preconditions.checkNotNull(ko, "ko should not be null");
-
-    // Deduplicate datasets
-    Set<String> newOk = Sets.newHashSet(ok);
-    Set<String> newKo = Sets.difference(Sets.newHashSet(ko), Sets.newHashSet(ok));
-
-    // Build vocabulary for the ok and ko datasets
-    Vocabulary ngramsOk = Vocabulary.of(View.of(newOk).map(tokenizer).displayProgress(10_000), 0.01, 0.99, 100_000);
-    Vocabulary ngramsKo = Vocabulary.of(View.of(newKo).map(tokenizer).displayProgress(10_000), 0.01, 0.99, 100_000);
-
-    // Provide an implementation of the DocSetLabeler
-    AbstractDocSetLabeler docSetLabeler = new AbstractDocSetLabeler() {
-
-      @Override
-      protected Multiset<String> candidates(String text) {
-        return HashMultiset.create(tokenizer.apply(text));
-      }
-
-      @Override
-      protected double computeX(String text, String candidate, int count) {
-
-        if (ngramsKo.index(candidate) == 0 /* UNK */) {
-          return 1.0;
-        }
-        if (ngramsOk.index(candidate) == 0 /* UNK */) {
-          return 0.0;
-        }
-
-        ConfusionMatrix confusionMatrix = new ConfusionMatrix();
-        confusionMatrix.addTruePositives(ngramsOk.df(candidate));
-        confusionMatrix.addTrueNegatives(ngramsKo.nbDocsSeen() - ngramsKo.df(candidate));
-        confusionMatrix.addFalsePositives(ngramsKo.df(candidate));
-        confusionMatrix.addFalseNegatives(ngramsOk.nbDocsSeen() - ngramsOk.df(candidate));
-
-        // The more the candidate is able to correctly split the input dataset, the better
-        return (confusionMatrix.matthewsCorrelationCoefficient() + 1.0) / 2.0;
-      }
-
-      @Override
-      protected double computeY(String text, String candidate, int count) {
-
-        // The less common the word is in the whole vocabulary, the better
-        return 1.0 - ngrams.ntf(candidate);
-      }
-    };
-    return docSetLabeler.labels(Lists.newArrayList(newOk), Lists.newArrayList(newKo), 100, 10);
   }
 
   /**

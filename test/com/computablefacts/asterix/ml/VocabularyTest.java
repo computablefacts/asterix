@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
@@ -36,6 +37,7 @@ public class VocabularyTest {
       Assert.assertEquals("Straße", Vocabulary.normalize("Straße"));
     }
   */
+
   @Test
   public void testVocabulary() {
 
@@ -351,7 +353,7 @@ public class VocabularyTest {
 
     lines = IO.readLines(weightedKeywordsDecompressed);
 
-    Assert.assertEquals(21_2661, lines.size());
+    Assert.assertEquals(94_196, lines.size());
 
     for (int i = 0; i < lines.size(); i++) {
 
@@ -412,11 +414,13 @@ public class VocabularyTest {
     Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK");
     Set<String> stopwords = Sets.newHashSet("out", "a", "new", "way", "for", "to", "and", "they", "like", ",", "it",
         "already", "on", "your", ".", "got", "the", "this", "is", "taken", "from");
-    Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 1, -1);
+    Predicate<Span> keepSpan = span -> !Sets.intersection(span.tags(), includeTags).isEmpty();
+    Predicate<String> keepToken = tkn -> !stopwords.contains(tkn);
+    Function<String, List<String>> tokenizer = Vocabulary.tokenizer(keepSpan, 1, -1);
     List<String> texts = Lists.newArrayList(
         "Google quietly rolled out a new way for Android users to listen to podcasts and subscribe to shows they like, and it already works on your phone. Podcast production company Pacific Content got the exclusive on it.This text is taken from Google news.");
     Map.Entry<Map<String, Double>, Map<String, Double>> rake = Vocabulary.rake(View.of(texts).map(tokenizer),
-        stopwords::contains);
+        keepToken);
 
     Map<String, Double> weightedNGrams = rake.getValue();
 

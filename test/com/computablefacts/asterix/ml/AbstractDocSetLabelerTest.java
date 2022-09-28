@@ -376,38 +376,4 @@ public class AbstractDocSetLabelerTest {
     Assert.assertEquals(0.04884, informationGainRatioWindyTrue, 0.00001);
     Assert.assertEquals(0.04884, informationGainRatioWindyFalse, 0.00001);
   }
-
-  @Test
-  public void testFindInterestingNGrams() throws Exception {
-
-    String path = Files.createTempDirectory("").toFile().getAbsolutePath();
-    File file = new File(path + File.separator + "papers.jsonl.gz");
-    DocumentTest.papers().toFile(doc -> JsonCodec.asString(doc.json()), file, false, true);
-
-    Set<String> ok = new HashSet<>();
-    Set<String> ko = new HashSet<>();
-
-    Pattern pattern = Pattern.compile(".*crowdsourcing.*",
-        Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
-
-    DocumentTest.papers().map(doc -> (String) doc.text()).flatten(text -> View.of(Splitter.on('\f').split(text)))
-        .forEachRemaining(page -> {
-          if (pattern.matches(page)) {
-            ok.add(page);
-          } else {
-            ko.add(page);
-          }
-        });
-
-    Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK");
-    String[] args = new String[]{file.getAbsolutePath(), "0.01", "0.99", "1000", Joiner.on(',').join(includeTags), "1"};
-    Vocabulary.main(args);
-
-    File fngrams = new File(String.format("%svocabulary-1grams.tsv.gz", file.getParent() + File.separator));
-    Vocabulary ngrams = new Vocabulary(fngrams);
-    List<Map.Entry<String, Double>> terms = AbstractDocSetLabeler.findInterestingNGrams(
-        Vocabulary.tokenizer(includeTags, 1), ngrams, View.of(ok).toList(), View.of(ko).sample(500));
-
-    Assert.assertEquals("crowdsourcing", terms.get(0).getKey());
-  }
 }
