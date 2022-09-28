@@ -57,10 +57,9 @@ final public class RegexVectorizer implements Function<String, FeatureVector> {
     return vector;
   }
 
-  List<Set<Span>> matchedGroups(String text) {
+  List<Set<Span>> findGroupMatches(String text) {
 
-    String newText = Strings.nullToEmpty(text).replaceAll("([ \n\r])+", "$1");
-    Matcher matcher = pattern_.matcher(newText);
+    Matcher matcher = pattern_.matcher(Strings.nullToEmpty(text));
 
     List<Set<Span>> matches = new ArrayList<>();
 
@@ -74,7 +73,7 @@ final public class RegexVectorizer implements Function<String, FeatureVector> {
         int end = matcher.end(i);
 
         if (start >= 0 && end >= 0) {
-          matches.get(i - 1).add(new Span(newText, start, end));
+          matches.get(i - 1).add(new Span(text, start, end));
         }
       }
     }

@@ -74,37 +74,7 @@ final public class Vocabulary {
 
     Preconditions.checkNotNull(texts, "texts should not be null");
 
-    Map<String, Multiset<String>> matrix = new HashMap<>();
-
-    texts.forEachRemaining(tokens -> {
-
-      List<String> subTokens = keepToken == null ? tokens : new ArrayList<>();
-
-      for (int k = keepToken == null ? tokens.size() : 0; k < tokens.size(); k++) {
-        if (keepToken.test(tokens.get(k))) {
-          subTokens.add(tokens.get(k));
-        } else {
-          String ngram = Joiner.on('_').join(subTokens);
-          for (String tkn : subTokens) {
-            if (!matrix.containsKey(tkn)) {
-              matrix.put(tkn, HashMultiset.create());
-            }
-            matrix.get(tkn).add(ngram);
-          }
-          subTokens.clear();
-        }
-      }
-      if (!subTokens.isEmpty()) {
-        String ngram = Joiner.on('_').join(subTokens);
-        for (String tkn : subTokens) {
-          if (!matrix.containsKey(tkn)) {
-            matrix.put(tkn, HashMultiset.create());
-          }
-          matrix.get(tkn).add(ngram);
-        }
-      }
-    });
-
+    Map<String, Multiset<String>> matrix = rakeSplit(texts, keepToken);
     AtomicDouble minTokenWeight = new AtomicDouble(Double.MAX_VALUE);
     AtomicDouble maxTokenWeight = new AtomicDouble(Double.MIN_VALUE);
     Map<String, Double> weightedTokens = new HashMap<>();
@@ -149,6 +119,44 @@ final public class Vocabulary {
         (e.getValue() - minNGramWeight.doubleValue()) / (maxNGramWeight.doubleValue() - minNGramWeight.doubleValue())));
 */
     return new SimpleImmutableEntry<>(weightedTokens, weightedNGrams);
+  }
+
+  @Beta
+  public static Map<String, Multiset<String>> rakeSplit(View<List<String>> texts, Predicate<String> keepToken) {
+
+    Preconditions.checkNotNull(texts, "texts should not be null");
+
+    Map<String, Multiset<String>> matrix = new HashMap<>();
+
+    texts.forEachRemaining(tokens -> {
+
+      List<String> subTokens = keepToken == null ? tokens : new ArrayList<>();
+
+      for (int k = keepToken == null ? tokens.size() : 0; k < tokens.size(); k++) {
+        if (keepToken.test(tokens.get(k))) {
+          subTokens.add(tokens.get(k));
+        } else {
+          String ngram = Joiner.on('_').join(subTokens);
+          for (String tkn : subTokens) {
+            if (!matrix.containsKey(tkn)) {
+              matrix.put(tkn, HashMultiset.create());
+            }
+            matrix.get(tkn).add(ngram);
+          }
+          subTokens.clear();
+        }
+      }
+      if (!subTokens.isEmpty()) {
+        String ngram = Joiner.on('_').join(subTokens);
+        for (String tkn : subTokens) {
+          if (!matrix.containsKey(tkn)) {
+            matrix.put(tkn, HashMultiset.create());
+          }
+          matrix.get(tkn).add(ngram);
+        }
+      }
+    });
+    return matrix;
   }
 
   /**

@@ -1,6 +1,5 @@
 package com.computablefacts.asterix.ml;
 
-import static com.computablefacts.asterix.ml.AbstractDocSetLabeler.findInterestingNGrams;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
@@ -48,15 +47,14 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -97,20 +95,21 @@ final public class Model extends AbstractStack {
     System.out.printf("Labels to consider are [%s].\n", Joiner.on(", ").join(labels));
     System.out.printf("Classifiers to consider are [%s].\n", Joiner.on(", ").join(classifiers));
 
-    // Load vocabulary: unigrams, bigrams and trigrams, etc.
-    File funigrams = new File(String.format("%svocabulary-1grams.tsv.gz", goldLabels.getParent() + File.separator));
-    File fbigrams = new File(String.format("%svocabulary-2grams.tsv.gz", goldLabels.getParent() + File.separator));
-    File ftrigrams = new File(String.format("%svocabulary-3grams.tsv.gz", goldLabels.getParent() + File.separator));
-    File fquadgrams = new File(String.format("%svocabulary-4grams.tsv.gz", goldLabels.getParent() + File.separator));
-    File fquintgrams = new File(String.format("%svocabulary-5grams.tsv.gz", goldLabels.getParent() + File.separator));
-    File fsextgrams = new File(String.format("%svocabulary-6grams.tsv.gz", goldLabels.getParent() + File.separator));
+    // Load vocabulary (unigrams)
+    File fvocabulary = new File(String.format("%svocabulary-1grams.tsv.gz", goldLabels.getParent() + File.separator));
 
-    Vocabulary unigrams = funigrams.exists() ? new Vocabulary(funigrams) : null;
-    Vocabulary bigrams = fbigrams.exists() ? new Vocabulary(fbigrams) : null;
-    Vocabulary trigrams = ftrigrams.exists() ? new Vocabulary(ftrigrams) : null;
-    Vocabulary quadgrams = fquadgrams.exists() ? new Vocabulary(fquadgrams) : null;
-    Vocabulary quintgrams = fquintgrams.exists() ? new Vocabulary(fquintgrams) : null;
-    Vocabulary sextgrams = fsextgrams.exists() ? new Vocabulary(fsextgrams) : null;
+    Preconditions.checkState(fvocabulary.exists(), "Missing vocabulary : %s", fvocabulary);
+
+    Vocabulary vocabulary = fvocabulary.exists() ? new Vocabulary(fvocabulary) : null;
+
+    // Initialize tokenizers
+    int chopAt = 6; // TODO : move as parameter?
+    Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK"); // TODO : move as parameter?
+    Set<String> stopwords = Sets.newHashSet(vocabulary.stopwords(100));
+    Predicate<Span> keepSpan = span -> !Sets.intersection(span.tags(), includeTags).isEmpty();
+    Predicate<String> keepToken = tkn -> tkn.length() > 1 && vocabulary.index(tkn) != 0 /* UNK */
+        && !stopwords.contains(tkn);
+    Function<String, List<String>> tokenizer = Vocabulary.tokenizer(keepSpan, keepToken, null, 1, chopAt);
 
     // Train/test model
     double trainSizeInPercent = 0.75; // TODO : move as parameter?
@@ -164,55 +163,37 @@ final public class Model extends AbstractStack {
       List<String> ko = View.of(dataset.getKey()).zip(dataset.getValue()).filter(e -> e.getValue() == KO)
           .map(Entry::getKey).toList();
 
-      Set<String> includeTags = Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK"); // TODO : move as parameter?
-      Map<Integer, List<Map.Entry<String, Double>>> labelingFunctions = new HashMap<>();
-
-      if (unigrams != null) {
-        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 1);
-        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, unigrams, ok, ko);
-        labelingFunctions.put(1, lfs);
-        System.out.printf("Labeling functions for unigrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
-      }
-      if (bigrams != null) {
-        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 2);
-        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, bigrams, ok, ko);
-        labelingFunctions.put(2, lfs);
-        System.out.printf("Labeling functions for bigrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
-      }
-      if (trigrams != null) {
-        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 3);
-        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, trigrams, ok, ko);
-        labelingFunctions.put(3, lfs);
-        System.out.printf("Labeling functions for trigrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
-      }
-      if (quadgrams != null) {
-        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 4);
-        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, quadgrams, ok, ko);
-        labelingFunctions.put(4, lfs);
-        System.out.printf("Labeling functions for quadgrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
-      }
-      if (quintgrams != null) {
-        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 5);
-        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, quintgrams, ok, ko);
-        labelingFunctions.put(5, lfs);
-        System.out.printf("Labeling functions for quintgrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
-      }
-      if (sextgrams != null) {
-        Function<String, List<String>> tokenizer = Vocabulary.tokenizer(includeTags, 6);
-        List<Map.Entry<String, Double>> lfs = findInterestingNGrams(tokenizer, sextgrams, ok, ko);
-        labelingFunctions.put(6, lfs);
-        System.out.printf("Labeling functions for sextgrams are : %s\n", View.of(lfs).toString(Entry::getKey, ", "));
-      }
+      int nbCandidatesToConsider = 50; // TODO : move as parameter?
+      int nbLabelsToReturn = 25; // TODO : move as parameter?
+      List<Map.Entry<String, Double>> labelingFunctions = findInterestingNGrams(ok, ko, vocabulary, tokenizer,
+          nbCandidatesToConsider, nbLabelsToReturn);
 
       stopwatch.stop();
       System.out.printf("DocSetLabeler ran in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+      System.out.printf("Labeling functions are : [%s]\n", View.of(labelingFunctions).toString(Entry::getKey, ", "));
+
+      // Rewrite all LF as a single regexp
+      System.out.println("Rewriting labeling functions as RegExp...");
+      stopwatch.reset().start();
+
+      List<String> patterns = View.of(labelingFunctions).map(
+              lf -> "(?:^|$|\\s)+" + Pattern.quote(lf.getKey()).replace("_", ".*(?:^|$|\\s)+") + "[a-z0-9]*(?:^|$|\\s)+")
+          .toList();
+      Pattern regex = Pattern.compile("(" + Joiner.on(")|(").join(patterns) + ")",
+          Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+      List<Double> weights = View.of(labelingFunctions).map(Entry::getValue).toList();
+
+      stopwatch.stop();
+      System.out.printf("Labeling functions rewritten in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+      System.out.printf("RegExp is : %s\n", regex);
+      System.out.printf("Group weights are : [%s]\n", View.of(weights).toString(x -> Double.toString(x), ", "));
 
       List<Model> models = new ArrayList<>();
 
       for (String classifier : classifiers) {
 
         Model model = new Model(label + "/" + classifier);
-        model.featurizer_ = featurizer(labelingFunctions, categorizer);
+        model.featurizer_ = new Featurizer(new RegexVectorizer(regex, weights), categorizer);
 
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
@@ -253,59 +234,26 @@ final public class Model extends AbstractStack {
 
         if (!model.classifier_.supportsIncrementalTraining()) {
 
-          List<Entry<String, Integer>> batchOk = View.of(texts).zip(categories).filter(b -> b.getValue() == OK)
-              .toList();
-          List<Entry<String, Integer>> batchKo = View.of(texts).zip(categories).filter(b -> b.getValue() == KO)
-              .toList();
+          Entry<List<Entry<String, Integer>>, List<Entry<String, Integer>>> entry = split(
+              View.of(texts).zip(categories).toList(), trainSizeInPercent);
+          Map.Entry<List<String>, List<Integer>> train = View.of(entry.getKey()).unzip(Function.identity());
+          Map.Entry<List<String>, List<Integer>> test = View.of(entry.getValue()).unzip(Function.identity());
 
-          Collections.shuffle(batchOk);
-          Collections.shuffle(batchKo);
+          model.train(train.getKey(), train.getValue());
 
-          int trainSizeOk = (int) (batchOk.size() * trainSizeInPercent);
-          int trainSizeKo = (int) (batchKo.size() * trainSizeInPercent);
-
-          List<Entry<String, Integer>> train = View.of(batchOk).take(trainSizeOk)
-              .concat(View.of(batchKo).take(trainSizeKo)).toList();
-          List<Entry<String, Integer>> test = View.of(batchOk).drop(trainSizeOk)
-              .concat(View.of(batchKo).drop(trainSizeKo)).toList();
-
-          Collections.shuffle(train);
-          Collections.shuffle(test);
-
-          Map.Entry<List<String>, List<Integer>> trainn = View.of(train).unzip(Function.identity());
-          Map.Entry<List<String>, List<Integer>> testt = View.of(test).unzip(Function.identity());
-
-          model.train(trainn.getKey(), trainn.getValue());
-
-          testDataset.addAll(testt.getKey());
-          testCategories.addAll(testt.getValue());
+          testDataset.addAll(test.getKey());
+          testCategories.addAll(test.getValue());
         } else {
           View.of(texts).zip(categories).partition(1000 /* batch size */).forEachRemaining(list -> {
 
-            List<Entry<String, Integer>> batchOk = View.of(list).filter(b -> b.getValue() == OK).toList();
-            List<Entry<String, Integer>> batchKo = View.of(list).filter(b -> b.getValue() == KO).toList();
+            Entry<List<Entry<String, Integer>>, List<Entry<String, Integer>>> entry = split(list, trainSizeInPercent);
+            Map.Entry<List<String>, List<Integer>> train = View.of(entry.getKey()).unzip(Function.identity());
+            Map.Entry<List<String>, List<Integer>> test = View.of(entry.getValue()).unzip(Function.identity());
 
-            Collections.shuffle(batchOk);
-            Collections.shuffle(batchKo);
+            model.train(train.getKey(), train.getValue());
 
-            int trainSizeOk = (int) (batchOk.size() * trainSizeInPercent);
-            int trainSizeKo = (int) (batchKo.size() * trainSizeInPercent);
-
-            List<Entry<String, Integer>> train = View.of(batchOk).take(trainSizeOk)
-                .concat(View.of(batchKo).take(trainSizeKo)).toList();
-            List<Entry<String, Integer>> test = View.of(batchOk).drop(trainSizeOk)
-                .concat(View.of(batchKo).drop(trainSizeKo)).toList();
-
-            Collections.shuffle(train);
-            Collections.shuffle(test);
-
-            Map.Entry<List<String>, List<Integer>> trainn = View.of(train).unzip(Function.identity());
-            Map.Entry<List<String>, List<Integer>> testt = View.of(test).unzip(Function.identity());
-
-            model.train(trainn.getKey(), trainn.getValue());
-
-            testDataset.addAll(testt.getKey());
-            testCategories.addAll(testt.getValue());
+            testDataset.addAll(test.getKey());
+            testCategories.addAll(test.getValue());
           });
         }
 
@@ -324,7 +272,15 @@ final public class Model extends AbstractStack {
 
         List<FeatureVector> vectors = View.of(texts).map(text -> model.featurizer_.transform(text)).toList();
         model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
-        models.add(model);
+
+        if (Double.isFinite(model.confusionMatrix().matthewsCorrelationCoefficient())) {
+          models.add(model);
+        }
+      }
+
+      if (models.isEmpty()) {
+        System.out.println("ERROR: at least one model is needed");
+        continue;
       }
 
       System.out.println("Building stack...");
@@ -358,9 +314,9 @@ final public class Model extends AbstractStack {
           System.out.printf("== %s (actual) vs. %s (prediction)\n", actual == OK ? "OK" : "KO",
               prediction == OK ? "OK" : "KO");
           System.out.println("================================================================================");
+          stack.snippetBestEffort(text).forEach(System.out::println);
+          System.out.println("================================================================================");
           System.out.println(text);
-          // System.out.println("================================================================================");
-          // stack.snippetBestEffort(text).forEach(System.out::println);
         }
       });
     }
@@ -399,51 +355,72 @@ final public class Model extends AbstractStack {
     return xStream;
   }
 
-  private static Featurizer featurizer(Map<Integer, List<Map.Entry<String, Double>>> labelingFunctions,
-      TextCategorizer categorizer) {
+  private static Entry<List<Entry<String, Integer>>, List<Entry<String, Integer>>> split(
+      List<Entry<String, Integer>> list, double trainSizeInPercent) {
 
-    Preconditions.checkNotNull(labelingFunctions, "missing labelingFunctions");
+    Preconditions.checkNotNull(list, "list should not be null");
+    Preconditions.checkArgument(0.0 <= trainSizeInPercent && trainSizeInPercent <= 1.0,
+        "trainSizeInPercent must be such as 0.0 <= trainSizeInPercent <= 1.0");
 
-    // Reduce the number of overlapping labeling functions
-    List<Entry<Integer, Entry<String, Double>>> newLabelingFunctions = View.of(View.of(labelingFunctions.entrySet())
-        .flatten(e1 -> View.of(e1.getValue())
-            .map(e2 -> (Entry<Integer, Entry<String, Double>>) new SimpleImmutableEntry<>(e1.getKey(), e2)))
-        .toSortedList(
-            Comparator.comparingDouble((Entry<Integer, Entry<String, Double>> o) -> o.getValue().getValue()).reversed()
-                .thenComparingInt(Entry::getKey))).reduce(new ArrayList<>(), (carry, lf) -> {
+    List<Entry<String, Integer>> batchOk = View.of(list).filter(b -> b.getValue() == OK).toList();
+    List<Entry<String, Integer>> batchKo = View.of(list).filter(b -> b.getValue() == KO).toList();
 
-      int length = lf.getKey();
-      String ngram = lf.getValue().getKey();
-      double weight = lf.getValue().getValue();
+    Collections.shuffle(batchOk);
+    Collections.shuffle(batchKo);
 
-      String pattern = Pattern.quote(ngram).replace("_", ".*");
+    int trainSizeOk = (int) (batchOk.size() * trainSizeInPercent);
+    int trainSizeKo = (int) (batchKo.size() * trainSizeInPercent);
 
-      if (!View.of(carry).map(e -> e.getValue().getKey()).anyMatch(pattern::contains)) {
-        carry.add(new SimpleImmutableEntry<>(length, new SimpleImmutableEntry<>(pattern, weight)));
+    List<Entry<String, Integer>> train = View.of(batchOk).take(trainSizeOk).concat(View.of(batchKo).take(trainSizeKo))
+        .toList();
+    List<Entry<String, Integer>> test = View.of(batchOk).drop(trainSizeOk).concat(View.of(batchKo).drop(trainSizeKo))
+        .toList();
+
+    Collections.shuffle(train);
+    Collections.shuffle(test);
+
+    return new SimpleImmutableEntry<>(train, test);
+  }
+
+  private static List<Map.Entry<String, Double>> findInterestingNGrams(List<String> ok, List<String> ko,
+      Vocabulary wholeVocabulary, Function<String, List<String>> tokenizer, int nbCandidatesToConsider,
+      int nbLabelsToReturn) {
+
+    Preconditions.checkNotNull(ok, "ok should not be null");
+    Preconditions.checkNotNull(ko, "ko should not be null");
+    Preconditions.checkNotNull(wholeVocabulary, "wholeVocabulary should not be null");
+    Preconditions.checkNotNull(tokenizer, "tokenizer should not be null");
+
+    // Deduplicate datasets
+    Set<String> newOk = Sets.newHashSet(ok);
+    Set<String> newKo = Sets.difference(Sets.newHashSet(ko), Sets.newHashSet(ok));
+
+    // Provide an implementation of the DocSetLabeler
+    AbstractDocSetLabeler docSetLabeler = new AbstractDocSetLabeler() {
+
+      private final Map<String, Multiset<String>> cache_ = new ConcurrentHashMap<>();
+
+      @Override
+      protected Multiset<String> candidates(String text) {
+        if (!cache_.containsKey(text)) {
+          cache_.put(text,
+              HashMultiset.create(View.of(Lists.newArrayList(text)).map(tokenizer).flatten(View::of).toList()));
+        }
+        return cache_.get(text);
       }
-      return carry;
-    });
 
-    // Map labeling functions to regexs
-    Map<Integer, String> regexes = new HashMap<>();
+      @Override
+      protected double computeX(String text, String candidate, int count) {
+        return (double) count / (double) cache_.get(text).size();
+      }
 
-    labelingFunctions.keySet().forEach(length -> regexes.put(length,
-        View.of(newLabelingFunctions).filter(e -> e.getKey().equals(length)).map(e -> e.getValue().getKey())
-            .toString(x -> x, ")|(", "(", ")")));
-
-    Map<Integer, List<Double>> weights = new HashMap<>();
-
-    labelingFunctions.keySet().forEach(length -> weights.put(length,
-        View.of(newLabelingFunctions).filter(e -> e.getKey().equals(length)).map(e -> e.getValue().getValue())
-            .toList()));
-
-    // Map regexs to vectorizers
-    List<RegexVectorizer> vectorizers = View.of(regexes.entrySet())
-        .filter(pattern -> !weights.get(pattern.getKey()).isEmpty()).map(pattern -> new RegexVectorizer(
-            Pattern.compile(pattern.getValue(), Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE),
-            weights.get(pattern.getKey()))).toList();
-
-    return new Featurizer(vectorizers, categorizer);
+      @Override
+      protected double computeY(String text, String candidate, int count) {
+        return 1.0 / (1.0 + Math.exp(-1.0 * wholeVocabulary.tfIdf(candidate, count)));
+      }
+    };
+    return docSetLabeler.labels(Lists.newArrayList(newOk), Lists.newArrayList(newKo), nbCandidatesToConsider,
+        nbLabelsToReturn);
   }
 
   @Override
@@ -537,8 +514,11 @@ final public class Model extends AbstractStack {
     private final TextCategorizer categorizer_;
     private final Reducer reducer_ = new Reducer();
 
-    public Featurizer(List<RegexVectorizer> vectorizers, TextCategorizer categorizer) {
-      vectorizers_ = Preconditions.checkNotNull(vectorizers, "missing vectorizer");
+    public Featurizer(RegexVectorizer vectorizer, TextCategorizer categorizer) {
+
+      Preconditions.checkNotNull(vectorizer, "missing vectorizer");
+
+      vectorizers_ = Lists.newArrayList(vectorizer);
       categorizer_ = categorizer;
     }
 
@@ -550,40 +530,16 @@ final public class Model extends AbstractStack {
       return reducer_.apply(View.of(texts).map(this::apply).toList());
     }
 
+    @Beta
     public String snippetBestEffort(String text) {
 
-      Preconditions.checkNotNull(text, "text should not be null");
+      Preconditions.checkState(vectorizers_.size() == 1);
 
-      // Vectorize text
-      String newText = normalizer_.apply(Strings.nullToEmpty(text));
-      List<List<Set<Span>>> vectors = new ArrayList<>();
+      String newText = Strings.nullToEmpty(text).replaceAll("([ \n\r])+", "$1");
+      List<String> matches = vectorizers_.get(0).findGroupMatches(newText).stream().filter(set -> !set.isEmpty())
+          .flatMap(spans -> spans.stream().map(Span::text).map(String::trim)).distinct().collect(Collectors.toList());
 
-      for (int i = 0; i < vectorizers_.size(); i++) {
-        vectors.add(vectorizers_.get(i).matchedGroups(newText));
-      }
-
-      // Concat vectors
-      int length = vectors.stream().mapToInt(List::size).sum();
-      List<Set<Span>> vector = new ArrayList<>(length);
-
-      for (List<Set<Span>> vect : vectors) {
-        vector.addAll(vect);
-      }
-
-      if (categorizer_ != null) {
-        vector.add(new HashSet<>());
-      }
-
-      // Reduce vector
-      Set<Integer> entries = Sets.newHashSet(reducer_.pruneCorrelatedFeatures_.nonZeroEntries());
-      Set<String> matches = new HashSet<>();
-
-      for (int i = 0; i < vector.size(); i++) {
-        if (entries.contains(i)) {
-          matches.addAll(View.of(vector.get(i)).flatten(View::of).map(Span::text).toSet());
-        }
-      }
-      return matches.isEmpty() ? "" : SnippetExtractor.extract(Lists.newArrayList(matches), newText);
+      return SnippetExtractor.extract(matches, newText);
     }
 
     private FeatureVector apply(String text) {

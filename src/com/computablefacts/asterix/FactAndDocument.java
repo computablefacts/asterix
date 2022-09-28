@@ -93,7 +93,7 @@ public final class FactAndDocument {
       View<GoldLabel> view =
           (fad.isAccepted() || fad.isRejected()) && !Strings.isNullOrEmpty(fad.matchedPage()) ? View.of(
               fad.pageAsGoldLabel()) : View.of();
-      return view; // fad.isAccepted() ? view.concat(fad.syntheticPagesAsGoldLabels()) : view;
+      return fad.isAccepted() ? view.concat(fad.syntheticPagesAsGoldLabels()) : view;
     }).displayProgress(5000))) {
       System.out.println("Gold labels exported.");
     } else {
