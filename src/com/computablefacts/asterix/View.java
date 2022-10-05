@@ -264,6 +264,16 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return Sets.newHashSet(this);
   }
 
+  @Deprecated
+  public String toString(Function<T, String> fn, String separator) {
+    return join(fn, separator, null, null);
+  }
+
+  @Deprecated
+  public String toString(Function<T, String> fn, String separator, String prefix, String suffix) {
+    return join(fn, separator, prefix, suffix);
+  }
+
   /**
    * Accumulates the view elements into a new {@link String}.
    *
@@ -271,8 +281,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param separator join mapped elements together using the specified separator.
    * @return a {@link String} whose format is {@code <el1><separator><el2><separator><el3>...}.
    */
-  public String toString(Function<T, String> fn, String separator) {
-    return toString(fn, separator, null, null);
+  public String join(Function<T, String> fn, String separator) {
+    return join(fn, separator, null, null);
   }
 
   /**
@@ -284,7 +294,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param suffix    string to add at the end of the buffer (optional).
    * @return a {@link String} whose format is {@code <prefix><el1><separator><el2><separator><el3>...<suffix>}.
    */
-  public String toString(Function<T, String> fn, String separator, String prefix, String suffix) {
+  public String join(Function<T, String> fn, String separator, String prefix, String suffix) {
 
     Preconditions.checkNotNull(fn, "fn should not be null");
     Preconditions.checkNotNull(separator, "separator should not be null");
