@@ -583,9 +583,8 @@ final public class Model extends AbstractStack {
       @Var int prevLength = 0;
 
       for (FeatureVector vect : vectors) {
-        for (int i = 0; i < vect.length(); i++) {
-          vector.set(prevLength + i, vect.get(i));
-        }
+        int disp = prevLength;
+        vect.nonZeroEntries().forEach(i -> vector.set(disp + i, vect.get(i)));
         prevLength += vect.length();
       }
       return vector;
