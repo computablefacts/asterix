@@ -23,7 +23,6 @@ import com.computablefacts.asterix.ml.classification.StandardScaler;
 import com.computablefacts.asterix.ml.classification.SvmClassifier;
 import com.computablefacts.asterix.ml.stacking.AbstractStack;
 import com.computablefacts.asterix.ml.stacking.Stack;
-import com.computablefacts.asterix.ml.textcategorization.TextCategorizer;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -145,7 +144,7 @@ final public class Model extends AbstractStack {
 
       System.out.printf("The number of POSITIVE entries is %d.\n", count.count(OK));
       System.out.printf("The number of NEGATIVE entries is %d.\n", count.count(KO));
-
+/*
       // Train categorizer
       System.out.println("Training text categorizer...");
       stopwatch.reset().start();
@@ -155,7 +154,7 @@ final public class Model extends AbstractStack {
 
       stopwatch.stop();
       System.out.printf("Text categorizer trained in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-
+*/
       // Extract interesting ngrams
       System.out.println("Running DocSetLabeler...");
       stopwatch.reset().start();
@@ -207,7 +206,7 @@ final public class Model extends AbstractStack {
       for (String classifier : classifiers) {
 
         Model model = new Model(label + "/" + classifier);
-        model.featurizer_ = new Featurizer(new DictionaryVectorizer(dictionary, dicBuilder), categorizer);
+        model.featurizer_ = new Featurizer(new DictionaryVectorizer(dictionary, dicBuilder));
 
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
@@ -529,16 +528,14 @@ final public class Model extends AbstractStack {
 
     private final TextNormalizer normalizer_ = new TextNormalizer(true);
     private final List<DictionaryVectorizer> vectorizers_;
-    private final TextCategorizer categorizer_;
     private final Reducer reducer_ = new Reducer();
     private final RegexVectorizer snippeter_;
 
-    public Featurizer(DictionaryVectorizer vectorizer, TextCategorizer categorizer) {
+    public Featurizer(DictionaryVectorizer vectorizer) {
 
       Preconditions.checkNotNull(vectorizer, "missing vectorizer");
 
       vectorizers_ = Lists.newArrayList(vectorizer);
-      categorizer_ = categorizer;
 
       Pattern regex = Pattern.compile(
           View.of(vectorizer.dicKeys()).map(key -> Pattern.quote(key).replace("_", ".*")).join(x -> x, ")|(", "(", ")"),
@@ -590,10 +587,6 @@ final public class Model extends AbstractStack {
           vector.set(prevLength + i, vect.get(i));
         }
         prevLength += vect.length();
-      }
-
-      if (categorizer_ != null) {
-        vector.append("OK".equals(categorizer_.categorize(Strings.nullToEmpty(text))) ? OK : KO);
       }
       return vector;
     }
