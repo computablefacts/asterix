@@ -47,6 +47,7 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -123,8 +124,8 @@ final public class Model extends AbstractStack {
       System.out.println("Assembling dataset...");
       Stopwatch stopwatch = Stopwatch.createStarted();
 
-      Map.Entry<List<String>, List<Integer>> dataset = GoldLabel.load(goldLabels, label).displayProgress(1000).unzip(
-          goldLabel -> new SimpleImmutableEntry<>(goldLabel.data(),
+      Map.Entry<List<GoldLabel>, List<Integer>> dataset = GoldLabel.load(goldLabels, label).displayProgress(1000).unzip(
+          goldLabel -> new SimpleImmutableEntry<>(goldLabel,
               goldLabel.isTruePositive() || goldLabel.isFalseNegative() ? OK : KO));
 
       stopwatch.stop();
@@ -149,7 +150,8 @@ final public class Model extends AbstractStack {
       System.out.println("Training text categorizer...");
       stopwatch.reset().start();
 
-      TextCategorizer categorizer = TextCategorizer.trainTextCategorizer(dataset.getKey(), dataset.getValue());
+      TextCategorizer categorizer = TextCategorizer.trainTextCategorizer(
+          View.of(dataset.getKey()).map(GoldLabel::data).toList(), dataset.getValue());
 
       stopwatch.stop();
       System.out.printf("Text categorizer trained in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
@@ -158,10 +160,10 @@ final public class Model extends AbstractStack {
       System.out.println("Running DocSetLabeler...");
       stopwatch.reset().start();
 
-      List<String> ok = View.of(dataset.getKey()).zip(dataset.getValue()).filter(e -> e.getValue() == OK)
-          .map(Entry::getKey).toList();
-      List<String> ko = View.of(dataset.getKey()).zip(dataset.getValue()).filter(e -> e.getValue() == KO)
-          .map(Entry::getKey).toList();
+      List<String> ok = View.of(dataset.getKey()).map(GoldLabel::data).zip(dataset.getValue())
+          .filter(e -> e.getValue() == OK).map(Entry::getKey).toList();
+      List<String> ko = View.of(dataset.getKey()).map(GoldLabel::data).zip(dataset.getValue())
+          .filter(e -> e.getValue() == KO).map(Entry::getKey).toList();
 
       int nbCandidatesToConsider = 50; // TODO : move as parameter?
       int nbLabelsToReturn = 25; // TODO : move as parameter?
@@ -170,30 +172,42 @@ final public class Model extends AbstractStack {
 
       stopwatch.stop();
       System.out.printf("DocSetLabeler ran in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-      System.out.printf("Labeling functions are : [%s]\n", View.of(labelingFunctions).toString(Entry::getKey, ", "));
+      System.out.printf("Labeling functions are : [\n  %s\n]\n",
+          View.of(labelingFunctions).toString(Entry::getKey, ",\n  "));
 
-      // Rewrite all LF as a single regexp
-      System.out.println("Rewriting labeling functions as RegExp...");
+      // Rewrite all LF as spans
+      System.out.println("Capturing context around labeling functions...");
       stopwatch.reset().start();
 
-      List<String> patterns = View.of(labelingFunctions).map(
-              lf -> "(?:^|$|\\s)+" + Pattern.quote(lf.getKey()).replace("_", ".*(?:^|$|\\s)+") + "[a-z0-9]*(?:^|$|\\s)+")
-          .toList();
-      Pattern regex = Pattern.compile("(" + Joiner.on(")|(").join(patterns) + ")",
-          Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
-      List<Double> weights = View.of(labelingFunctions).map(Entry::getValue).toList();
+      int windowLength = 7; // TODO : move as parameter?
+      int windowCenter = (windowLength - 1) / 2;
+      Set<String> lfs = View.of(labelingFunctions).map(Entry::getKey).toSet();
+
+      Function<String, Multiset<String>> dicBuilder = text -> HashMultiset.create(View.of(text).map(tokenizer).flatten(
+              tkns -> View.of(tkns).overlappingWindowWithStrictLength(windowLength)
+                  .filter(ngram -> ngram.size() == windowLength && lfs.contains(ngram.get(windowCenter))))
+          .map(ngram -> Joiner.on('_').join(ngram)).toList());
+
+      Map<String, Double> dictionary = new HashMap<>();
+
+      View.of(ok).map(tokenizer).flatten(tkns -> View.of(tkns).overlappingWindowWithStrictLength(windowLength)
+              .filter(ngram -> ngram.size() == windowLength && lfs.contains(ngram.get(windowCenter))))
+          .forEachRemaining(ngram -> {
+            String pattern = Joiner.on('_').join(ngram);
+            double weight = View.of(ngram).map(tkn -> lfs.contains(tkn) ? 1.0 : 0.0).reduce(0.0, Double::sum);
+            dictionary.put(pattern, weight);
+          });
 
       stopwatch.stop();
-      System.out.printf("Labeling functions rewritten in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-      System.out.printf("RegExp is : %s\n", regex);
-      System.out.printf("Group weights are : [%s]\n", View.of(weights).toString(x -> Double.toString(x), ", "));
+      System.out.printf("Context captured in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
+      System.out.printf("Context is : [\n  %s\n]\n", View.of(dictionary.keySet()).join(x -> x, ",\n  "));
 
       List<Model> models = new ArrayList<>();
 
       for (String classifier : classifiers) {
 
         Model model = new Model(label + "/" + classifier);
-        model.featurizer_ = new Featurizer(new RegexVectorizer(regex, weights), categorizer);
+        model.featurizer_ = new Featurizer(new DictionaryVectorizer(dictionary, dicBuilder), categorizer);
 
         if ("dnb".equals(classifier)) {
           model.classifier_ = new DiscreteNaiveBayesClassifier();
@@ -221,7 +235,7 @@ final public class Model extends AbstractStack {
           model.classifier_ = new LogisticRegressionClassifier(model.scaler_);
         }
 
-        List<String> texts = dataset.getKey();
+        List<String> texts = View.of(dataset.getKey()).map(GoldLabel::data).toList();
         List<Integer> categories = dataset.getValue();
         List<String> testDataset = new ArrayList<>();
         List<Integer> testCategories = new ArrayList<>();
@@ -298,10 +312,10 @@ final public class Model extends AbstractStack {
       save(new File(String.format("%sstack-%s.xml.gz", goldLabels.getParent() + File.separator, label)), stack);
 
       System.out.println("Stack saved.");
-
+/*
       View.of(dataset.getKey()).zip(dataset.getValue()).forEachRemaining(entry -> {
 
-        String text = entry.getKey();
+        String text = entry.getKey().data();
         int actual = entry.getValue();
 
         Preconditions.checkState(actual == KO || actual == OK,
@@ -309,16 +323,22 @@ final public class Model extends AbstractStack {
 
         int prediction = stack.predict(text);
 
-        if ((actual == OK || prediction == OK) && (actual == KO || prediction == KO)) {
+        if (prediction == OK) {
           System.out.println("================================================================================");
-          System.out.printf("== %s (actual) vs. %s (prediction)\n", actual == OK ? "OK" : "KO",
-              prediction == OK ? "OK" : "KO");
-          System.out.println("================================================================================");
-          stack.snippetBestEffort(text).forEach(System.out::println);
-          System.out.println("================================================================================");
-          System.out.println(text);
+          System.out.printf("== %s - %s (actual) vs. %s (prediction)\n", entry.getKey().id(),
+              actual == OK ? "OK" : "KO", prediction == OK ? "OK" : "KO");
+          Set<String> snippets = stack.snippetBestEffort(text);
+          if (snippets.isEmpty()) {
+            System.out.println("================================================================================");
+          } else {
+            snippets.forEach(snippet -> {
+              System.out.println("================================================================================");
+              System.out.println(snippet);
+            });
+          }
         }
       });
+*/
     }
   }
 
@@ -403,8 +423,7 @@ final public class Model extends AbstractStack {
       @Override
       protected Multiset<String> candidates(String text) {
         if (!cache_.containsKey(text)) {
-          cache_.put(text,
-              HashMultiset.create(View.of(Lists.newArrayList(text)).map(tokenizer).flatten(View::of).toList()));
+          cache_.put(text, HashMultiset.create(View.of(text).map(tokenizer).flatten(View::of).toList()));
         }
         return cache_.get(text);
       }
@@ -445,8 +464,7 @@ final public class Model extends AbstractStack {
     Preconditions.checkState(featurizer_ != null, "missing featurizer");
     Preconditions.checkState(classifier_ != null, "missing classifier");
 
-    String snippet = featurizer_.snippetBestEffort(text);
-    return Strings.isNullOrEmpty(snippet) ? Sets.newHashSet() : Sets.newHashSet(snippet);
+    return featurizer_.snippetBestEffort(text);
   }
 
   private void train(List<String> texts, List<Integer> categories) {
@@ -510,16 +528,25 @@ final public class Model extends AbstractStack {
   private static class Featurizer {
 
     private final TextNormalizer normalizer_ = new TextNormalizer(true);
-    private final List<RegexVectorizer> vectorizers_;
+    private final List<DictionaryVectorizer> vectorizers_;
     private final TextCategorizer categorizer_;
     private final Reducer reducer_ = new Reducer();
+    private final RegexVectorizer snippeter_;
 
-    public Featurizer(RegexVectorizer vectorizer, TextCategorizer categorizer) {
+    public Featurizer(DictionaryVectorizer vectorizer, TextCategorizer categorizer) {
 
       Preconditions.checkNotNull(vectorizer, "missing vectorizer");
 
       vectorizers_ = Lists.newArrayList(vectorizer);
       categorizer_ = categorizer;
+
+      Pattern regex = Pattern.compile(
+          View.of(vectorizer.dicKeys()).map(key -> Pattern.quote(key).replace("_", ".*")).join(x -> x, ")|(", "(", ")"),
+          Pattern.DOTALL | Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+
+      List<Double> weights = View.iterate(1.0, x -> 1.0).take(vectorizer.dicKeys().size()).toList();
+
+      snippeter_ = new RegexVectorizer(regex, weights);
     }
 
     public FeatureVector transform(String text) {
@@ -531,15 +558,15 @@ final public class Model extends AbstractStack {
     }
 
     @Beta
-    public String snippetBestEffort(String text) {
+    public Set<String> snippetBestEffort(String text) {
 
       Preconditions.checkState(vectorizers_.size() == 1);
 
-      String newText = Strings.nullToEmpty(text).replaceAll("([ \n\r])+", "$1");
-      List<String> matches = vectorizers_.get(0).findGroupMatches(newText).stream().filter(set -> !set.isEmpty())
-          .flatMap(spans -> spans.stream().map(Span::text).map(String::trim)).distinct().collect(Collectors.toList());
+      String newText = normalizer_.apply(Strings.nullToEmpty(text));
+      List<Set<Span>> matchedGroups = snippeter_.findGroupMatches(newText);
 
-      return SnippetExtractor.extract(matches, newText);
+      return View.of(matchedGroups).flatten(View::of)
+          .map(span -> SnippetExtractor.extract(Lists.newArrayList(span.text().trim()), newText, 300, 50, "")).toSet();
     }
 
     private FeatureVector apply(String text) {
