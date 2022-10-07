@@ -2,19 +2,9 @@ package com.computablefacts.asterix.ml;
 
 import static com.computablefacts.asterix.ml.AbstractDocSetLabeler.counts;
 
-import com.computablefacts.asterix.DocumentTest;
-import com.computablefacts.asterix.View;
-import com.computablefacts.asterix.codecs.JsonCodec;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Var;
-import com.google.re2j.Pattern;
-import java.io.File;
-import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
