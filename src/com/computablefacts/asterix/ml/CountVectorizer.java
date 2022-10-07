@@ -1,6 +1,5 @@
 package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.SpanSequence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;

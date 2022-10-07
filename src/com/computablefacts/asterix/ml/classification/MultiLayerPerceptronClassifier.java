@@ -12,7 +12,7 @@ import smile.math.TimeFunction;
 
 @CheckReturnValue
 final public class MultiLayerPerceptronClassifier implements AbstractBinaryClassifier {
-  
+
   private final AbstractScaler scaler_;
   private final int nbEpochs_;
   private final int nbHiddenNeurons_;

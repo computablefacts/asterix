@@ -32,7 +32,7 @@ final public class FeatureVector {
     length_ = vector.length();
     nonZeroEntries_ = new HashMap<>(vector.nonZeroEntries_);
   }
-  
+
   public FeatureVector(double[] vector) {
 
     Preconditions.checkNotNull(vector, "vector should not be null");

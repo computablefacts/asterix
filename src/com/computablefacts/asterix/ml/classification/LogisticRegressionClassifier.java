@@ -48,7 +48,8 @@ final public class LogisticRegressionClassifier implements AbstractBinaryClassif
     properties.setProperty("smile.logit.max.iterations", "1000");
 
     classifier_ = SparseLogisticRegression.binomial(
-        SparseDataset.of(scaler_.fitAndTransform(matrix).rows().stream().map(FeatureVector::sparseArray)), actuals, properties);
+        SparseDataset.of(scaler_.fitAndTransform(matrix).rows().stream().map(FeatureVector::sparseArray)), actuals,
+        properties);
   }
 
   @Override
