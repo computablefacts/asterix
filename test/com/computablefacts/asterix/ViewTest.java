@@ -44,6 +44,14 @@ public class ViewTest {
   }
 
   @Test
+  public void testViewOfList() {
+
+    View<String> view = View.of(Lists.newArrayList("a", "b", "c"));
+
+    Assert.assertEquals(Lists.newArrayList("a", "b", "c"), view.toList());
+  }
+
+  @Test
   public void testViewOfMap() {
 
     Map<Integer, Set<String>> map = new HashMap<>();
@@ -91,7 +99,7 @@ public class ViewTest {
   @Test
   public void testToList() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "b", "b", "c", "c", "c"));
+    View<String> view = View.of("a", "b", "b", "c", "c", "c");
 
     Assert.assertEquals(Lists.newArrayList("a", "b", "b", "c", "c", "c"), view.toList());
   }
@@ -99,7 +107,7 @@ public class ViewTest {
   @Test
   public void testToSortedList() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "b", "b", "c", "c", "c"));
+    View<String> view = View.of("a", "b", "b", "c", "c", "c");
 
     Assert.assertEquals(Lists.newArrayList("c", "c", "c", "b", "b", "a"),
         view.toSortedList(Ordering.natural().reverse()));
@@ -108,7 +116,7 @@ public class ViewTest {
   @Test
   public void testToSet() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "b", "b", "c", "c", "c"));
+    View<String> view = View.of("a", "b", "b", "c", "c", "c");
 
     Assert.assertEquals(Sets.newHashSet("a", "b", "c"), view.toSet());
   }
@@ -290,7 +298,7 @@ public class ViewTest {
   @Test
   public void testGroupDistinctByLength() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "a", "ab", "abc", "abc", "abcd"));
+    View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
     Map<Integer, Set<String>> actual = view.groupDistinct(x -> x.length());
     Map<Integer, Set<String>> expected = new HashMap<>();
     expected.put(1, Sets.newHashSet("a"));
@@ -304,7 +312,7 @@ public class ViewTest {
   @Test
   public void testGroupAllByLength() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "a", "ab", "abc", "abc", "abcd"));
+    View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
     Map<Integer, List<String>> actual = view.groupAll(x -> x.length());
     Map<Integer, List<String>> expected = new HashMap<>();
     expected.put(1, Lists.newArrayList("a", "a"));
@@ -318,7 +326,7 @@ public class ViewTest {
   @Test
   public void testTakeAll() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.take(5).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"), list);
@@ -327,7 +335,7 @@ public class ViewTest {
   @Test
   public void testTakeNone() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.take(0).toList();
 
     Assert.assertTrue(list.isEmpty());
@@ -345,7 +353,7 @@ public class ViewTest {
   @Test
   public void testTakeN() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.take(2).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "ab"), list);
@@ -363,7 +371,7 @@ public class ViewTest {
   @Test
   public void testTakeWhileExhaustsView() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.takeWhile(w -> w.length() < 6).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"), list);
@@ -372,7 +380,7 @@ public class ViewTest {
   @Test
   public void testTakeWhile() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.takeWhile(w -> w.length() == 1).toList();
 
     Assert.assertEquals(Lists.newArrayList("a"), list);
@@ -381,7 +389,7 @@ public class ViewTest {
   @Test
   public void testTakeUntil() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.takeUntil(w -> w.length() > 3).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "ab", "abc"), list);
@@ -390,7 +398,7 @@ public class ViewTest {
   @Test
   public void testDropAll() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.drop(5).toList();
 
     Assert.assertTrue(list.isEmpty());
@@ -399,7 +407,7 @@ public class ViewTest {
   @Test
   public void testDropNone() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.drop(0).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"), list);
@@ -417,7 +425,7 @@ public class ViewTest {
   @Test
   public void testDropN() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.drop(2).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
@@ -435,7 +443,7 @@ public class ViewTest {
   @Test
   public void testDropWhileExhaustsView() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.dropWhile(w -> w.length() < 6).toList();
 
     Assert.assertTrue(list.isEmpty());
@@ -444,7 +452,7 @@ public class ViewTest {
   @Test
   public void testDropWhile() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.dropWhile(w -> w.length() < 3).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
@@ -453,7 +461,7 @@ public class ViewTest {
   @Test
   public void testDropUntil() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.dropUntil(w -> w.length() >= 3).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
@@ -462,7 +470,7 @@ public class ViewTest {
   @Test
   public void testDropAndTake() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.drop(2).take(1).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc"), list);
@@ -471,7 +479,7 @@ public class ViewTest {
   @Test
   public void testFilterView() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.filter(w -> w.length() % 2 == 0).toList();
 
     Assert.assertEquals(Lists.newArrayList("ab", "abcd"), list);
@@ -480,7 +488,7 @@ public class ViewTest {
   @Test
   public void testFilterInParallel() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.filterInParallel(2, w -> w.length() % 2 == 0).toList();
 
     Assert.assertEquals(Lists.newArrayList("ab", "abcd"), list);
@@ -489,7 +497,7 @@ public class ViewTest {
   @Test
   public void testMapView() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<Integer> list = view.map(w -> w.length()).toList();
 
     Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), list);
@@ -498,7 +506,7 @@ public class ViewTest {
   @Test
   public void testMapInParallel() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<Integer> list = view.mapInParallel(2, w -> w.length()).toList();
 
     Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), list);
@@ -507,14 +515,14 @@ public class ViewTest {
   @Test
   public void testConcatViews() {
 
-    View<String> left1 = View.of(Lists.newArrayList("a", "ab", "abc"));
-    View<String> right1 = View.of(Lists.newArrayList("abcd", "abcde"));
+    View<String> left1 = View.of("a", "ab", "abc");
+    View<String> right1 = View.of("abcd", "abcde");
     List<String> list1 = left1.concat(right1).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"), list1);
 
-    View<String> left2 = View.of(Lists.newArrayList("a", "ab", "abc"));
-    View<String> right2 = View.of(Lists.newArrayList("abcd", "abcde"));
+    View<String> left2 = View.of("a", "ab", "abc");
+    View<String> right2 = View.of("abcd", "abcde");
     List<String> list2 = right2.concat(left2).toList();
 
     Assert.assertEquals(Lists.newArrayList("abcd", "abcde", "a", "ab", "abc"), list2);
@@ -523,7 +531,7 @@ public class ViewTest {
   @Test
   public void testPartitionView() {
 
-    View<String> view = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<List<String>> list = view.partition(3).toList();
 
     Assert.assertEquals(Lists.newArrayList(Lists.newArrayList("a", "ab", "abc"), Lists.newArrayList("abcd", "abcde")),
@@ -533,8 +541,8 @@ public class ViewTest {
   @Test
   public void testDiffEmptyViewAgainstEmptyView() {
 
-    View<String> left = View.of(Lists.newArrayList());
-    View<String> right = View.of(Lists.newArrayList());
+    View<String> left = View.of();
+    View<String> right = View.of();
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertTrue(diff.isEmpty());
@@ -543,8 +551,8 @@ public class ViewTest {
   @Test
   public void testDiffEmptyViewAgainstNonEmptyView() {
 
-    View<String> left = View.of(Lists.newArrayList());
-    View<String> right = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
+    View<String> left = View.of();
+    View<String> right = View.of("a", "b", "c", "d", "e");
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertTrue(diff.isEmpty());
@@ -553,8 +561,8 @@ public class ViewTest {
   @Test
   public void testDiffNonEmptyViewAgainstEmptyView() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList());
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of();
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d", "e"), diff);
@@ -563,8 +571,8 @@ public class ViewTest {
   @Test
   public void testDiffViewAgainstItself() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of("a", "b", "c", "d", "e");
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertTrue(diff.isEmpty());
@@ -573,8 +581,8 @@ public class ViewTest {
   @Test
   public void testDiffRemovesElementsInEvenPositions() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("a", "c", "e"));
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of("a", "c", "e");
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("b", "d"), diff);
@@ -583,8 +591,8 @@ public class ViewTest {
   @Test
   public void testDiffRemovesElementsInOddPositions() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("b", "d"));
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of("b", "d");
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "c", "e"), diff);
@@ -593,8 +601,8 @@ public class ViewTest {
   @Test
   public void testDiffLeftViewHasMoreElements() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f"));
-    View<String> right = View.of(Lists.newArrayList("a", "c", "e"));
+    View<String> left = View.of("a", "b", "c", "d", "e", "f");
+    View<String> right = View.of("a", "c", "e");
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("b", "d", "f"), diff);
@@ -603,8 +611,8 @@ public class ViewTest {
   @Test
   public void testDiffRightViewHasMoreElements() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("b", "d", "f", "h"));
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of("b", "d", "f", "h");
     List<String> diff = left.diffSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "c", "e"), diff);
@@ -621,7 +629,7 @@ public class ViewTest {
   @Test
   public void testDedupViewWithoutDuplicates() {
 
-    List<String> actual = View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h")).dedupSorted().toList();
+    List<String> actual = View.of("a", "b", "c", "d", "e", "f", "g", "h").dedupSorted().toList();
     List<String> expected = Lists.newArrayList("a", "b", "c", "d", "e", "f", "g", "h");
 
     Assert.assertEquals(expected, actual);
@@ -649,8 +657,7 @@ public class ViewTest {
   @Test
   public void testFlattenFlatView() {
 
-    List<String> actual = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"))
-        .flatten(l -> View.of(Lists.newArrayList(l))).toList();
+    List<String> actual = View.of("a", "ab", "abc", "abcd", "abcde").flatten(View::of).toList();
     List<String> expected = Lists.newArrayList("a", "ab", "abc", "abcd", "abcde");
 
     Assert.assertEquals(expected, actual);
@@ -659,8 +666,7 @@ public class ViewTest {
   @Test
   public void testFlattenViewOfViews() {
 
-    List<String> actual = View.of(
-            Lists.newArrayList(View.of(Lists.newArrayList("a", "ab")), View.of(Lists.newArrayList("abc", "abcd", "abcde"))))
+    List<String> actual = View.of(Lists.newArrayList(View.of("a", "ab"), View.of("abc", "abcd", "abcde")))
         .flatten(l -> l).toList();
     List<String> expected = Lists.newArrayList("a", "ab", "abc", "abcd", "abcde");
 
@@ -681,7 +687,7 @@ public class ViewTest {
   public void testIntersectEmptyViewWithNonEmptyView() {
 
     View<String> left = View.of(Collections.emptyList());
-    View<String> right = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> right = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = left.intersectSorted(right).toList();
 
     Assert.assertTrue(list.isEmpty());
@@ -690,7 +696,7 @@ public class ViewTest {
   @Test
   public void testIntersectNonEmptyViewWithEmptyView() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"));
+    View<String> left = View.of("a", "ab", "abc", "abcd", "abcde");
     View<String> right = View.of(Collections.emptyList());
     List<String> list = left.intersectSorted(right).toList();
 
@@ -700,8 +706,8 @@ public class ViewTest {
   @Test
   public void testIntersectKeepsOnlyElementsInEvenPositions() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("b", "d"));
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of("b", "d");
     List<String> intersection = left.intersectSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("b", "d"), intersection);
@@ -710,8 +716,8 @@ public class ViewTest {
   @Test
   public void testIntersectKeepsOnlyElementsInOddPositions() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("a", "c", "e"));
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of("a", "c", "e");
     List<String> intersection = left.intersectSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "c", "e"), intersection);
@@ -720,8 +726,8 @@ public class ViewTest {
   @Test
   public void testIntersectLeftViewDoesNotOverlapRightView() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f"));
-    View<String> right = View.of(Lists.newArrayList("0", "1", "2"));
+    View<String> left = View.of("a", "b", "c", "d", "e", "f");
+    View<String> right = View.of("0", "1", "2");
     List<String> intersection = left.intersectSorted(right).toList();
 
     Assert.assertTrue(intersection.isEmpty());
@@ -730,8 +736,8 @@ public class ViewTest {
   @Test
   public void testIntersectLeftViewOverlapsRightView() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e", "f"));
-    View<String> right = View.of(Lists.newArrayList("0", "1", "2", "a", "c", "e"));
+    View<String> left = View.of("a", "b", "c", "d", "e", "f");
+    View<String> right = View.of("0", "1", "2", "a", "c", "e");
     List<String> intersection = left.intersectSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "c", "e"), intersection);
@@ -740,10 +746,9 @@ public class ViewTest {
   @Test
   public void testIntersectLeftViewHasDuplicatedElements() {
 
-    View<String> left = View.of(
-        Lists.newArrayList("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "d", "d", "d", "d", "e", "e", "e", "e",
-            "e", "e"));
-    View<String> right = View.of(Lists.newArrayList("a", "c", "e"));
+    View<String> left = View.of("a", "a", "b", "b", "b", "c", "c", "c", "c", "d", "d", "d", "d", "d", "e", "e", "e",
+        "e", "e", "e");
+    View<String> right = View.of("a", "c", "e");
     List<String> intersection = left.intersectSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "c", "e"), intersection);
@@ -752,8 +757,8 @@ public class ViewTest {
   @Test
   public void testIntersectRightViewHasDuplicatedElements() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("a", "a", "c", "c", "c", "e", "e", "e", "e"));
+    View<String> left = View.of("a", "b", "c", "d", "e");
+    View<String> right = View.of("a", "a", "c", "c", "c", "e", "e", "e", "e");
     List<String> intersection = left.intersectSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "c", "e"), intersection);
@@ -762,8 +767,8 @@ public class ViewTest {
   @Test
   public void testIntersectBothViewsHaveDuplicatedElements() {
 
-    View<String> left = View.of(Lists.newArrayList("a", "b", "c", "c", "c", "d", "e"));
-    View<String> right = View.of(Lists.newArrayList("a", "a", "a", "c", "e"));
+    View<String> left = View.of("a", "b", "c", "c", "c", "d", "e");
+    View<String> right = View.of("a", "a", "a", "c", "e");
     List<String> intersection = left.intersectSorted(right).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "c", "e"), intersection);
@@ -819,10 +824,10 @@ public class ViewTest {
   @Test
   public void testMerge() {
 
-    View<String> view1 = View.of(Lists.newArrayList("0", "2", "4"));
-    View<String> view2 = View.of(Lists.newArrayList("1", "3", "5"));
-    View<String> view3 = View.of(Lists.newArrayList("6", "7", "8", "9", "b", "d", "f"));
-    View<String> view4 = View.of(Lists.newArrayList("a", "c", "e", "g"));
+    View<String> view1 = View.of("0", "2", "4");
+    View<String> view2 = View.of("1", "3", "5");
+    View<String> view3 = View.of("6", "7", "8", "9", "b", "d", "f");
+    View<String> view4 = View.of("a", "c", "e", "g");
 
     View<String> merged = view1.mergeSorted(Lists.newArrayList(view2, view3, view4), String::compareTo);
 
@@ -834,7 +839,7 @@ public class ViewTest {
   @Test
   public void testOverlappingWindow() {
 
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
     List<ImmutableList<String>> windows = view.overlappingWindow(3).toList();
 
     Assert.assertEquals(7, windows.size());
@@ -850,7 +855,7 @@ public class ViewTest {
   @Test
   public void testNonOverlappingWindow() {
 
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
     List<ImmutableList<String>> windows = view.nonOverlappingWindow(3).toList();
 
     Assert.assertEquals(3, windows.size());
@@ -862,7 +867,7 @@ public class ViewTest {
   @Test
   public void testOverlappingWindowWithStrictLength() {
 
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
     List<ImmutableList<String>> windows = view.overlappingWindowWithStrictLength(3).toList();
 
     Assert.assertEquals(5, windows.size());
@@ -876,7 +881,7 @@ public class ViewTest {
   @Test
   public void testNonOverlappingWindowWithStrictLength() {
 
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
     List<ImmutableList<String>> windows = view.nonOverlappingWindowWithStrictLength(3).toList();
 
     Assert.assertEquals(2, windows.size());
@@ -920,7 +925,7 @@ public class ViewTest {
   public void testPeek() {
 
     List<String> valuesPeeked = new ArrayList<>();
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7")).peek(valuesPeeked::add);
+    View<String> view = View.of("1", "2", "3", "4", "5", "6", "7").peek(valuesPeeked::add);
 
     Assert.assertTrue(valuesPeeked.isEmpty());
 
@@ -1025,7 +1030,7 @@ public class ViewTest {
   @Test
   public void testFirst() {
 
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
 
     Assert.assertEquals(Optional.of("1"), view.first());
     Assert.assertEquals(Optional.of("2"), view.first());
@@ -1040,7 +1045,7 @@ public class ViewTest {
   @Test
   public void testLast() {
 
-    View<String> view = View.of(Lists.newArrayList("1", "2", "3", "4", "5", "6", "7"));
+    View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
 
     Assert.assertEquals(Optional.of("7"), view.last());
     Assert.assertFalse(view.first().isPresent());
@@ -1049,7 +1054,7 @@ public class ViewTest {
   @Test
   public void testRetain() {
 
-    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
     List<Integer> even = view.retain(x -> x % 2 == 0).toList();
 
     Assert.assertEquals(Lists.newArrayList(2, 4, 6), even);
@@ -1058,7 +1063,7 @@ public class ViewTest {
   @Test
   public void testDiscard() {
 
-    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
     List<Integer> even = view.discard(x -> x % 2 != 0).toList();
 
     Assert.assertEquals(Lists.newArrayList(2, 4, 6), even);
@@ -1067,7 +1072,7 @@ public class ViewTest {
   @Test
   public void testToStringWithoutPrefixOrSuffix() {
 
-    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
     String str = view.toString(x -> Integer.toString(x, 10), ", ");
 
     Assert.assertEquals("1, 2, 3, 4, 5, 6, 7", str);
@@ -1076,7 +1081,7 @@ public class ViewTest {
   @Test
   public void testToStringWithPrefixAndSuffix() {
 
-    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
     String str = view.toString(x -> Integer.toString(x, 10), ", ", "{", "}");
 
     Assert.assertEquals("{1, 2, 3, 4, 5, 6, 7}", str);
@@ -1098,7 +1103,7 @@ public class ViewTest {
   @Test
   public void testDivideEvenAndOdd() {
 
-    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
     Map.Entry<List<Integer>, List<Integer>> evenAndOdd = view.divide(x -> x % 2 != 0);
 
     List<Integer> even = evenAndOdd.getKey();
@@ -1111,7 +1116,7 @@ public class ViewTest {
   @Test
   public void testDivideOddAndEven() {
 
-    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
     Map.Entry<List<Integer>, List<Integer>> evenAndOdd = view.divide(x -> x % 2 == 0);
 
     List<Integer> odd = evenAndOdd.getKey();
@@ -1124,7 +1129,7 @@ public class ViewTest {
   @Test
   public void testDivide() {
 
-    View<Integer> view = View.of(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7));
+    View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
     Map.Entry<List<Integer>, List<Integer>> evenAndOdd = view.divide();
 
     List<Integer> even = evenAndOdd.getKey();
