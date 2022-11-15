@@ -40,24 +40,24 @@
 
   <properties>
     <logfmt.version>0.14</logfmt.version>
-    <slf4j.version>1.7.32</slf4j.version>
-    <guava.version>29.0-jre</guava.version>
-    <re2j.version>1.2</re2j.version>
+    <slf4j.version>2.0.3</slf4j.version>
+    <guava.version>31.1-jre</guava.version>
+    <re2j.version>1.7</re2j.version>
     <smile.version>2.6.0</smile.version>
     <xstream.version>1.4.19</xstream.version>
-    <jsonflattener.version>0.12.0</jsonflattener.version>
-    <jackson-dataformat-csv.version>2.12.0</jackson-dataformat-csv.version>
-    <equalsverifier.version>3.4.2</equalsverifier.version>
+    <jsonflattener.version>0.14.2</jsonflattener.version>
+    <jackson-dataformat-csv.version>2.14.0</jackson-dataformat-csv.version>
+    <equalsverifier.version>3.11</equalsverifier.version>
     <javax-validation.version>2.0.1.Final</javax-validation.version>
     <jcip.version>1.0-1</jcip.version>
     <junit.version>4.13.1</junit.version>
-    <error-prone.version>2.13.1</error-prone.version>
+    <error-prone.version>2.15.0</error-prone.version>
     <maven-shade-plugin.version>3.1.1</maven-shade-plugin.version>
     <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
     <maven-source-plugin.version>2.2.1</maven-source-plugin.version>
     <maven-javadoc-plugin.version>2.9.1</maven-javadoc-plugin.version>
     <maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
-    <maven-jacoco-plugin.version>0.8.6</maven-jacoco-plugin.version>
+    <maven-jacoco-plugin.version>0.8.8</maven-jacoco-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <git-commit-id-plugin.version>2.2.4</git-commit-id-plugin.version>
@@ -318,6 +318,7 @@
           <parallel>methods</parallel>
           <threadCount>5</threadCount>
           <skipTests>false</skipTests>
+          <argLine>--add-opens java.base/java.util=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
     </plugins>

@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.ml.stacking;
 
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.annotations.Beta;
@@ -14,7 +15,7 @@ import java.util.Set;
 @CheckReturnValue
 final public class Stack {
 
-  private final Optional<AbstractStack> stack_;
+  private final Result<AbstractStack> stack_;
 
   public Stack(List<AbstractStack> stacks) {
 
@@ -41,46 +42,48 @@ final public class Stack {
     stack_ = newStackz.stream()
         .filter(stack -> Double.isFinite(stack.confusionMatrix().matthewsCorrelationCoefficient())).max(
             Comparator.comparingDouble(
-                (AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient()));
+                (AbstractStack stack) -> stack.confusionMatrix().matthewsCorrelationCoefficient())).map(Result::success)
+        .orElseGet(() -> Result.failure("stack not found"));
   }
 
   @Override
   public String toString() {
 
-    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.get().toString();
+    return stack_.successValue().toString();
   }
 
   public ConfusionMatrix confusionMatrix() {
 
-    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.get().confusionMatrix();
+    return stack_.successValue().confusionMatrix();
   }
 
   public int predict(String text) {
 
     Preconditions.checkNotNull(text, "text should not be null");
-    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.get().predict(text);
+    return stack_.successValue().predict(text);
   }
 
   public int predict(FeatureVector vector) {
 
     Preconditions.checkNotNull(vector, "vector should not be null");
-    Preconditions.checkState(stack_ != null && stack_.isPresent(), "missing stack");
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.get().predict(vector);
+    return stack_.successValue().predict(vector);
   }
 
   @Beta
   public Set<String> snippetBestEffort(String text) {
 
     Preconditions.checkNotNull(text, "text should not be null");
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.get().snippetBestEffort(text);
+    return stack_.successValue().snippetBestEffort(text);
   }
 
   private AbstractStack merge(eStackType stackType, AbstractStack leftNode, List<AbstractStack> rightNodes) {
