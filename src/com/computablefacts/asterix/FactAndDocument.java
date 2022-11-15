@@ -464,10 +464,18 @@ public final class FactAndDocument {
   private Optional<Integer> page() {
     return values().map(list -> {
       if (list.size() == 5 /* vam */) {
-        return Strings.isNullOrEmpty(list.get(1)) ? 0 : Integer.parseInt(list.get(1), 10);
+        try {
+          return Integer.parseInt(list.get(1), 10);
+        } catch (NumberFormatException e) {
+          return 0;
+        }
       }
       if (list.size() == 3 /* dab */) {
-        return Strings.isNullOrEmpty(list.get(2)) ? 0 : Integer.parseInt(list.get(2), 10);
+        try {
+          return Integer.parseInt(list.get(2), 10);
+        } catch (NumberFormatException e) {
+          return 0;
+        }
       }
       return 0;
     }).filter(page -> page > 0 /* page is 1-based */);
