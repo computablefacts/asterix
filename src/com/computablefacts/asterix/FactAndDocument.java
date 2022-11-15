@@ -462,9 +462,15 @@ public final class FactAndDocument {
   }
 
   private Optional<Integer> page() {
-    return values().map(list -> list.size() == 5 /* vam */ ? Integer.parseInt(list.get(1), 10)
-            : list.size() == 3 /* dab */ ? Integer.parseInt(list.get(2), 10) : 0)
-        .filter(page -> page > 0 /* page is 1-based */);
+    return values().map(list -> {
+      if (list.size() == 5 /* vam */) {
+        return Strings.isNullOrEmpty(list.get(1)) ? 0 : Integer.parseInt(list.get(1), 10);
+      }
+      if (list.size() == 3 /* dab */) {
+        return Strings.isNullOrEmpty(list.get(2)) ? 0 : Integer.parseInt(list.get(2), 10);
+      }
+      return 0;
+    }).filter(page -> page > 0 /* page is 1-based */);
   }
 
   private Optional<Integer> startIndex() {
