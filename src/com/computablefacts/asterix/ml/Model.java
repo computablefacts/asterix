@@ -85,12 +85,16 @@ final public class Model extends AbstractStack {
   public static void main(String[] args) {
 
     File goldLabels = new File(args[0]);
-    List<String> labels = Splitter.on(',').trimResults().omitEmptyStrings().splitToList(args.length < 3 ? "" : args[1]);
+    @Var List<String> labels = Splitter.on(',').trimResults().omitEmptyStrings()
+        .splitToList(args.length < 3 ? "" : args[1]);
     List<String> classifiers = Splitter.on(',').trimResults().omitEmptyStrings()
         .splitToList(args.length < 3 ? "logit" : args[2]);
 
     Preconditions.checkState(goldLabels.exists(), "Missing gold labels : %s", goldLabels);
-    Preconditions.checkArgument(!labels.isEmpty(), "labels should not be empty");
+
+    if (labels.isEmpty()) {
+      labels = new ArrayList<>(GoldLabel.load(goldLabels).map(GoldLabel::label).toSet());
+    }
 
     System.out.printf("Gold labels stored in %s.\n", goldLabels);
     System.out.printf("Labels to consider are [%s].\n", Joiner.on(", ").join(labels));
@@ -113,8 +117,6 @@ final public class Model extends AbstractStack {
     Function<String, List<String>> tokenizer = Vocabulary.tokenizer(keepSpan, keepToken, null, 1, chopAt);
 
     // Train/test model
-    double trainSizeInPercent = 0.75; // TODO : move as parameter?
-
     for (String label : labels) {
 
       System.out.println("================================================================================");
