@@ -4,6 +4,7 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
 import com.computablefacts.asterix.IO;
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.SnippetExtractor;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
@@ -205,90 +206,12 @@ final public class Model extends AbstractStack {
 
       for (String classifier : classifiers) {
 
-        Model model = new Model(label + "/" + classifier);
-        model.featurizer_ = new Featurizer(new DictionaryVectorizer(dictionary, dicBuilder));
-
-        if ("dnb".equals(classifier)) {
-          model.classifier_ = new DiscreteNaiveBayesClassifier();
-        } else if ("fld".equals(classifier)) {
-          model.classifier_ = new FisherLinearDiscriminantClassifier();
-        } else if ("knn".equals(classifier)) {
-          model.scaler_ = new StandardScaler();
-          model.classifier_ = new KNearestNeighborClassifier(model.scaler_);
-        } else if ("mlp".equals(classifier)) {
-          model.scaler_ = new StandardScaler();
-          model.classifier_ = new MultiLayerPerceptronClassifier(model.scaler_);
-        } else if ("svm".equals(classifier)) {
-          model.scaler_ = new StandardScaler();
-          model.classifier_ = new SvmClassifier(model.scaler_);
-        } else if ("rf".equals(classifier)) {
-          model.classifier_ = new RandomForestClassifier();
-        } else if ("dt".equals(classifier)) {
-          model.classifier_ = new DecisionTreeClassifier();
-        } else if ("gbt".equals(classifier)) {
-          model.classifier_ = new GradientBoostedTreesClassifier();
-        } else if ("ab".equals(classifier)) {
-          model.classifier_ = new AdaBoostClassifier();
-        } else {
-          model.scaler_ = new StandardScaler();
-          model.classifier_ = new LogisticRegressionClassifier(model.scaler_);
-        }
-
         List<String> texts = View.of(dataset.getKey()).map(GoldLabel::data).toList();
         List<Integer> categories = dataset.getValue();
-        List<String> testDataset = new ArrayList<>();
-        List<Integer> testCategories = new ArrayList<>();
 
-        ConfusionMatrix confusionMatrix;
-
-        // Split data between train and test then train a classifier
-        System.out.printf("Training model for classifier %s...\n", classifier);
-        stopwatch.reset().start();
-
-        if (!model.classifier_.supportsIncrementalTraining()) {
-
-          Entry<List<Entry<String, Integer>>, List<Entry<String, Integer>>> entry = split(
-              View.of(texts).zip(categories).toList(), trainSizeInPercent);
-          Map.Entry<List<String>, List<Integer>> train = View.of(entry.getKey()).unzip(Function.identity());
-          Map.Entry<List<String>, List<Integer>> test = View.of(entry.getValue()).unzip(Function.identity());
-
-          model.train(train.getKey(), train.getValue());
-
-          testDataset.addAll(test.getKey());
-          testCategories.addAll(test.getValue());
-        } else {
-          View.of(texts).zip(categories).partition(1000 /* batch size */).forEachRemaining(list -> {
-
-            Entry<List<Entry<String, Integer>>, List<Entry<String, Integer>>> entry = split(list, trainSizeInPercent);
-            Map.Entry<List<String>, List<Integer>> train = View.of(entry.getKey()).unzip(Function.identity());
-            Map.Entry<List<String>, List<Integer>> test = View.of(entry.getValue()).unzip(Function.identity());
-
-            model.train(train.getKey(), train.getValue());
-
-            testDataset.addAll(test.getKey());
-            testCategories.addAll(test.getValue());
-          });
-        }
-
-        stopwatch.stop();
-        System.out.printf("Model trained in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-
-        // Test the classifier
-        System.out.printf("Testing model for classifier %s...\n", classifier);
-        stopwatch.reset().start();
-
-        confusionMatrix = model.test(testDataset, testCategories);
-
-        stopwatch.stop();
-        System.out.println(confusionMatrix);
-        System.out.printf("Model tested in %d seconds.\n", stopwatch.elapsed(TimeUnit.SECONDS));
-
-        List<FeatureVector> vectors = View.of(texts).map(text -> model.featurizer_.transform(text)).toList();
-        model.init(vectors, categories.stream().mapToInt(x -> x).toArray());
-
-        if (Double.isFinite(model.confusionMatrix().matthewsCorrelationCoefficient())) {
-          models.add(model);
-        }
+        View.of(texts).zip(categories).partition(1000 /* batch size */).index().mapInParallel(10,
+                batch -> trainModel(label, dataset, classifier, dictionary, dicBuilder, batch.getKey(), batch.getValue()))
+            .filter(Result::isSuccess).forEachRemaining(model -> models.add(model.successValue()));
       }
 
       if (models.isEmpty()) {
@@ -399,6 +322,91 @@ final public class Model extends AbstractStack {
     Collections.shuffle(test);
 
     return new SimpleImmutableEntry<>(train, test);
+  }
+
+  private static Result<Model> trainModel(String label, Map.Entry<List<GoldLabel>, List<Integer>> dataset,
+      String classifier, Map<String, Double> dictionary, Function<String, Multiset<String>> dicBuilder, int batchId,
+      List<Entry<String, Integer>> batch) {
+
+    Preconditions.checkNotNull(label, "label should not be null");
+    Preconditions.checkNotNull(dataset, "dataset should not be null");
+    Preconditions.checkNotNull(classifier, "classifier should not be null");
+    Preconditions.checkNotNull(dictionary, "dictionary should not be null");
+    Preconditions.checkNotNull(dicBuilder, "dicBuilder should not be null");
+    Preconditions.checkNotNull(batch, "batch should not be null");
+    Preconditions.checkArgument(dataset.getKey().size() == dataset.getValue().size());
+    Preconditions.checkArgument(batch.size() <= dataset.getKey().size());
+
+    double trainSizeInPercent = 0.75;
+
+    Model model = new Model(label + "/" + classifier);
+    model.featurizer_ = new Featurizer(new DictionaryVectorizer(dictionary, dicBuilder));
+
+    if ("dnb".equals(classifier)) {
+      model.classifier_ = new DiscreteNaiveBayesClassifier();
+    } else if ("fld".equals(classifier)) {
+      model.classifier_ = new FisherLinearDiscriminantClassifier();
+    } else if ("knn".equals(classifier)) {
+      model.scaler_ = new StandardScaler();
+      model.classifier_ = new KNearestNeighborClassifier(model.scaler_);
+    } else if ("mlp".equals(classifier)) {
+      model.scaler_ = new StandardScaler();
+      model.classifier_ = new MultiLayerPerceptronClassifier(model.scaler_);
+    } else if ("svm".equals(classifier)) {
+      model.scaler_ = new StandardScaler();
+      model.classifier_ = new SvmClassifier(model.scaler_);
+    } else if ("rf".equals(classifier)) {
+      model.classifier_ = new RandomForestClassifier();
+    } else if ("dt".equals(classifier)) {
+      model.classifier_ = new DecisionTreeClassifier();
+    } else if ("gbt".equals(classifier)) {
+      model.classifier_ = new GradientBoostedTreesClassifier();
+    } else if ("ab".equals(classifier)) {
+      model.classifier_ = new AdaBoostClassifier();
+    } else {
+      model.scaler_ = new StandardScaler();
+      model.classifier_ = new LogisticRegressionClassifier(model.scaler_);
+    }
+
+    // Split data between train and test then train a classifier
+    System.out.printf("Training model for classifier %s... (batch_id=%d)\n", classifier, batchId);
+    Stopwatch stopwatch = Stopwatch.createStarted();
+
+    Entry<List<Entry<String, Integer>>, List<Entry<String, Integer>>> entry = split(batch, trainSizeInPercent);
+    Map.Entry<List<String>, List<Integer>> train = View.of(entry.getKey()).unzip(Function.identity());
+    Map.Entry<List<String>, List<Integer>> test = View.of(entry.getValue()).unzip(Function.identity());
+
+    model.train(train.getKey(), train.getValue());
+
+    stopwatch.stop();
+    System.out.printf("Model trained in %d seconds. (batch_id=%d)\n", stopwatch.elapsed(TimeUnit.SECONDS), batchId);
+
+    // Test the classifier on the test dataset
+    System.out.printf("Testing model for classifier %s... (batch_id=%d)\n", classifier, batchId);
+    stopwatch.reset().start();
+
+    ConfusionMatrix confusionMatrix = model.test(test.getKey(), test.getValue());
+
+    stopwatch.stop();
+    System.out.println(confusionMatrix);
+    System.out.printf("Model tested in %d seconds. (batch_id=%d)\n", stopwatch.elapsed(TimeUnit.SECONDS), batchId);
+
+    // Compute MCC for the whole dataset
+    System.out.printf("Finalizing model for classifier %s... (batch_id=%d)\n", classifier, batchId);
+    stopwatch.reset().start();
+
+    List<FeatureVector> vectors = View.of(dataset.getKey()).map(e -> model.featurizer_.transform(e.data())).toList();
+    int[] actuals = new int[dataset.getKey().size()];
+    View.range(0, dataset.getKey().size()).forEachRemaining(i -> actuals[i] = dataset.getValue().get(i));
+
+    model.init(vectors, actuals);
+
+    stopwatch.stop();
+    System.out.println(model.confusionMatrix());
+    System.out.printf("Model finalized in %d seconds. (batch_id=%d)\n", stopwatch.elapsed(TimeUnit.SECONDS), batchId);
+
+    return Double.isFinite(model.confusionMatrix().matthewsCorrelationCoefficient()) ? Result.success(model)
+        : Result.failure("invalid MCC");
   }
 
   private static List<Map.Entry<String, Double>> findInterestingNGrams(List<String> ok, List<String> ko,
