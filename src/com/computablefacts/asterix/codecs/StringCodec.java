@@ -491,7 +491,7 @@ final public class StringCodec {
       if (!isNumber(text)) {
 
         // Check if text is a date in ISO Instant format
-        if (text.length() >= 20 && text.length() <= 24 && (text.charAt(10) == 'T' || text.charAt(10) == 't') && (
+        if (text.length() >= 20 && (text.charAt(10) == 'T' || text.charAt(10) == 't') && (
             text.charAt(text.length() - 1) == 'Z' || text.charAt(text.length() - 1) == 'z')) {
           try {
             return Date.from(Instant.parse(text));

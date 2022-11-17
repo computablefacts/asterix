@@ -569,6 +569,16 @@ public class StringCodecTest {
   }
 
   @Test
+  public void testCoerceDateWhenUsingHighResolutionClockString() {
+
+    Assert.assertEquals(Date.from(Instant.parse("2022-11-17T10:37:13.402379Z")),
+        StringCodec.defaultCoercer("2022-11-17T10:37:13.402379Z"));
+
+    Assert.assertEquals(Date.from(Instant.parse("2022-11-17T10:37:13.402379Z")),
+        StringCodec.defaultCoercer("2022-11-17T10:37:13.402379Z"));
+  }
+
+  @Test
   public void testCoerceNumberStringEndingWithDot() {
     Assert.assertEquals("1.", StringCodec.defaultCoercer("1."));
   }
