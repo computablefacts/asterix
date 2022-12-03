@@ -190,12 +190,12 @@
                 </restrictImports>
                 <restrictImports
                   implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Nona must not inherit from Morta</reason>
+                  <reason>Asterix must not inherit from Morta</reason>
                   <bannedImport>com.computablefacts.morta.**</bannedImport>
                 </restrictImports>
                 <restrictImports
                   implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Nona must not inherit from Junon</reason>
+                  <reason>Asterix must not inherit from Junon</reason>
                   <bannedImport>com.computablefacts.junon.**</bannedImport>
                 </restrictImports>
                 <restrictImports
