@@ -1,5 +1,7 @@
 package com.computablefacts.asterix.codecs;
 
+import com.computablefacts.asterix.Result;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
@@ -346,6 +348,28 @@ public class JsonCodecTest {
     Assert.assertEquals(JsonCodec.asObject(json), JsonCodec.unflattenAsMap(map, '¤'));
   }
 
+  @Test
+  public void testObjectToDto1() {
+
+    SimplePojo<Number> pojo = new SimplePojo<>("x", 123);
+    String json = JsonCodec.asString(pojo);
+    Result<SimplePojo> newPojo = JsonCodec.objectToDto(SimplePojo.class, json);
+
+    Assert.assertTrue(newPojo.isSuccess());
+    Assert.assertEquals(pojo, newPojo.successValue());
+  }
+
+  @Test
+  public void testObjectToDto2() {
+
+    SimplePojo<Number> pojo = new SimplePojo<>("x", 123);
+    Map<String, Object> json = JsonCodec.asObject(JsonCodec.asString(pojo));
+    Result<SimplePojo> newPojo = JsonCodec.objectToDto(SimplePojo.class, json);
+
+    Assert.assertTrue(newPojo.isSuccess());
+    Assert.assertEquals(pojo, newPojo.successValue());
+  }
+
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private static class SimplePojo<T> {
 
@@ -355,7 +379,9 @@ public class JsonCodecTest {
     @JsonProperty("value")
     public final T value_;
 
-    public SimplePojo(String key, T value) {
+
+    @JsonCreator
+    public SimplePojo(@JsonProperty("key") String key, @JsonProperty("value") T value) {
       key_ = key;
       value_ = value;
     }

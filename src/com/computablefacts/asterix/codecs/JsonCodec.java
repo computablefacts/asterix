@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.codecs;
 
+import com.computablefacts.asterix.Result;
 import com.computablefacts.logfmt.LogFormatter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -99,6 +100,54 @@ final public class JsonCodec {
    */
   public static Map<String, Object> unflattenAsMap(Map<String, Object> json, char separator) {
     return new JsonUnflattener(jsonCore_, json).withSeparator(separator).unflattenAsMap();
+  }
+
+  /**
+   * Convert a JSON string to an object.
+   *
+   * @param clazz the object type.
+   * @param json  the JSON string.
+   * @param <T>   the object type.
+   * @return an object.
+   */
+  public static <T> Result<T> objectToDto(Class<T> clazz, String json) {
+    if (clazz == null) {
+      return Result.failure("clazz is null");
+    }
+    if (json == null) {
+      return Result.empty();
+    }
+    try {
+      T dto = mapper_.convertValue(asObject(json), clazz);
+      return dto == null ? Result.empty() : Result.success(dto);
+    } catch (IllegalArgumentException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+      return Result.failure(e);
+    }
+  }
+
+  /**
+   * Convert a JSON object to an object.
+   *
+   * @param clazz the object type.
+   * @param obj   the JSON object.
+   * @param <T>   the object type.
+   * @return an object.
+   */
+  public static <T> Result<T> objectToDto(Class<T> clazz, Map<String, Object> obj) {
+    if (clazz == null) {
+      return Result.failure("clazz is null");
+    }
+    if (obj == null) {
+      return Result.empty();
+    }
+    try {
+      T dto = mapper_.convertValue(obj, clazz);
+      return dto == null ? Result.empty() : Result.success(dto);
+    } catch (IllegalArgumentException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+      return Result.failure(e);
+    }
   }
 
   /**
