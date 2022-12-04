@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.Generated;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;

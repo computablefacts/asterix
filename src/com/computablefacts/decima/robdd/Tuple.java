@@ -1,6 +1,6 @@
 package com.computablefacts.decima.robdd;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.Objects;
 

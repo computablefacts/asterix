@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.Generated;
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.ml.GoldLabel;
 import com.fasterxml.jackson.annotation.JsonCreator;

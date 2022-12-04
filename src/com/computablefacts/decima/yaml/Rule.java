@@ -1,6 +1,6 @@
 package com.computablefacts.decima.yaml;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

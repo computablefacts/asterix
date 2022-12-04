@@ -1,6 +1,6 @@
 package com.computablefacts.nona.types;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;

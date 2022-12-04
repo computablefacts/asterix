@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.Generated;
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Objects;

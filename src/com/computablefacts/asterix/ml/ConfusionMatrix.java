@@ -3,7 +3,7 @@ package com.computablefacts.asterix.ml;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;

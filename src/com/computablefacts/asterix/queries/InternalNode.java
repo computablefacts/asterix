@@ -1,6 +1,6 @@
 package com.computablefacts.asterix.queries;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.computablefacts.asterix.View;
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;

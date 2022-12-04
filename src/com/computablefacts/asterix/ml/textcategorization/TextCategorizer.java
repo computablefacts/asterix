@@ -3,7 +3,7 @@ package com.computablefacts.asterix.ml.textcategorization;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.GoldLabel;

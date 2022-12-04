@@ -1,6 +1,6 @@
 package com.computablefacts.asterix.ml;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

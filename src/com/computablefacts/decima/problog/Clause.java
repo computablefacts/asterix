@@ -1,6 +1,6 @@
 package com.computablefacts.decima.problog;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;

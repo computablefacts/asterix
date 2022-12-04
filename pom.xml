@@ -40,7 +40,6 @@
 
   <properties>
     <logfmt.version>0.14</logfmt.version>
-    <junon.version>0.13</junon.version>
     <slf4j.version>2.0.3</slf4j.version>
     <guava.version>31.1-jre</guava.version>
     <re2j.version>1.7</re2j.version>
@@ -74,11 +73,6 @@
       <groupId>com.computablefacts</groupId>
       <artifactId>logfmt</artifactId>
       <version>${logfmt.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.computablefacts</groupId>
-      <artifactId>junon</artifactId>
-      <version>${junon.version}</version>
     </dependency>
     <dependency>
       <groupId>com.github.haifengl</groupId>
@@ -219,12 +213,12 @@
                   <basePackages>
                     <basePackage>com.computablefacts.asterix.**</basePackage>
                   </basePackages>
-                  <reason>Ban packages</reason>
+                  <reason>Ban packages from being used in Asterix</reason>
                   <bannedImports>
-                    <bannedImport>com.computablefacts.nona.**</bannedImport>
                     <bannedImport>com.computablefacts.decima.**</bannedImport>
-                    <bannedImport>com.computablefacts.morta.**</bannedImport>
                     <bannedImport>com.computablefacts.jupiter.**</bannedImport>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>com.computablefacts.nona.**</bannedImport>
                     <bannedImport>java.util.logging.**</bannedImport>
                   </bannedImports>
                 </restrictImports>
@@ -233,10 +227,25 @@
                   <basePackages>
                     <basePackage>com.computablefacts.decima.**</basePackage>
                   </basePackages>
-                  <reason>Ban packages</reason>
+                  <reason>Ban packages from being used in Decima</reason>
                   <bannedImports>
-                    <bannedImport>com.computablefacts.morta.**</bannedImport>
                     <bannedImport>com.computablefacts.jupiter.**</bannedImport>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>java.util.logging.**</bannedImport>
+                  </bannedImports>
+                </restrictImports>
+                <restrictImports
+                  implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
+                  <basePackages>
+                    <basePackage>com.computablefacts.junon.**</basePackage>
+                  </basePackages>
+                  <reason>Ban packages from being used in Junon</reason>
+                  <bannedImports>
+                    <bannedImport>com.computablefacts.asterix.**</bannedImport>
+                    <bannedImport>com.computablefacts.decima.**</bannedImport>
+                    <bannedImport>com.computablefacts.jupiter.**</bannedImport>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>com.computablefacts.nona.**</bannedImport>
                     <bannedImport>java.util.logging.**</bannedImport>
                   </bannedImports>
                 </restrictImports>
@@ -245,11 +254,12 @@
                   <basePackages>
                     <basePackage>com.computablefacts.nona.**</basePackage>
                   </basePackages>
-                  <reason>Ban packages</reason>
+                  <reason>Ban packages from being used in Nona</reason>
                   <bannedImports>
                     <bannedImport>com.computablefacts.decima.**</bannedImport>
-                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>com.computablefacts.junon.**</bannedImport>
                     <bannedImport>com.computablefacts.jupiter.**</bannedImport>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
                     <bannedImport>java.util.logging.**</bannedImport>
                   </bannedImports>
                 </restrictImports>

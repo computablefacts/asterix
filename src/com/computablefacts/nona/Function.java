@@ -1,7 +1,7 @@
 package com.computablefacts.nona;
 
 import com.computablefacts.asterix.BoxedType;
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.computablefacts.asterix.codecs.Base64Codec;
 import com.computablefacts.nona.functions.additiveoperators.Add;
 import com.computablefacts.nona.functions.additiveoperators.Substract;

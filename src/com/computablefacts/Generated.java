@@ -1,4 +1,4 @@
-package com.computablefacts.asterix;
+package com.computablefacts;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

@@ -1,6 +1,6 @@
 package com.computablefacts.decima.yaml;
 
-import com.computablefacts.asterix.Generated;
+import com.computablefacts.Generated;
 import com.computablefacts.decima.problog.Clause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
