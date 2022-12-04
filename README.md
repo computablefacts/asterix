@@ -77,6 +77,13 @@ $ git commit -am "Update to version <version_number>-SNAPSHOT"
 $ git push origin master
 ```
 
+## Packages Summary
+
+- [Asterix](#asterix).  Core data structures and algorithms.
+- [Decima](#decima).  Decima is a proof-of-concept Java implementation of the probabilistic logic programming language ProbLog.
+- [Junon](#junon).  Junon is a data transfer object for Java compatible with our platform API.
+- [Nona](#nona).  Nona is an extensible Excel-like programming language.
+
 ## Asterix
 
 [Asterix](/src/com/computablefacts/asterix) contains a few helpers to perform text mining/NLP related tasks :
@@ -439,6 +446,10 @@ clients("Roger", "Bacon", "rogerbacon12@yahoo.com").
 clients("Robert", "Schwartz", "rob23@gmail.com").
 clients("Anna", "Smith", "annasmith23@gmail.com").
 ```
+
+## Junon
+
+[Junon](/src/com/computablefacts/junon) is a data transfer object for Java compatible with our platform API.
 
 ## Nona
 
