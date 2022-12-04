@@ -40,13 +40,19 @@
 
   <properties>
     <logfmt.version>0.14</logfmt.version>
+    <junon.version>0.13</junon.version>
     <slf4j.version>2.0.3</slf4j.version>
     <guava.version>31.1-jre</guava.version>
     <re2j.version>1.7</re2j.version>
+    <ahocorasick.version>0.6.3</ahocorasick.version>
+    <carrot.version>2.4.5</carrot.version>
+    <fuzzywuzzy.version>1.4.0</fuzzywuzzy.version>
+    <bplustree.version>0.1.3</bplustree.version>
     <smile.version>2.6.0</smile.version>
     <xstream.version>1.4.19</xstream.version>
     <jsonflattener.version>0.14.2</jsonflattener.version>
     <jackson-dataformat-csv.version>2.14.0</jackson-dataformat-csv.version>
+    <jackson-dataformat-yaml.version>2.14.0</jackson-dataformat-yaml.version>
     <equalsverifier.version>3.11</equalsverifier.version>
     <javax-validation.version>2.0.1.Final</javax-validation.version>
     <jcip.version>1.0-1</jcip.version>
@@ -70,6 +76,11 @@
       <version>${logfmt.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.computablefacts</groupId>
+      <artifactId>junon</artifactId>
+      <version>${junon.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
       <version>${smile.version}</version>
@@ -90,6 +101,26 @@
       <version>${re2j.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.ahocorasick</groupId>
+      <artifactId>ahocorasick</artifactId>
+      <version>${ahocorasick.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>au.com.codeka</groupId>
+      <artifactId>carrot</artifactId>
+      <version>${carrot.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>me.xdrop</groupId>
+      <artifactId>fuzzywuzzy</artifactId>
+      <version>${fuzzywuzzy.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.davidmoten</groupId>
+      <artifactId>bplustree</artifactId>
+      <version>${bplustree.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.wnameless.json</groupId>
       <artifactId>json-flattener</artifactId>
       <version>${jsonflattener.version}</version>
@@ -98,6 +129,11 @@
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-csv</artifactId>
       <version>${jackson-dataformat-csv.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>${jackson-dataformat-yaml.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.errorprone</groupId>
@@ -180,33 +216,42 @@
               <rules>
                 <restrictImports
                   implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Asterix must not inherit from Nona</reason>
-                  <bannedImport>com.computablefacts.nona.**</bannedImport>
+                  <basePackages>
+                    <basePackage>com.computablefacts.asterix.**</basePackage>
+                  </basePackages>
+                  <reason>Ban packages</reason>
+                  <bannedImports>
+                    <bannedImport>com.computablefacts.nona.**</bannedImport>
+                    <bannedImport>com.computablefacts.decima.**</bannedImport>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>com.computablefacts.jupiter.**</bannedImport>
+                    <bannedImport>java.util.logging.**</bannedImport>
+                  </bannedImports>
                 </restrictImports>
                 <restrictImports
                   implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Asterix must not inherit from Decima</reason>
-                  <bannedImport>com.computablefacts.decima.**</bannedImport>
+                  <basePackages>
+                    <basePackage>com.computablefacts.decima.**</basePackage>
+                  </basePackages>
+                  <reason>Ban packages</reason>
+                  <bannedImports>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>com.computablefacts.jupiter.**</bannedImport>
+                    <bannedImport>java.util.logging.**</bannedImport>
+                  </bannedImports>
                 </restrictImports>
                 <restrictImports
                   implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Asterix must not inherit from Morta</reason>
-                  <bannedImport>com.computablefacts.morta.**</bannedImport>
-                </restrictImports>
-                <restrictImports
-                  implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Asterix must not inherit from Junon</reason>
-                  <bannedImport>com.computablefacts.junon.**</bannedImport>
-                </restrictImports>
-                <restrictImports
-                  implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Asterix must not inherit from Jupiter</reason>
-                  <bannedImport>com.computablefacts.jupiter.**</bannedImport>
-                </restrictImports>
-                <restrictImports
-                  implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
-                  <reason>Use SLF4j for logging</reason>
-                  <bannedImport>java.util.logging.**</bannedImport>
+                  <basePackages>
+                    <basePackage>com.computablefacts.nona.**</basePackage>
+                  </basePackages>
+                  <reason>Ban packages</reason>
+                  <bannedImports>
+                    <bannedImport>com.computablefacts.decima.**</bannedImport>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>com.computablefacts.jupiter.**</bannedImport>
+                    <bannedImport>java.util.logging.**</bannedImport>
+                  </bannedImports>
                 </restrictImports>
               </rules>
             </configuration>
