@@ -1,6 +1,7 @@
 package com.computablefacts.junon;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -214,6 +215,7 @@ final public class Fact extends HasId {
         provenances_, values_);
   }
 
+  @JsonIgnore
   public void value(String value) {
 
     Preconditions.checkNotNull(value);
@@ -221,6 +223,7 @@ final public class Fact extends HasId {
     values_.add(value);
   }
 
+  @JsonIgnore
   public String value(int position) {
 
     Preconditions.checkArgument(0 <= position && position < values_.size());
@@ -228,10 +231,12 @@ final public class Fact extends HasId {
     return values_.get(position);
   }
 
+  @JsonIgnore
   public List<String> values() {
     return ImmutableList.copyOf(values_);
   }
 
+  @JsonIgnore
   public void metadata(Collection<Metadata> metadata) {
 
     Preconditions.checkNotNull(metadata);
@@ -239,6 +244,7 @@ final public class Fact extends HasId {
     this.metadata_.addAll(metadata);
   }
 
+  @JsonIgnore
   public void metadata(Metadata metadata) {
 
     Preconditions.checkNotNull(metadata);
@@ -246,10 +252,12 @@ final public class Fact extends HasId {
     this.metadata_.add(metadata);
   }
 
+  @JsonIgnore
   public List<Metadata> metadata() {
     return ImmutableList.copyOf(metadata_);
   }
 
+  @JsonIgnore
   public void provenance(Provenance provenance) {
 
     Preconditions.checkNotNull(provenance);
@@ -257,6 +265,7 @@ final public class Fact extends HasId {
     provenances_.add(provenance);
   }
 
+  @JsonIgnore
   public Provenance provenance() {
 
     Preconditions.checkState(provenances_.size() == 1);
@@ -264,14 +273,17 @@ final public class Fact extends HasId {
     return provenances_.get(0);
   }
 
+  @JsonIgnore
   public List<Provenance> provenances() {
     return ImmutableList.copyOf(provenances_);
   }
 
+  @JsonIgnore
   public String type() {
     return type_;
   }
 
+  @JsonIgnore
   public Boolean isValid() {
     return isValid_;
   }
@@ -281,6 +293,7 @@ final public class Fact extends HasId {
    *
    * @return true if the fact has been accepted, false otherwise.
    */
+  @JsonIgnore
   public boolean isAccepted() {
     return isValid_ != null && isValid_;
   }
@@ -290,6 +303,7 @@ final public class Fact extends HasId {
    *
    * @return true if the fact has been rejected, false otherwise.
    */
+  @JsonIgnore
   public boolean isRejected() {
     return isValid_ != null && !isValid_;
   }
@@ -299,22 +313,27 @@ final public class Fact extends HasId {
    *
    * @return true if the fact should be verified, false otherwise.
    */
+  @JsonIgnore
   public boolean isVerified() {
     return isValid_ != null;
   }
 
+  @JsonIgnore
   public String authorizations() {
     return authorizations_;
   }
 
+  @JsonIgnore
   public double confidenceScore() {
     return confidenceScore_;
   }
 
+  @JsonIgnore
   public String startDate() {
     return startDate_;
   }
 
+  @JsonIgnore
   public String endDate() {
     return endDate_;
   }

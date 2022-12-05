@@ -1,6 +1,7 @@
 package com.computablefacts.junon;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -178,65 +179,80 @@ final public class Provenance {
         span_, spanHash_, startIndex_, endIndex_, page_);
   }
 
+  @JsonIgnore
   public String storage() {
     return sourceStore_.substring(0, sourceStore_.indexOf('/'));
   }
 
+  @JsonIgnore
   public String root() {
     int idx = sourceStore_.indexOf('/') + 1;
     return sourceStore_.substring(idx, sourceStore_.indexOf('/', idx));
   }
 
+  @JsonIgnore
   public String dataset() {
     int idx1 = sourceStore_.indexOf('/') + 1;
     int idx2 = sourceStore_.indexOf('/', idx1) + 1;
     return sourceStore_.substring(idx2, sourceStore_.lastIndexOf('/'));
   }
 
+  @JsonIgnore
   public String docId() {
     return sourceStore_.substring(sourceStore_.lastIndexOf('/') + 1);
   }
 
+  @JsonIgnore
   public String sourceStore() {
     return sourceStore_;
   }
 
+  @JsonIgnore
   public String sourceType() {
     return sourceType_;
   }
 
+  @JsonIgnore
   public String sourceReliability() {
     return sourceReliability_;
   }
 
+  @JsonIgnore
   public String string() {
     return string_;
   }
 
+  @JsonIgnore
   public String span() {
     return span_;
   }
 
+  @JsonIgnore
   public int startIndex() {
     return startIndex_ == null ? -1 : startIndex_;
   }
 
+  @JsonIgnore
   public int endIndex() {
     return endIndex_ == null ? -1 : endIndex_;
   }
 
+  @JsonIgnore
   public String extractionDate() {
     return extractionDate_;
   }
 
+  @JsonIgnore
   public String modificationDate() {
     return modificationDate_;
   }
 
+  @JsonIgnore
   public String spanHash() {
     return spanHash_;
   }
 
+  @JsonIgnore
   public int page() {
     return page_ == null ? -1 : page_;
   }

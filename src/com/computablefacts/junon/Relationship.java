@@ -177,6 +177,7 @@ final public class Relationship extends HasId {
         metadata_, provenances_);
   }
 
+  @JsonIgnore
   public void metadata(Metadata metadata) {
 
     Preconditions.checkNotNull(metadata);
@@ -184,6 +185,7 @@ final public class Relationship extends HasId {
     this.metadata_.add(metadata);
   }
 
+  @JsonIgnore
   public void provenance(Provenance provenance) {
 
     Preconditions.checkNotNull(provenance);
