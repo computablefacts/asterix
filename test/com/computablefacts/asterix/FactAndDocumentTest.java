@@ -20,6 +20,7 @@ import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
 import org.junit.Test;
 
+@Deprecated
 public class FactAndDocumentTest {
 
   public static File factsAndDocuments() throws Exception {

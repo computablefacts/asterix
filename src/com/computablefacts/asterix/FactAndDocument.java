@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
  * Link a {@link com.computablefacts.junon.Fact}, i.e. a span of text associated with a label, to its underlying
  * {@link Document}, i.e. the document from which the fact has been extracted.
  */
+@Deprecated
 @CheckReturnValue
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class FactAndDocument {
