@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
+@Deprecated
 @NotThreadSafe
 @CheckReturnValue
 final public class Vocabulary {
