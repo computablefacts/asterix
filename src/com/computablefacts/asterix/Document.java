@@ -2,18 +2,31 @@ package com.computablefacts.asterix;
 
 import com.computablefacts.Generated;
 import com.computablefacts.asterix.codecs.JsonCodec;
+import com.computablefacts.junon.Fact;
+import com.computablefacts.junon.Provenance;
 import com.computablefacts.logfmt.LogFormatter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @CheckReturnValue
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 final public class Document {
 
   public static final String ID_MAGIC_KEY = "_id";
@@ -21,6 +34,7 @@ final public class Document {
   public static final String TEXT = "text";
   public static final String METADATA = "metadata";
   public static final String CONTENT = "content";
+  public static final String FACTS = "facts";
   public static final String CONTENT_TYPE = "content_type";
   public static final String PRODUCER = "producer";
   public static final String NB_PAGES = "nb_pages";
@@ -33,9 +47,14 @@ final public class Document {
   public static final String DESCRIPTION = "description";
   public static final String LANGUAGE = "language";
   private static final Logger logger_ = LoggerFactory.getLogger(Document.class);
+  @JsonProperty(value = "doc_id")
   private final String docId_;
+  @JsonProperty(value = "metadata")
   private final Map<String, Object> metadata_ = new HashMap<>();
+  @JsonProperty(value = "content")
   private final Map<String, Object> content_ = new HashMap<>();
+  @JsonProperty(value = "facts")
+  private final List<Fact> facts_ = new ArrayList<>();
 
   public Document(String docId) {
     docId_ = Preconditions.checkNotNull(docId, "docId should not be null");
@@ -45,6 +64,7 @@ final public class Document {
   // this(Codecs.asObject(Preconditions.checkNotNull(json, "json should not be null")));
   // }
 
+  @SuppressWarnings("unchecked")
   public Document(Map<String, Object> json) {
 
     Preconditions.checkNotNull(json, "json should not be null");
@@ -65,6 +85,26 @@ final public class Document {
     Preconditions.checkState(json.containsKey(CONTENT), "Missing content in %s", json);
 
     content_.putAll((Map<String, Object>) json.get(CONTENT));
+  }
+
+  @JsonCreator
+  public Document(@JsonProperty(value = "doc_id") String docId,
+      @JsonProperty(value = "metadata") Map<String, Object> metadata,
+      @JsonProperty(value = "content") Map<String, Object> content, @JsonProperty(value = "facts") List<Fact> facts) {
+
+    Preconditions.checkNotNull(docId, "docId should not be null");
+
+    docId_ = docId;
+
+    if (metadata != null) {
+      metadata_.putAll(metadata);
+    }
+    if (content != null) {
+      content_.putAll(content);
+    }
+    if (facts != null) {
+      facts_.addAll(facts);
+    }
   }
 
   /**
@@ -106,6 +146,65 @@ final public class Document {
     });
   }
 
+  /**
+   * Load a corpus of documents.
+   *
+   * @param documents the 'document' file as a gzipped JSONL file.
+   * @param facts     the 'fact' file as a gzipped JSONL file.
+   * @return a {@link View} over the corpus of documents.
+   */
+  public static View<Document> of(File documents, File facts) {
+
+    Preconditions.checkNotNull(documents, "documents should not be null");
+    Preconditions.checkArgument(documents.exists(), "documents file does not exist : %s", documents);
+    Preconditions.checkNotNull(facts, "facts should not be null");
+    Preconditions.checkArgument(facts.exists(), "facts file does not exist : %s", facts);
+
+    // Load facts
+    Map<String, List<Fact>> factsIndexedByDocId = View.of(facts, true)
+        .filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */).map(JsonCodec::asObject)
+        .map(Fact::fromLegacy).filter(fact -> fact != null && fact.isVerified())
+        .groupAll(fact -> fact.provenance().docId());
+
+    // Load documents and associate them with the loaded facts
+    return of(documents, true).takeWhile(
+            doc -> !factsIndexedByDocId.isEmpty() /* exit as soon as all facts are associated with a document */)
+        .filter(doc -> {
+
+          // Ignore documents that are not linked to at least one fact
+          return factsIndexedByDocId.containsKey(doc.docId());
+        }).map(doc -> {
+
+          // Remove useless document attributes
+          doc.unindexedContent("bbox", null);
+          doc.unindexedContent("tika", null);
+
+          // Associate the current document with the relevant facts
+          doc.facts_.addAll(View.of(factsIndexedByDocId.get(doc.docId())).map(fact -> {
+
+            int page = fact.provenance().page();
+            List<String> pages = Splitter.on('\f').splitToList((String) doc.text());
+
+            Preconditions.checkState(0 < page && page <= pages.size());
+            Preconditions.checkState(pages.get(page - 1).contains(fact.provenance().span()));
+
+            Provenance newProvenance = new Provenance(fact.provenance().sourceStore(), fact.provenance().sourceType(),
+                fact.provenance().sourceReliability(), pages.get(page - 1), fact.provenance().span(),
+                fact.provenance().startIndex(), fact.provenance().endIndex(), fact.provenance().extractionDate(),
+                fact.provenance().modificationDate(), fact.provenance().spanHash(), page);
+
+            return new Fact(fact.externalId_, fact.metadata(), Lists.newArrayList(newProvenance), fact.values(),
+                fact.type(), fact.isValid(), fact.authorizations(), fact.confidenceScore(), fact.startDate(),
+                fact.endDate());
+          }).toList());
+
+          // Remove the processed facts from the list of facts to be processed
+          factsIndexedByDocId.remove(doc.docId());
+
+          return doc;
+        });
+  }
+
   @Generated
   @Override
   public String toString() {
@@ -122,24 +221,29 @@ final public class Document {
     }
     Document other = (Document) obj;
     return Objects.equal(docId_, other.docId_) && Objects.equal(metadata_, other.metadata_) && Objects.equal(content_,
-        other.content_);
+        other.content_) && Objects.equal(facts_, other.facts_);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(docId_, metadata_, content_);
+    return Objects.hashCode(docId_, metadata_, content_, facts_);
   }
 
   public Map<String, Object> json() {
+
     Map<String, Object> json = new HashMap<>();
     json.put(ID_MAGIC_KEY, docId_);
     json.put(METADATA, metadata_);
     json.put(CONTENT, content_);
+
+    if (!facts_.isEmpty()) {
+      json.put(FACTS, facts_);
+    }
     return json;
   }
 
   public boolean isEmpty() {
-    return metadata_.isEmpty() && content_.isEmpty();
+    return metadata_.isEmpty() && content_.isEmpty() && facts_.isEmpty();
   }
 
   public String docId() {
@@ -218,6 +322,10 @@ final public class Document {
 
   public Map<String, Object> content() {
     return new HashMap<>(content_);
+  }
+
+  public List<Fact> facts() {
+    return ImmutableList.copyOf(facts_);
   }
 
   public void contentType(String obj) {
