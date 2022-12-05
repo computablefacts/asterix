@@ -10,6 +10,8 @@ public interface AbstractBinaryClassifier {
   int OK = 1;
   int KO = 0;
 
+  String type();
+
   boolean isTrained();
 
   int predict(FeatureVector vector);

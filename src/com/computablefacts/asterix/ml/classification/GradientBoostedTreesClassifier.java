@@ -18,6 +18,11 @@ final public class GradientBoostedTreesClassifier implements AbstractBinaryClass
   }
 
   @Override
+  public String type() {
+    return "GradientBoostedTrees";
+  }
+
+  @Override
   public boolean isTrained() {
     return tree_ != null;
   }

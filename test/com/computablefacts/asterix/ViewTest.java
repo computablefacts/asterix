@@ -839,7 +839,7 @@ public class ViewTest {
   public void testOverlappingWindow() {
 
     View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
-    List<ImmutableList<String>> windows = view.overlappingWindow(3).toList();
+    List<List<String>> windows = view.overlappingWindow(3).toList();
 
     Assert.assertEquals(7, windows.size());
     Assert.assertTrue(windows.contains(ImmutableList.of("1", "2", "3")));
@@ -855,7 +855,7 @@ public class ViewTest {
   public void testNonOverlappingWindow() {
 
     View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
-    List<ImmutableList<String>> windows = view.nonOverlappingWindow(3).toList();
+    List<List<String>> windows = view.nonOverlappingWindow(3).toList();
 
     Assert.assertEquals(3, windows.size());
     Assert.assertTrue(windows.contains(ImmutableList.of("1", "2", "3")));
@@ -867,7 +867,7 @@ public class ViewTest {
   public void testOverlappingWindowWithStrictLength() {
 
     View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
-    List<ImmutableList<String>> windows = view.overlappingWindowWithStrictLength(3).toList();
+    List<List<String>> windows = view.overlappingWindowWithStrictLength(3).toList();
 
     Assert.assertEquals(5, windows.size());
     Assert.assertTrue(windows.contains(ImmutableList.of("1", "2", "3")));
@@ -881,7 +881,7 @@ public class ViewTest {
   public void testNonOverlappingWindowWithStrictLength() {
 
     View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
-    List<ImmutableList<String>> windows = view.nonOverlappingWindowWithStrictLength(3).toList();
+    List<List<String>> windows = view.nonOverlappingWindowWithStrictLength(3).toList();
 
     Assert.assertEquals(2, windows.size());
     Assert.assertTrue(windows.contains(ImmutableList.of("1", "2", "3")));

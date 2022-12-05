@@ -6,7 +6,7 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.computablefacts.asterix.ml.classification.LogisticRegressionClassifier;
-import com.computablefacts.asterix.ml.classification.NopScaler;
+import com.computablefacts.asterix.ml.standardization.NopScaler;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.ArrayList;

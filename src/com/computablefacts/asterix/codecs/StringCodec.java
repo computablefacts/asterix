@@ -1,8 +1,8 @@
 package com.computablefacts.asterix.codecs;
 
-import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
-import com.computablefacts.asterix.StringIterator;
+import com.computablefacts.asterix.nlp.Span;
+import com.computablefacts.asterix.nlp.SpanSequence;
+import com.computablefacts.asterix.nlp.StringIterator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.errorprone.annotations.CheckReturnValue;

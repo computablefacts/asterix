@@ -3,12 +3,14 @@ package com.computablefacts.asterix.ml.stacking;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -64,7 +66,7 @@ public abstract class AbstractStack {
   public abstract int predict(FeatureVector vector);
 
   @Beta
-  public Set<String> snippetBestEffort(String text) {
-    throw new NotImplementedException("snippetBestEffort(String) is not implemented");
+  public Result<String> focus(String text) {
+    throw new NotImplementedException("focus(String) is not implemented");
   }
 }

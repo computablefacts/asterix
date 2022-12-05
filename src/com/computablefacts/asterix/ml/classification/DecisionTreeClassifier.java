@@ -18,6 +18,11 @@ final public class DecisionTreeClassifier implements AbstractBinaryClassifier {
   }
 
   @Override
+  public String type(){
+    return "DecisionTree";
+  }
+
+  @Override
   public boolean isTrained() {
     return tree_ != null;
   }

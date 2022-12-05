@@ -185,8 +185,12 @@ final public class Document {
             int page = fact.provenance().page();
             List<String> pages = Splitter.on('\f').splitToList((String) doc.text());
 
-            Preconditions.checkState(0 < page && page <= pages.size());
-            Preconditions.checkState(pages.get(page - 1).contains(fact.provenance().span()));
+            if (page <= 0 || pages.size() < page) {
+              return null; // TODO : log error?
+            }
+            // if (!pages.get(page - 1).contains(fact.provenance().span())) {
+            // return null;
+            // }
 
             Provenance newProvenance = new Provenance(fact.provenance().sourceStore(), fact.provenance().sourceType(),
                 fact.provenance().sourceReliability(), pages.get(page - 1), fact.provenance().span(),
@@ -196,7 +200,7 @@ final public class Document {
             return new Fact(fact.externalId_, fact.metadata(), Lists.newArrayList(newProvenance), fact.values(),
                 fact.type(), fact.isValid(), fact.authorizations(), fact.confidenceScore(), fact.startDate(),
                 fact.endDate());
-          }).toList());
+          }).filter(java.util.Objects::nonNull).toList());
 
           // Remove the processed facts from the list of facts to be processed
           factsIndexedByDocId.remove(doc.docId());

@@ -16,6 +16,11 @@ final public class FisherLinearDiscriminantClassifier implements AbstractBinaryC
   }
 
   @Override
+  public String type() {
+    return "FisherLinearDiscriminant";
+  }
+
+  @Override
   public boolean isTrained() {
     return classifier_ != null;
   }

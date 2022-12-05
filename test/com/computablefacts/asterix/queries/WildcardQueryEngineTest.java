@@ -1,7 +1,7 @@
 package com.computablefacts.asterix.queries;
 
 import com.computablefacts.asterix.View;
-import com.computablefacts.asterix.WildcardMatcher;
+import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.List;

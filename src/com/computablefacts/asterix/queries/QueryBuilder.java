@@ -1,7 +1,7 @@
 package com.computablefacts.asterix.queries;
 
-import com.computablefacts.asterix.StringIterator;
-import com.computablefacts.asterix.WildcardMatcher;
+import com.computablefacts.asterix.nlp.StringIterator;
+import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.google.common.base.Splitter;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;

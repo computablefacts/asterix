@@ -6,7 +6,7 @@ import static com.computablefacts.decima.problog.TestUtils.buildClause;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 import static com.computablefacts.decima.problog.TestUtils.checkProofs;
 
-import com.computablefacts.asterix.WildcardMatcher;
+import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.computablefacts.asterix.trie.Trie;
 import com.computablefacts.decima.problog.Clause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;

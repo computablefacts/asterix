@@ -2,8 +2,8 @@ package com.computablefacts.decima.problog;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 
-import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.Generated;
+import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.asterix.trie.Trie;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

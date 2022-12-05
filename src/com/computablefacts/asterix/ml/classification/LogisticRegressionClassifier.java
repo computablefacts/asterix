@@ -2,6 +2,7 @@ package com.computablefacts.asterix.ml.classification;
 
 import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
+import com.computablefacts.asterix.ml.standardization.AbstractScaler;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.Properties;
@@ -19,6 +20,11 @@ final public class LogisticRegressionClassifier implements AbstractBinaryClassif
     Preconditions.checkNotNull(scaler, "scaler should not be null");
 
     scaler_ = scaler;
+  }
+
+  @Override
+  public String type() {
+    return "LogisticRegression";
   }
 
   @Override

@@ -59,81 +59,6 @@ final public class Fact extends HasId {
   @JsonProperty("end_date")
   private final String endDate_;
 
-  @Deprecated
-  @SuppressWarnings("unchecked")
-  public static Fact fromLegacy(Map<String, Object> obj) {
-
-    Integer id = (Integer) obj.get("id");
-    String type = (String) obj.get("type");
-    List<String> values = (List<String>) obj.get("values");
-    Boolean isValid = (Boolean) obj.get("is_valid");
-    Double confidenceScore = (Double) obj.get("confidence_score");
-    String externalId = (String) obj.get("external_id");
-    String startDate = (String) obj.get("start_date");
-    String endDate = (String) obj.get("end_date");
-    String updatedAt = (String) obj.get("updated_at");
-    List<Map<String, Object>> metadata = (List<Map<String, Object>>) obj.get("metadata");
-    List<Map<String, Object>> provenances = (List<Map<String, Object>>) obj.get("provenances");
-
-    Preconditions.checkState(provenances.size() == 1);
-
-    Map<String, Object> provenance = provenances.get(0);
-    String sourceStore = (String) provenance.get("source_store");
-    String sourceType = (String) provenance.get("source_type");
-    String sourceReliability = null;
-    String string = null;
-    String span = (String) provenance.get("string_span");
-    Integer startIndex = (Integer) provenance.get("start_index");
-    Integer endIndex = (Integer) provenance.get("end_index");
-    String extractionDate = null;
-    String modificationDate = null;
-    String spanHash = (String) provenance.get("string_span_hash");
-    int page;
-
-    if (values.size() == 5 && sourceStore.contains("/vam/")) {
-      try {
-        page = Integer.parseInt(values.get(1), 10);
-      } catch (NumberFormatException e) {
-        page = 0;
-      }
-    } else if (values.size() == 3 && sourceStore.contains("/dab/")) {
-      try {
-        page = Integer.parseInt(values.get(2), 10);
-      } catch (NumberFormatException e) {
-        page = 0;
-      }
-    } else {
-      try {
-        page = (Integer) provenance.get("page");
-      } catch (NumberFormatException e) {
-        page = 0;
-      }
-    }
-
-    if (page <= 0) {
-      return null; // pages are 1-based
-    }
-
-    // Extract metadata
-    List<Metadata> newMetadata = metadata.stream()
-        .map(m -> new Metadata((String) m.get("type"), (String) m.get("key"), (String) m.get("value")))
-        .collect(Collectors.toList());
-
-    // Extract provenance
-    Provenance newProvenance = new Provenance(sourceStore, sourceType, sourceReliability, string, span, startIndex,
-        endIndex, extractionDate, modificationDate, spanHash, page);
-
-    List<Provenance> newProvenances = new ArrayList<>();
-    newProvenances.add(newProvenance);
-
-    // Create fact
-    Fact fact = new Fact(externalId, newMetadata, newProvenances, values, type, isValid, null, confidenceScore,
-        startDate, endDate);
-    fact.id_ = id;
-
-    return fact;
-  }
-
   public Fact(String type, double confidenceScore) {
     this(type, confidenceScore, null, new Date(), null, null);
   }
@@ -191,6 +116,93 @@ final public class Fact extends HasId {
     if (values != null) {
       values_.addAll(values);
     }
+  }
+
+  @Deprecated
+  @SuppressWarnings("unchecked")
+  public static Fact fromLegacy(Map<String, Object> obj) {
+
+    Integer id = (Integer) obj.get("id");
+    String type = (String) obj.get("type");
+    List<String> values = (List<String>) obj.get("values");
+    Boolean isValid = (Boolean) obj.get("is_valid");
+    Double confidenceScore = null;
+
+    if (obj.get("confidence_score") instanceof Double) {
+      confidenceScore = (Double) obj.get("confidence_score");
+    } else if (obj.get("confidence_score") instanceof Integer) {
+      confidenceScore = ((Integer) obj.get("confidence_score")).doubleValue();
+    } else {
+      confidenceScore = 0.5;
+    }
+
+    String externalId = (String) obj.get("external_id");
+    String startDate = (String) obj.get("start_date");
+    String endDate = (String) obj.get("end_date");
+    String updatedAt = (String) obj.get("updated_at");
+    List<Map<String, Object>> metadata = (List<Map<String, Object>>) obj.get("metadata");
+    List<Map<String, Object>> provenances = (List<Map<String, Object>>) obj.get("provenances");
+
+    Preconditions.checkState(provenances.size() == 1);
+
+    Map<String, Object> provenance = provenances.get(0);
+    String sourceStore = (String) provenance.get("source_store");
+    String sourceType = (String) provenance.get("source_type");
+    String sourceReliability = (String) provenance.get("source_reliability");
+    String string = (String) provenance.get("string");
+    String span = (String) provenance.get("string_span");
+    Integer startIndex = (Integer) provenance.get("start_index");
+    Integer endIndex = (Integer) provenance.get("end_index");
+    String extractionDate = null;
+    String modificationDate = null;
+    String spanHash = (String) provenance.get("string_span_hash");
+    int page;
+
+    if (values.size() == 5 && sourceStore.contains("/vam/")) {
+      try {
+        page = Integer.parseInt(values.get(1), 10);
+      } catch (NumberFormatException e) {
+        page = 0;
+      }
+    } else if (values.size() == 3 && sourceStore.contains("/dab/")) {
+      try {
+        page = Integer.parseInt(values.get(2), 10);
+      } catch (NumberFormatException e) {
+        page = 0;
+      }
+    } else {
+      try {
+        page = (Integer) provenance.get("page");
+      } catch (NumberFormatException e) {
+        page = 0;
+      }
+    }
+
+    if (page <= 0) {
+      return null; // pages are 1-based
+    }
+    if (endIndex < 0 || endIndex > span.length()) {
+      return null; // endIndex cannot be bigger than the saved text fragment
+    }
+
+    // Extract metadata
+    List<Metadata> newMetadata = metadata.stream()
+        .map(m -> new Metadata((String) m.get("type"), (String) m.get("key"), (String) m.get("value")))
+        .collect(Collectors.toList());
+
+    // Extract provenance
+    Provenance newProvenance = new Provenance(sourceStore, sourceType, sourceReliability, string, span, startIndex,
+        endIndex, extractionDate, modificationDate, spanHash, page);
+
+    List<Provenance> newProvenances = new ArrayList<>();
+    newProvenances.add(newProvenance);
+
+    // Create fact
+    Fact fact = new Fact(externalId, newMetadata, newProvenances, values, type, isValid, null, confidenceScore,
+        startDate, endDate);
+    fact.id_ = id;
+
+    return fact;
   }
 
   @Override

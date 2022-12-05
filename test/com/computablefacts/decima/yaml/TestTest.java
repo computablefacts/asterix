@@ -14,8 +14,7 @@ public class TestTest {
     Set<Clause> rules = Parser.parseClauses(
         new Rule("child", "", 1.0, "X", Lists.newArrayList("boy(X)", "girl(X)").toArray(new String[2])).toString());
 
-    Test test1 = new Test("girl(alice).\nboy(alex).\n", "child(alice)?",
-        "child(alice).");
+    Test test1 = new Test("girl(alice).\nboy(alex).\n", "child(alice)?", "child(alice).");
     Test test2 = new Test("girl(alice).\nboy(alex).\n", "child(alex)?", "child(alex).");
 
     Assert.assertTrue(test1.matchOutput(rules));

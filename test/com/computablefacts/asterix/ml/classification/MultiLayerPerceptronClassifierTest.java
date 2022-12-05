@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.ml.classification;
 
+import com.computablefacts.asterix.ml.standardization.NopScaler;
 import org.junit.Assert;
 import org.junit.Test;
 

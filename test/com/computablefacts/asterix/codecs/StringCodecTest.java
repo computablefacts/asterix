@@ -5,8 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.computablefacts.asterix.RandomString;
-import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
+import com.computablefacts.asterix.nlp.Span;
+import com.computablefacts.asterix.nlp.SpanSequence;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

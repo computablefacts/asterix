@@ -1,8 +1,8 @@
 package com.computablefacts.nona.functions.stringoperators;
 
 import com.computablefacts.asterix.BoxedType;
-import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
+import com.computablefacts.asterix.nlp.Span;
+import com.computablefacts.asterix.nlp.SpanSequence;
 import com.computablefacts.nona.Function;
 import org.junit.Assert;
 import org.junit.Test;

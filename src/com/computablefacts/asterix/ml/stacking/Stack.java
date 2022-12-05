@@ -10,14 +10,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @CheckReturnValue
 final public class Stack {
 
   private final Result<AbstractStack> stack_;
 
-  public Stack(List<AbstractStack> stacks) {
+  public Stack(List<? extends AbstractStack> stacks) {
 
     Preconditions.checkNotNull(stacks, "stacks should not be null");
 
@@ -78,15 +77,15 @@ final public class Stack {
   }
 
   @Beta
-  public Set<String> snippetBestEffort(String text) {
+  public Result<String> focus(String text) {
 
     Preconditions.checkNotNull(text, "text should not be null");
     Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.successValue().snippetBestEffort(text);
+    return stack_.successValue().focus(text);
   }
 
-  private AbstractStack merge(eStackType stackType, AbstractStack leftNode, List<AbstractStack> rightNodes) {
+  private AbstractStack merge(eStackType stackType, AbstractStack leftNode, List<? extends AbstractStack> rightNodes) {
 
     Preconditions.checkNotNull(stackType, "stackType should not be null");
     Preconditions.checkNotNull(rightNodes, "rightNodes should not be null");

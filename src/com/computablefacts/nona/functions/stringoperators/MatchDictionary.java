@@ -3,8 +3,8 @@ package com.computablefacts.nona.functions.stringoperators;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.computablefacts.asterix.BoxedType;
-import com.computablefacts.asterix.Span;
-import com.computablefacts.asterix.SpanSequence;
+import com.computablefacts.asterix.nlp.Span;
+import com.computablefacts.asterix.nlp.SpanSequence;
 import com.computablefacts.nona.Function;
 import com.computablefacts.nona.eCategory;
 import com.google.common.base.Preconditions;

@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.ml;
 
+import com.computablefacts.asterix.View;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -24,6 +25,14 @@ final public class FeatureMatrix {
     Preconditions.checkNotNull(matrix, "matrix should not be null");
 
     rows_ = matrix.rows_.stream().map(FeatureVector::new).collect(Collectors.toList());
+  }
+
+  public FeatureMatrix(View<FeatureVector> vectors) {
+
+    Preconditions.checkNotNull(vectors, "vectors should not be null");
+
+    rows_ = new ArrayList<>();
+    vectors.forEachRemaining(this::addRow);
   }
 
   public FeatureMatrix(List<FeatureVector> vectors) {

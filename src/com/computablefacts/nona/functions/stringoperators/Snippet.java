@@ -1,7 +1,7 @@
 package com.computablefacts.nona.functions.stringoperators;
 
 import com.computablefacts.asterix.BoxedType;
-import com.computablefacts.asterix.SnippetExtractor;
+import com.computablefacts.asterix.nlp.SnippetExtractor;
 import com.computablefacts.nona.Function;
 import com.computablefacts.nona.eCategory;
 import com.google.common.base.Preconditions;

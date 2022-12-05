@@ -1,8 +1,8 @@
 package com.computablefacts.asterix.queries;
 
-import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.StringCodec;
+import com.computablefacts.asterix.nlp.Span;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Var;
 import java.util.ArrayList;

@@ -18,6 +18,11 @@ final public class RandomForestClassifier implements AbstractBinaryClassifier {
   }
 
   @Override
+  public String type() {
+    return "RandomForest";
+  }
+
+  @Override
   public boolean isTrained() {
     return forest_ != null;
   }

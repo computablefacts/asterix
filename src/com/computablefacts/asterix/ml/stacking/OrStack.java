@@ -3,10 +3,11 @@ package com.computablefacts.asterix.ml.stacking;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.Map;
 import java.util.Set;
 
 @CheckReturnValue
@@ -70,10 +71,13 @@ final public class OrStack extends AbstractStack {
   }
 
   @Override
-  public Set<String> snippetBestEffort(String text) {
-    return Sets.union(leftStack_.snippetBestEffort(text), rightStack_.snippetBestEffort(text));
+  public Result<String> focus(String text) {
+    if (leftStack_.predict(text) == OK) {
+      return leftStack_.focus(text);
+    }
+    return rightStack_.focus(text);
   }
-
+  
   private int reduce(int prediction1, int prediction2) {
     return prediction1 == OK || prediction2 == OK ? OK : KO;
   }

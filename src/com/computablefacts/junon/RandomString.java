@@ -17,7 +17,6 @@ final class RandomString {
   public static final String lower = upper.toLowerCase(Locale.ROOT);
   public static final String digits = "0123456789";
   public static final String alphanum = upper + lower + digits;
-
   private final Random random;
   private final char[] symbols;
   private final char[] buf;

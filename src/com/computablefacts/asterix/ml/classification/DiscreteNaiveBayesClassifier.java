@@ -26,6 +26,11 @@ final public class DiscreteNaiveBayesClassifier implements AbstractBinaryClassif
   }
 
   @Override
+  public String type() {
+    return "DiscreteNaiveBayes";
+  }
+
+  @Override
   public boolean isTrained() {
     return classifier_ != null;
   }

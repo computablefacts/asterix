@@ -3,6 +3,7 @@ package com.computablefacts.asterix;
 import static com.computablefacts.asterix.Document.ID_MAGIC_KEY;
 
 import com.computablefacts.asterix.codecs.JsonCodec;
+import com.computablefacts.asterix.nlp.SnippetExtractor;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.re2j.Matcher;

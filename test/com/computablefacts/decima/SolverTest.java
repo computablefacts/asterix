@@ -1,6 +1,6 @@
 package com.computablefacts.decima;
 
-import com.computablefacts.asterix.WildcardMatcher;
+import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -78,7 +78,8 @@ public class SolverTest {
         new String[]{"-facts", factz.toString(), "-rules", rulez.toString(), "-queries", queriez.toString(), "-type",
             "json", "-root", "my_root", "-dataset", "my_dataset"});
 
+    originalOut_.println("*** " + outContent_.toString());
     Assert.assertTrue(WildcardMatcher.match(outContent_.toString(),
-        "*{\"external_id\":\"*\",\"metadata\":[{\"type\":\"Comment\",\"key\":\"extracted_with\",\"value\":\"decima\"},{\"type\":\"Comment\",\"key\":\"extracted_by\",\"value\":\"decima\"},{\"type\":\"Comment\",\"key\":\"extraction_date\",\"value\":\"????-??-??T??:??:??*Z\"}],\"provenances\":[{\"source_store\":\"ACCUMULO/my_root/my_dataset/000|0000-00-00T00:00:00.000Z\",\"source_type\":\"STORAGE/ROOT/DATASET/DOC_ID\"}],\"values\":[\"bill\",\"alice\"],\"type\":\"son\",\"is_valid\":true,\"confidence_score\":1.0,\"start_date\":\"????-??-??T??:??:??*Z\",\"valid\":true,\"accepted\":true,\"rejected\":false,\"verified\":true}*"));
+        "*{\"external_id\":\"*\",\"metadata\":[{\"type\":\"Comment\",\"key\":\"extracted_with\",\"value\":\"decima\"},{\"type\":\"Comment\",\"key\":\"extracted_by\",\"value\":\"decima\"},{\"type\":\"Comment\",\"key\":\"extraction_date\",\"value\":\"????-??-??T??:??:??*Z\"}],\"provenances\":[{\"source_store\":\"ACCUMULO/my_root/my_dataset/000|0000-00-00T00:00:00.000Z\",\"source_type\":\"STORAGE/ROOT/DATASET/DOC_ID\"}],\"values\":[\"bill\",\"alice\"],\"type\":\"son\",\"is_valid\":true,\"confidence_score\":1.0,\"start_date\":\"????-??-??T??:??:??*Z\"}*"));
   }
 }

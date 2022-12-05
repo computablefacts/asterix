@@ -18,6 +18,11 @@ final public class AdaBoostClassifier implements AbstractBinaryClassifier {
   }
 
   @Override
+  public String type(){
+    return "AdaBoost";
+  }
+
+  @Override
   public boolean isTrained() {
     return boost_ != null;
   }

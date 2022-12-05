@@ -2,6 +2,7 @@ package com.computablefacts.asterix.ml.classification;
 
 import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
+import com.computablefacts.asterix.ml.standardization.AbstractScaler;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import smile.base.mlp.Layer;
@@ -31,6 +32,11 @@ final public class MultiLayerPerceptronClassifier implements AbstractBinaryClass
     scaler_ = scaler;
     nbEpochs_ = nbEpochs;
     nbHiddenNeurons_ = nbHiddenNeurons;
+  }
+
+  @Override
+  public String type() {
+    return "MultiLayerPerceptron";
   }
 
   @Override

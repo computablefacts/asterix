@@ -683,6 +683,18 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param consumer the action to be performed for each element.
    */
   public void forEachRemainingInParallel(Consumer<? super T> consumer) {
+    forEachRemainingInParallel(consumer, Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+  }
+
+  /**
+   * Performs the given action for each remaining element of the view in parallel until all elements have been
+   * processed.
+   *
+   * @param consumer the action to be performed for each element.
+   * @param timeout  the maximum time to wait.
+   * @param unit     the time unit of the timeout argument.
+   */
+  public void forEachRemainingInParallel(Consumer<? super T> consumer, long timeout, TimeUnit unit) {
 
     Preconditions.checkNotNull(consumer, "consumer should not be null");
 
@@ -695,7 +707,11 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     }
     try {
       executorService.shutdown();
-      executorService.awaitTermination(180, TimeUnit.SECONDS);
+      if (!executorService.awaitTermination(timeout, unit)) {
+        logger_.error(
+            LogFormatter.create().message("forEachRemainingInParallel(...) - The timeout elapsed before termination.")
+                .formatError());
+      }
     } catch (InterruptedException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -942,6 +958,24 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @return a new {@link View}.
    */
   public <U> View<U> mapInParallel(int batchSize, Function<? super T, ? extends U> fn) {
+    return mapInParallel(batchSize, fn, Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+  }
+
+  /**
+   * Returns a view consisting of the results of applying the given function to the elements of this view.
+   * <p>
+   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
+   * shenanigans, the output of {@link #mapInParallel(int, Function)} is identical to the output of
+   * {@link #map(Function)}.
+   *
+   * @param batchSize the size of each batch.
+   * @param fn        the function to apply.
+   * @param timeout   the maximum time to wait.
+   * @param unit      the time unit of the timeout argument.
+   * @param <U>
+   * @return a new {@link View}.
+   */
+  public <U> View<U> mapInParallel(int batchSize, Function<? super T, ? extends U> fn, long timeout, TimeUnit unit) {
 
     Preconditions.checkArgument(batchSize > 0, "batchSize must be > 0");
     Preconditions.checkNotNull(fn, "fn should not be null");
@@ -959,7 +993,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       try {
         List<Future<U>> futures = executorService.invokeAll(callables);
         executorService.shutdown();
-        executorService.awaitTermination(180, TimeUnit.SECONDS);
+        if (!executorService.awaitTermination(timeout, unit)) {
+          logger_.error(LogFormatter.create().message("mapInParallel(...) - The timeout elapsed before termination.")
+              .formatError());
+        }
         return View.of(futures).map(future -> {
           try {
             return Result.of(future.get());
@@ -997,12 +1034,29 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @return a new {@link View}.
    */
   public View<T> filterInParallel(int batchSize, Predicate<? super T> predicate) {
+    return filterInParallel(batchSize, predicate, Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+  }
+
+  /**
+   * Returns a view consisting of the elements of this view matching the given predicate.
+   * <p>
+   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
+   * shenanigans, the output of {@link #filterInParallel(int, Predicate)} is identical to the output of
+   * {@link #filter(Predicate)}.
+   *
+   * @param batchSize the size of each batch.
+   * @param predicate the predicate to satisfy.
+   * @param timeout   the maximum time to wait.
+   * @param unit      the time unit of the timeout argument.
+   * @return a new {@link View}.
+   */
+  public View<T> filterInParallel(int batchSize, Predicate<? super T> predicate, long timeout, TimeUnit unit) {
 
     Preconditions.checkArgument(batchSize > 0, "batchSize must be > 0");
     Preconditions.checkNotNull(predicate, "predicate should not be null");
 
-    return mapInParallel(batchSize, t -> new AbstractMap.SimpleImmutableEntry<>(t, predicate.test(t))).filter(
-        SimpleImmutableEntry::getValue).map(SimpleImmutableEntry::getKey);
+    return mapInParallel(batchSize, t -> new AbstractMap.SimpleImmutableEntry<>(t, predicate.test(t)), timeout,
+        unit).filter(SimpleImmutableEntry::getValue).map(SimpleImmutableEntry::getKey);
   }
 
   /**
@@ -1460,7 +1514,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param length the window size.
    * @return a {@link ImmutableList}.
    */
-  public View<ImmutableList<T>> overlappingWindow(int length) {
+  public View<List<T>> overlappingWindow(int length) {
     return new View<>(new SlidingWindowIterator<>(this, length, true, false));
   }
 
@@ -1471,7 +1525,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param length the window size.
    * @return a {@link ImmutableList}.
    */
-  public View<ImmutableList<T>> nonOverlappingWindow(int length) {
+  public View<List<T>> nonOverlappingWindow(int length) {
     return new View<>(new SlidingWindowIterator<>(this, length, false, false));
   }
 
@@ -1482,7 +1536,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param length the window size.
    * @return a {@link ImmutableList}.
    */
-  public View<ImmutableList<T>> overlappingWindowWithStrictLength(int length) {
+  public View<List<T>> overlappingWindowWithStrictLength(int length) {
     return new View<>(new SlidingWindowIterator<>(this, length, true, true));
   }
 
@@ -1493,7 +1547,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param length the window size.
    * @return a {@link ImmutableList}.
    */
-  public View<ImmutableList<T>> nonOverlappingWindowWithStrictLength(int length) {
+  public View<List<T>> nonOverlappingWindowWithStrictLength(int length) {
     return new View<>(new SlidingWindowIterator<>(this, length, false, true));
   }
 
@@ -1510,7 +1564,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     }
   }
 
-  private static class SlidingWindowIterator<T> extends AbstractIterator<ImmutableList<T>> {
+  private static class SlidingWindowIterator<T> extends AbstractIterator<List<T>> {
 
     private final Iterator<T> iterator_;
     private final int length_;
@@ -1531,7 +1585,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     }
 
     @Override
-    protected ImmutableList<T> computeNext() {
+    protected List<T> computeNext() {
       if (!overlaps_) {
         list_.clear();
       } else if (!list_.isEmpty()) {

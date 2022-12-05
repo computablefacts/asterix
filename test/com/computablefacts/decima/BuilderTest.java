@@ -1,6 +1,6 @@
 package com.computablefacts.decima;
 
-import com.computablefacts.asterix.WildcardMatcher;
+import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.computablefacts.decima.problog.Parser;
 import com.computablefacts.decima.yaml.TestUtils;
 import com.google.common.collect.Lists;
