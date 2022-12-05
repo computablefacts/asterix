@@ -1,6 +1,7 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.SpanSequence;
+import com.computablefacts.asterix.TextTokenizer;
 import org.junit.Assert;
 import org.junit.Test;
 

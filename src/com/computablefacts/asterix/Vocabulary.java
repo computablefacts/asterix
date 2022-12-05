@@ -1,7 +1,5 @@
 package com.computablefacts.asterix;
 
-import com.computablefacts.asterix.ml.TextNormalizer;
-import com.computablefacts.asterix.ml.TextTokenizer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;

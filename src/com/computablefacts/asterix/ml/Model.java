@@ -7,6 +7,7 @@ import com.computablefacts.asterix.IO;
 import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.SnippetExtractor;
 import com.computablefacts.asterix.Span;
+import com.computablefacts.asterix.TextNormalizer;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.ml.VectorsReducer.eCorrelation;
 import com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier;

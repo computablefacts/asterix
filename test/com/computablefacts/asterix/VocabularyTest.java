@@ -1,7 +1,5 @@
 package com.computablefacts.asterix;
 
-import com.computablefacts.asterix.ml.TextNormalizer;
-import com.computablefacts.asterix.ml.TextTokenizer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;

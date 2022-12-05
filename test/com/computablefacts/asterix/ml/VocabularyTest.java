@@ -3,6 +3,8 @@ package com.computablefacts.asterix.ml;
 import com.computablefacts.asterix.DocumentTest;
 import com.computablefacts.asterix.IO;
 import com.computablefacts.asterix.Span;
+import com.computablefacts.asterix.TextNormalizer;
+import com.computablefacts.asterix.TextTokenizer;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.google.common.collect.Lists;

@@ -3,7 +3,7 @@ package com.computablefacts.asterix.ml.textcategorization;
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;
 import com.computablefacts.asterix.View;
-import com.computablefacts.asterix.ml.TextTokenizer;
+import com.computablefacts.asterix.TextTokenizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;

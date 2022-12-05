@@ -1,7 +1,8 @@
-package com.computablefacts.asterix.ml;
+package com.computablefacts.asterix;
 
 import com.computablefacts.asterix.DocumentTest;
 import com.computablefacts.asterix.SpanSequence;
+import com.computablefacts.asterix.TextTokenizer;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;

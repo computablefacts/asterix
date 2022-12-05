@@ -1,4 +1,4 @@
-package com.computablefacts.asterix.ml;
+package com.computablefacts.asterix;
 
 import com.computablefacts.asterix.codecs.StringCodec;
 import com.google.common.base.Strings;

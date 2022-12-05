@@ -1,4 +1,4 @@
-package com.computablefacts.asterix.ml;
+package com.computablefacts.asterix;
 
 import com.computablefacts.asterix.Span;
 import com.computablefacts.asterix.SpanSequence;

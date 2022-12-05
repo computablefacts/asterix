@@ -1,5 +1,6 @@
-package com.computablefacts.asterix.ml;
+package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.TextNormalizer;
 import com.computablefacts.asterix.codecs.StringCodec;
 import javax.validation.constraints.NotNull;
 import org.junit.Assert;

@@ -1,6 +1,8 @@
 package com.computablefacts.asterix.ml;
 
 import com.computablefacts.asterix.Span;
+import com.computablefacts.asterix.TextNormalizer;
+import com.computablefacts.asterix.TextTokenizer;
 import com.computablefacts.asterix.View;
 import com.google.common.collect.Lists;
 import java.util.List;

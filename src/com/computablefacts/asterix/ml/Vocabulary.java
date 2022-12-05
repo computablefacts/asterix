@@ -3,6 +3,8 @@ package com.computablefacts.asterix.ml;
 import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.asterix.Document;
 import com.computablefacts.asterix.Span;
+import com.computablefacts.asterix.TextNormalizer;
+import com.computablefacts.asterix.TextTokenizer;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.console.Observations;
 import com.google.common.annotations.Beta;
