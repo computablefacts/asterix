@@ -49,7 +49,7 @@ public class DocumentTest {
     });
   }
 
-  private static File facts() throws Exception {
+  public static File facts() throws Exception {
 
     // Use a random directory because FactAndDocument.main() uses it
     String path = Files.createTempDirectory("").toFile().getAbsolutePath();
@@ -89,7 +89,7 @@ public class DocumentTest {
     return facts;
   }
 
-  private static File documents() throws Exception {
+  public static File documents() throws Exception {
 
     // Use a random directory because FactAndDocument.main() uses it
     String path = Files.createTempDirectory("").toFile().getAbsolutePath();

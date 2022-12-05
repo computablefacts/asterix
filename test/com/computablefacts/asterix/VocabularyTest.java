@@ -282,6 +282,97 @@ public class VocabularyTest {
     Assert.assertEquals(Lists.newArrayList(",", ".", "and"), stopwords);
   }
 
+  @Test
+  public void testCommandLineExtractUnigrams() throws Exception {
+
+    File documents = DocumentTest.documents();
+    File vocabularyCompressed = new File(String.format("%s/vocabulary.tsv.gz", documents.getParent()));
+    File vocabularyDecompressed = new File(String.format("%s/vocabulary.tsv", documents.getParent()));
+    String[] args = new String[]{documents.getAbsolutePath(), "1", "0.01", "0.99", "1000", "WORD,NUMBER"};
+    Vocabulary.main(args);
+
+    Assert.assertTrue(vocabularyCompressed.exists());
+    Assert.assertFalse(vocabularyDecompressed.exists());
+    Assert.assertTrue(IO.gunzip(vocabularyCompressed, vocabularyDecompressed));
+    Assert.assertTrue(vocabularyCompressed.exists());
+    Assert.assertTrue(vocabularyDecompressed.exists());
+
+    Vocabulary vocab = new Vocabulary();
+    vocab.load(vocabularyCompressed);
+
+    Assert.assertEquals(1000, vocab.size());
+    Assert.assertEquals(2591028, vocab.nbTermsSeen());
+    Assert.assertEquals(403, vocab.nbDocsSeen());
+
+    List<String> lines = IO.readLines(vocabularyDecompressed);
+
+    for (int i = 3; i < lines.size(); i++) {
+      String line = lines.get(i);
+      Assert.assertTrue(line.matches("^" + (i - 1 /* comment */ - 1 /* header */) + "\t[^ ]+\t\\d+\t\\d+$"));
+    }
+  }
+
+  @Test
+  public void testCommandLineExtractBigrams() throws Exception {
+
+    File documents = DocumentTest.documents();
+    File vocabularyCompressed = new File(String.format("%s/vocabulary.tsv.gz", documents.getParent()));
+    File vocabularyDecompressed = new File(String.format("%s/vocabulary.tsv", documents.getParent()));
+    String[] args = new String[]{documents.getAbsolutePath(), "2", "0.01", "0.99", "1000", "WORD,NUMBER"};
+    Vocabulary.main(args);
+
+    Assert.assertTrue(vocabularyCompressed.exists());
+    Assert.assertFalse(vocabularyDecompressed.exists());
+    Assert.assertTrue(IO.gunzip(vocabularyCompressed, vocabularyDecompressed));
+    Assert.assertTrue(vocabularyCompressed.exists());
+    Assert.assertTrue(vocabularyDecompressed.exists());
+
+    Vocabulary vocab = new Vocabulary();
+    vocab.load(vocabularyCompressed);
+
+    Assert.assertEquals(1000, vocab.size());
+    Assert.assertEquals(2590625, vocab.nbTermsSeen());
+    Assert.assertEquals(403, vocab.nbDocsSeen());
+
+    List<String> lines = IO.readLines(vocabularyDecompressed);
+
+    for (int i = 3; i < lines.size(); i++) {
+      String line = lines.get(i);
+      Assert.assertTrue(line.matches("^" + (i - 1 /* comment */ - 1 /* header */) + "\t[^ ]+_[^ ]+\t\\d+\t\\d+$"));
+    }
+  }
+
+  @Test
+  public void testCommandLineExtractTrigrams() throws Exception {
+
+    File documents = DocumentTest.documents();
+    File vocabularyCompressed = new File(String.format("%s/vocabulary.tsv.gz", documents.getParent()));
+    File vocabularyDecompressed = new File(String.format("%s/vocabulary.tsv", documents.getParent()));
+    String[] args = new String[]{documents.getAbsolutePath(), "3", "0.01", "0.99", "1000", "WORD,NUMBER"};
+    Vocabulary.main(args);
+
+    Assert.assertTrue(vocabularyCompressed.exists());
+    Assert.assertFalse(vocabularyDecompressed.exists());
+    Assert.assertTrue(IO.gunzip(vocabularyCompressed, vocabularyDecompressed));
+    Assert.assertTrue(vocabularyCompressed.exists());
+    Assert.assertTrue(vocabularyDecompressed.exists());
+
+    Vocabulary vocab = new Vocabulary();
+    vocab.load(vocabularyCompressed);
+
+    Assert.assertEquals(1000, vocab.size());
+    Assert.assertEquals(2590222, vocab.nbTermsSeen());
+    Assert.assertEquals(403, vocab.nbDocsSeen());
+
+    List<String> lines = IO.readLines(vocabularyDecompressed);
+
+    for (int i = 3; i < lines.size(); i++) {
+      String line = lines.get(i);
+      Assert.assertTrue(
+          line.matches("^" + (i - 1 /* comment */ - 1 /* header */) + "\t[^ ]+_[^ ]+_[^ ]+\t\\d+\t\\d+$"));
+    }
+  }
+
   private Vocabulary partialVocabulary() {
 
     View<List<String>> docs = View.of(sentences()).map(new TextNormalizer(true)).map(new TextTokenizer())

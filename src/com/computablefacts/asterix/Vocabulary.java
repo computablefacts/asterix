@@ -1,12 +1,17 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.ml.TextNormalizer;
+import com.computablefacts.asterix.ml.TextTokenizer;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.io.File;
@@ -19,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -36,6 +42,60 @@ final public class Vocabulary {
   private int nbDocsSeen_ = 0;
   private boolean isFrozen_ = false;
   private TermsSeen termsSeen_ = null;
+
+  /**
+   * Build a vocabulary from a corpus of documents. To be versatile, this method does not attempt to remove stop words,
+   * diacritical marks or even lowercase tokens.
+   * <ul>
+   * <li>{@code args[0]} the corpus of documents as a gzipped JSONL file.</li>
+   * <li>{@code args[1]} the ngrams length: 1 = unigrams, 2 = bigrams, 3 = trigrams, etc. (optional, default is 1)</li>
+   * <li>{@code args[2]} the threshold (document frequency) under which a token must be excluded from the vocabulary (optional, default is 1%).</li>
+   * <li>{@code args[3]} the threshold (document frequency) above which a token must be excluded from the vocabulary (optional, default is 99%).</li>
+   * <li>{@code args[4]} the maximum size of the {@link Vocabulary} (optional, default is 100 000).</li>
+   * <li>{@code args[5]} the types of tokens to keep: WORD, PUNCTUATION, etc. (optional, default is {WORD, NUMBER, PUNCTUATION, TERMINAL_MARK})</li>
+   * <li>{@code args[6]} the prefix length after which a token must be chopped (optional, default is 9).</li>
+   * </ul>
+   */
+  public static void main(String[] args) {
+
+    List<File> documents = Splitter.on(',').trimResults().omitEmptyStrings().splitToStream(args[0]).map(File::new)
+        .collect(Collectors.toList());
+    int ngramsLength = args.length < 2 ? 1 : Integer.parseInt(args[1], 10);
+    double minDocFreq = args.length < 3 ? 0.01 : Double.parseDouble(args[2]);
+    double maxDocFreq = args.length < 4 ? 0.99 : Double.parseDouble(args[3]);
+    int maxVocabSize = args.length < 5 ? 100_000 : Integer.parseInt(args[4], 10);
+    Set<String> includeTags = args.length < 6 ? Sets.newHashSet("WORD", "NUMBER", "PUNCTUATION", "TERMINAL_MARK")
+        : Sets.newHashSet(Splitter.on(',').trimResults().omitEmptyStrings().split(args[5]));
+    int chopAt = args.length < 7 ? 9 : Integer.parseInt(args[6], 10);
+
+    Preconditions.checkArgument(documents.size() > 0, "at least one set of documents is needed");
+    Preconditions.checkArgument(ngramsLength > 0, "ngramLength must be > 0");
+    Preconditions.checkArgument(0.0 <= minDocFreq && minDocFreq <= 1.0,
+        "minDocFreq must be such as 0.0 <= minDocFreq <= 1.0");
+    Preconditions.checkArgument(minDocFreq <= maxDocFreq && maxDocFreq <= 1.0,
+        "maxDocFreq must be such as minDocFreq <= maxDocFreq <= 1.0");
+    Preconditions.checkArgument(maxVocabSize > 0, "maxVocabSize must be = -1 or > 0");
+    Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
+
+    Predicate<Span> keepSpan = span -> span.tags().stream().anyMatch(includeTags::contains);
+
+    Function<String, String> chopToken = tkn -> chopAt <= 0 ? tkn : tkn.substring(0, Math.min(chopAt, tkn.length()));
+
+    Function<String, List<String>> tokenize = ngramsLength == 1 ? new TextNormalizer(true).andThen(new TextTokenizer())
+        .andThen(seq -> View.of(seq).filter(keepSpan).map(Span::text).map(chopToken).toList())
+        : new TextNormalizer(true).andThen(new TextTokenizer()).andThen(
+            seq -> View.of(seq).filter(keepSpan).map(Span::text).map(chopToken)
+                .overlappingWindowWithStrictLength(ngramsLength).map(tks -> Joiner.on('_').join(tks)).toList());
+
+    View<List<String>> docs = Document.of(documents.get(0), true)
+        .concat(View.of(documents).drop(1).flatten(doc -> Document.of(doc, true))).map(doc -> (String) doc.text())
+        .filter(text -> !Strings.isNullOrEmpty(text)).map(tokenize).displayProgress(10_000);
+
+    Vocabulary vocabulary = new Vocabulary();
+    vocabulary.add(docs);
+    vocabulary.freeze(minDocFreq, maxDocFreq, maxVocabSize);
+    vocabulary.save(new File(String.format("%s/vocabulary.tsv.gz", documents.get(0).getParent())));
+  }
 
   public Vocabulary() {
   }
