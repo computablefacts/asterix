@@ -805,6 +805,16 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @param n the number of elements to remove.
    * @return a {@link View} with the first {@code n} elements removed.
    */
+  public View<T> skip(long n) {
+    return drop(n);
+  }
+
+  /**
+   * Returns a view with the first {@code n} elements removed.
+   *
+   * @param n the number of elements to remove.
+   * @return a {@link View} with the first {@code n} elements removed.
+   */
   public View<T> drop(long n) {
 
     Preconditions.checkArgument(n >= 0, "n must be >= 0");
@@ -823,6 +833,16 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
         return self.hasNext() ? self.next() : endOfData();
       }
     });
+  }
+
+  /**
+   * Returns a view with the front elements removed as long as they satisfy a condition.
+   *
+   * @param predicate the condition to satisfy.
+   * @return a {@link View} with the front elements removed.
+   */
+  public View<T> skipWhile(Predicate<? super T> predicate) {
+    return dropWhile(predicate);
   }
 
   /**
@@ -855,6 +875,16 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
         return self.hasNext() ? self.next() : endOfData();
       }
     });
+  }
+
+  /**
+   * Returns a view with the front elements removed as long as they do not satisfy a condition.
+   *
+   * @param predicate the condition to satisfy.
+   * @return a {@link View} with the front elements removed.
+   */
+  public View<T> skipUntil(Predicate<? super T> predicate) {
+    return dropUntil(predicate);
   }
 
   /**

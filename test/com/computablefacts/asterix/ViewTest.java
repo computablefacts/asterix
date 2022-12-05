@@ -399,7 +399,7 @@ public class ViewTest {
   public void testDropAll() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.drop(5).toList();
+    List<String> list = view.skip(5).toList();
 
     Assert.assertTrue(list.isEmpty());
   }
@@ -408,7 +408,7 @@ public class ViewTest {
   public void testDropNone() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.drop(0).toList();
+    List<String> list = view.skip(0).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "ab", "abc", "abcd", "abcde"), list);
   }
@@ -417,7 +417,7 @@ public class ViewTest {
   public void testDropNOnEmptyView() {
 
     View<String> view = View.of(Collections.emptyList());
-    List<String> list = view.drop(2).toList();
+    List<String> list = view.skip(2).toList();
 
     Assert.assertTrue(list.isEmpty());
   }
@@ -426,7 +426,7 @@ public class ViewTest {
   public void testDropN() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.drop(2).toList();
+    List<String> list = view.skip(2).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
   }
@@ -435,7 +435,7 @@ public class ViewTest {
   public void testDropWhileOnEmptyView() {
 
     View<String> view = View.of(Collections.emptyList());
-    List<String> list = view.dropWhile(w -> w.length() < 6).toList();
+    List<String> list = view.skipWhile(w -> w.length() < 6).toList();
 
     Assert.assertTrue(list.isEmpty());
   }
@@ -444,7 +444,7 @@ public class ViewTest {
   public void testDropWhileExhaustsView() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.dropWhile(w -> w.length() < 6).toList();
+    List<String> list = view.skipWhile(w -> w.length() < 6).toList();
 
     Assert.assertTrue(list.isEmpty());
   }
@@ -453,7 +453,7 @@ public class ViewTest {
   public void testDropWhile() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.dropWhile(w -> w.length() < 3).toList();
+    List<String> list = view.skipWhile(w -> w.length() < 3).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
   }
@@ -462,7 +462,7 @@ public class ViewTest {
   public void testDropUntil() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.dropUntil(w -> w.length() >= 3).toList();
+    List<String> list = view.skipUntil(w -> w.length() >= 3).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
   }
@@ -471,7 +471,7 @@ public class ViewTest {
   public void testDropAndTake() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.drop(2).take(1).toList();
+    List<String> list = view.skip(2).take(1).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc"), list);
   }
