@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -266,9 +265,9 @@ public class ViewTest {
   @Test
   public void testFindFirst() {
 
-    Optional<Integer> opt = View.iterate(1, x -> x + 1).take(5).findFirst(x -> x % 2 == 0);
+    Result<Integer> opt = View.iterate(1, x -> x + 1).take(5).findFirst(x -> x % 2 == 0);
 
-    Assert.assertEquals(2, (long) opt.get());
+    Assert.assertEquals(2, (long) opt.successValue());
   }
 
   @Test
@@ -1032,14 +1031,14 @@ public class ViewTest {
 
     View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
 
-    Assert.assertEquals(Optional.of("1"), view.first());
-    Assert.assertEquals(Optional.of("2"), view.first());
-    Assert.assertEquals(Optional.of("3"), view.first());
-    Assert.assertEquals(Optional.of("4"), view.first());
-    Assert.assertEquals(Optional.of("5"), view.first());
-    Assert.assertEquals(Optional.of("6"), view.first());
-    Assert.assertEquals(Optional.of("7"), view.first());
-    Assert.assertFalse(view.first().isPresent());
+    Assert.assertEquals(Result.of("1"), view.first());
+    Assert.assertEquals(Result.of("2"), view.first());
+    Assert.assertEquals(Result.of("3"), view.first());
+    Assert.assertEquals(Result.of("4"), view.first());
+    Assert.assertEquals(Result.of("5"), view.first());
+    Assert.assertEquals(Result.of("6"), view.first());
+    Assert.assertEquals(Result.of("7"), view.first());
+    Assert.assertFalse(view.first().isSuccess());
   }
 
   @Test
@@ -1047,8 +1046,8 @@ public class ViewTest {
 
     View<String> view = View.of("1", "2", "3", "4", "5", "6", "7");
 
-    Assert.assertEquals(Optional.of("7"), view.last());
-    Assert.assertFalse(view.first().isPresent());
+    Assert.assertEquals(Result.of("7"), view.last());
+    Assert.assertFalse(view.first().isSuccess());
   }
 
   @Test

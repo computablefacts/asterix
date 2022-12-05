@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -223,8 +222,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    *
    * @return the first element of the view.
    */
-  public Optional<T> first() {
-    return hasNext() ? Optional.of(next()) : Optional.empty();
+  public Result<T> first() {
+    return hasNext() ? Result.of(next()) : Result.empty();
   }
 
   /**
@@ -232,8 +231,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    *
    * @return the last element of the view.
    */
-  public Optional<T> last() {
-    return hasNext() ? Optional.of(Iterators.getLast(this)) : Optional.empty();
+  public Result<T> last() {
+    return hasNext() ? Result.of(Iterators.getLast(this)) : Result.empty();
   }
 
   /**
@@ -641,13 +640,13 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns an {@link Optional} containing the first element of this view that satisfies the provided predicate.
+   * Returns an {@link Result} containing the first element of this view that satisfies the provided predicate.
    *
    * @param predicate the predicate to satisfy.
-   * @return an {@link Optional}.
+   * @return an {@link Result}.
    */
-  public Optional<T> findFirst(Predicate<? super T> predicate) {
-    return Iterators.tryFind(this, predicate::test).toJavaUtil();
+  public Result<T> findFirst(Predicate<? super T> predicate) {
+    return Iterators.tryFind(this, predicate::test).toJavaUtil().map(Result::of).orElse(Result.empty());
   }
 
   /**
@@ -963,17 +962,17 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
         executorService.awaitTermination(180, TimeUnit.SECONDS);
         return View.of(futures).map(future -> {
           try {
-            return Optional.of(future.get());
+            return Result.of(future.get());
           } catch (InterruptedException | ExecutionException e) {
             logger_.error(LogFormatter.create().message(e).formatError());
           }
-          return Optional.empty();
+          return Result.empty();
         });
       } catch (InterruptedException e) {
         logger_.error(LogFormatter.create().message(e).formatError());
       }
-      return View.<Optional<U>>of();
-    }).filter(Optional::isPresent).map(opt -> opt.get());
+      return View.<Result<U>>of();
+    }).filter(Result::isSuccess).map(Result::successValue);
   }
 
   /**
