@@ -100,7 +100,11 @@ final public class Fact extends HasId {
         page = 0;
       }
     } else {
-      page = 0;
+      try {
+        page = (Integer) provenance.get("page");
+      } catch (NumberFormatException e) {
+        page = 0;
+      }
     }
 
     if (page <= 0) {
