@@ -3,6 +3,7 @@ package com.computablefacts.junon;
 import com.computablefacts.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
@@ -35,6 +36,7 @@ import java.util.TimeZone;
 @Generated
 @CheckReturnValue
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 final public class Relationship extends HasId {
 
   @JsonProperty("is_valid")
@@ -142,10 +144,15 @@ final public class Relationship extends HasId {
     type_ = type;
     startDate_ = startDate;
     endDate_ = endDate;
-    metadata_.addAll(metadata);
-    provenances_.addAll(provenances);
     fromId_ = fromId;
     toId_ = toId;
+
+    if (provenances != null) {
+      provenances_.addAll(provenances);
+    }
+    if (metadata != null) {
+      metadata_.addAll(metadata);
+    }
   }
 
   @Override

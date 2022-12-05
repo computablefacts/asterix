@@ -1,6 +1,7 @@
 package com.computablefacts.junon;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
@@ -19,6 +20,7 @@ import java.util.Objects;
  */
 @CheckReturnValue
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 final public class Metadata {
 
   @JsonProperty("type")

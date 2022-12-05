@@ -1,6 +1,7 @@
 package com.computablefacts.junon;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
  */
 @CheckReturnValue
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 final public class Fact extends HasId {
 
   @JsonProperty("metadata")
@@ -172,15 +174,22 @@ final public class Fact extends HasId {
     Preconditions.checkArgument(confidenceScore >= 0.0 && confidenceScore <= 1.0,
         "confidenceScore should be >= 0 and <= 1");
 
-    metadata_.addAll(metadata);
-    provenances_.addAll(provenances);
-    values_.addAll(values);
     type_ = type;
     isValid_ = isValid;
     authorizations_ = authorizations;
     confidenceScore_ = confidenceScore;
     startDate_ = startDate;
     endDate_ = endDate;
+
+    if (metadata != null) {
+      metadata_.addAll(metadata);
+    }
+    if (provenances != null) {
+      provenances_.addAll(provenances);
+    }
+    if (values != null) {
+      values_.addAll(values);
+    }
   }
 
   @Override

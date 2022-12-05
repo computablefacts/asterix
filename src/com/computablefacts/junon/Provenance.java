@@ -1,6 +1,7 @@
 package com.computablefacts.junon;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
@@ -33,6 +34,7 @@ import java.util.TimeZone;
  */
 @CheckReturnValue
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 final public class Provenance {
 
   private final static HashFunction MURMUR3_128 = Hashing.murmur3_128();
