@@ -36,7 +36,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.io.File;
@@ -65,17 +64,29 @@ final public class Model extends AbstractStack {
   private static final Function<GoldLabel, String> mapToClassLabel_ = gl -> gl.isTruePositive() || gl.isFalseNegative()
       ? "OK" : "KO";
 
-  private String name_;
-  private Vocabulary vocabulary_;
-  private Set<String> stopwords_;
-  private Map<String, Double> keywords_;
+  private final String name_;
+  private final Vocabulary vocabulary_;
+  private final Set<String> stopwords_;
+  private final Map<String, Double> keywords_;
+  private final Set<Integer> correlatedFeatures_;
   private AbstractBinaryClassifier classifier_;
-  private Set<Integer> correlatedFeatures_;
   private Function<String, View<List<Span>>> tokenizer_;
   private Function<View<List<Span>>, FeatureVector> featurizer_;
   private Function<FeatureVector, FeatureVector> reducer_;
 
-  public Model() {
+  public Model(String name, Vocabulary vocabulary, Set<String> stopwords, Map<String, Double> keywords,
+      Set<Integer> correlatedFeatures) {
+
+    Preconditions.checkNotNull(name, "name should not be null");
+    Preconditions.checkNotNull(vocabulary, "vocabulary should not be null");
+    Preconditions.checkNotNull(stopwords, "stopwords should not be null");
+    Preconditions.checkNotNull(keywords, "keywords should not be null");
+
+    name_ = name;
+    vocabulary_ = vocabulary;
+    stopwords_ = ImmutableSet.copyOf(stopwords);
+    keywords_ = ImmutableMap.copyOf(keywords);
+    correlatedFeatures_ = ImmutableSet.copyOf(correlatedFeatures);
   }
 
   /**
@@ -154,7 +165,7 @@ final public class Model extends AbstractStack {
           try {
 
             // Train/test model
-            Model model = new Model().name(label).setup(vocabulary, stopwords, keywords, correlatedFeatures);
+            Model model = new Model(label, vocabulary, stopwords, keywords, correlatedFeatures);
             ConfusionMatrix confusionMatrixTrain = model.train(trainVectors, trainClasses, classifier);
             ConfusionMatrix confusionMatrixTest = model.test(testVectors, testClasses);
 
@@ -194,6 +205,7 @@ final public class Model extends AbstractStack {
 
         // Try to improve the output by stacking the models
         Stack stack = new Stack(models);
+        stack.compactify();
 
         stopwatch.stop();
         observations.add("Stack is " + stack);
@@ -318,32 +330,6 @@ final public class Model extends AbstractStack {
 
   public String name() {
     return name_;
-  }
-  
-  @CanIgnoreReturnValue
-  public Model name(String name) {
-
-    Preconditions.checkNotNull(name, "name should not be null");
-
-    name_ = name;
-
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public Model setup(Vocabulary vocabulary, Set<String> stopwords, Map<String, Double> keywords,
-      Set<Integer> correlatedFeatures) {
-
-    Preconditions.checkNotNull(vocabulary, "vocabulary should not be null");
-    Preconditions.checkNotNull(stopwords, "stopwords should not be null");
-    Preconditions.checkNotNull(keywords, "keywords should not be null");
-
-    vocabulary_ = vocabulary;
-    stopwords_ = ImmutableSet.copyOf(stopwords);
-    keywords_ = ImmutableMap.copyOf(keywords);
-    correlatedFeatures_ = ImmutableSet.copyOf(correlatedFeatures);
-
-    return this;
   }
 
   public ConfusionMatrix train(List<FeatureVector> vectors, List<Integer> classes,

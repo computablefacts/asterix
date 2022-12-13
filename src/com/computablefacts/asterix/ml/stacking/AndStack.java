@@ -6,10 +6,7 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.ml.FeatureVector;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
-import java.util.Map;
-import java.util.Set;
 
 @CheckReturnValue
 final public class AndStack extends AbstractStack {
@@ -56,6 +53,15 @@ final public class AndStack extends AbstractStack {
   }
 
   @Override
+  public void compactify() {
+
+    super.compactify();
+
+    leftStack_.compactify();
+    rightStack_.compactify();
+  }
+
+  @Override
   public int predict(String text) {
     if (leftStack_.predict(text) == KO) {
       return KO;
@@ -78,7 +84,7 @@ final public class AndStack extends AbstractStack {
     }
     return rightStack_.focus(text);
   }
-  
+
   private int reduce(int prediction1, int prediction2) {
     return prediction1 == OK && prediction2 == OK ? OK : KO;
   }

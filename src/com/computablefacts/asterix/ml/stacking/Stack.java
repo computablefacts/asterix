@@ -60,6 +60,13 @@ final public class Stack {
     return stack_.successValue().confusionMatrix();
   }
 
+  public void compactify() {
+
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
+
+    stack_.successValue().compactify();
+  }
+
   public int predict(String text) {
 
     Preconditions.checkNotNull(text, "text should not be null");

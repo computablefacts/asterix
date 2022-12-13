@@ -10,8 +10,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 
 @CheckReturnValue
@@ -20,6 +18,7 @@ public abstract class AbstractStack {
   protected ConfusionMatrix confusionMatrix_ = new ConfusionMatrix();
   protected FeatureVector actuals_;
   protected FeatureVector predictions_;
+  protected boolean isFrozen_ = false;
 
   public FeatureVector actuals() {
     return actuals_;
@@ -31,6 +30,12 @@ public abstract class AbstractStack {
 
   public ConfusionMatrix confusionMatrix() {
     return confusionMatrix_;
+  }
+
+  public void compactify() {
+    isFrozen_ = true;
+    actuals_ = null;
+    predictions_ = null;
   }
 
   public void init(List<FeatureVector> dataset, int[] actuals) {
