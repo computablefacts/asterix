@@ -373,7 +373,7 @@
           <parallel>methods</parallel>
           <threadCount>5</threadCount>
           <skipTests>false</skipTests>
-          <argLine>--add-opens java.base/java.util=ALL-UNNAMED</argLine>
+          <argLine>-Xmx3g --add-opens java.base/java.util=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
     </plugins>
