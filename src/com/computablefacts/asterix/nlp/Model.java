@@ -212,6 +212,16 @@ final public class Model extends AbstractStack {
         observations.add(stack.confusionMatrix().toString());
         observations.add(String.format("Stack built in %d seconds.", stopwatch.elapsed(TimeUnit.SECONDS)));
 
+        models.clear();
+        keywords.clear();
+        trainVectors.clear();
+        trainClasses.clear();
+        testVectors.clear();
+        testClasses.clear();
+        correlatedFeatures.clear();
+        train.clear();
+        test.clear();
+
         File fileStack = new File(String.format("%s/stack-%s.xml.gz", fileKeywords.getParent(), label));
         XStream.save(fileStack, stack);
 
