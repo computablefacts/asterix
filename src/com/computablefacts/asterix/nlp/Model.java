@@ -120,11 +120,16 @@ final public class Model extends AbstractStack {
     vocabulary.load(fileVocabulary);
 
     Set<String> stopwords = Sets.newHashSet(vocabulary.stopwords(50));
-
     File fileObservations = new File(String.format("%s/observations.txt", fileKeywords.getParent()));
 
     try (Observations observations = new Observations(fileObservations)) {
       for (String label : labels) {
+
+        File fileStack = new File(String.format("%s/stack-%s.xml.gz", fileKeywords.getParent(), label));
+
+        if (fileStack.exists()) {
+          continue;
+        }
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
@@ -151,14 +156,7 @@ final public class Model extends AbstractStack {
         List<FeatureVector> testVectors = vectors(vocabulary, stopwords, keywords.keySet(), test);
         List<Integer> testClasses = classes(test);
 
-        Set<Integer> zeroedEntries = findZeroedEntries(trainVectors);
-        Set<Map.Entry<Integer, Integer>> correlatedEntries = findCorrelatedEntries(trainVectors, eCorrelation.KENDALL,
-            0.85, 50);
-        Set<Integer> difference = Sets.newHashSet(
-            Sets.difference(View.of(correlatedEntries).map(Map.Entry::getValue).toSet(),
-                View.of(correlatedEntries).map(Map.Entry::getKey)
-                    .toSet())); // A correlated with B and B correlated with C does not imply A correlated with C
-        Set<Integer> dropFeatures = Sets.union(zeroedEntries, difference);
+        Set<Integer> dropFeatures = dropFeatures(trainVectors);
 
         @Var int idx = 1;
         List<Model> models = new ArrayList<>();
@@ -226,12 +224,10 @@ final public class Model extends AbstractStack {
         trainClasses.clear();
         testVectors.clear();
         testClasses.clear();
-        zeroedEntries.clear();
-        correlatedEntries.clear();
+        dropFeatures.clear();
         train.clear();
         test.clear();
 
-        File fileStack = new File(String.format("%s/stack-%s.xml.gz", fileKeywords.getParent(), label));
         XStream.save(fileStack, stack);
 
         // Extract focus points
@@ -245,6 +241,19 @@ final public class Model extends AbstractStack {
         // });
       }
     }
+  }
+
+  private static Set<Integer> dropFeatures(List<FeatureVector> vectors) {
+
+    Preconditions.checkNotNull(vectors, "vectors should not be null");
+
+    Set<Integer> zeroedEntries = findZeroedEntries(vectors);
+    Set<Map.Entry<Integer, Integer>> correlatedEntries = findCorrelatedEntries(vectors, eCorrelation.KENDALL, 0.85, 50);
+
+    // A correlated with B and B correlated with C does not imply A correlated with C
+    return Sets.newHashSet(Sets.union(zeroedEntries,
+        Sets.difference(View.of(correlatedEntries).map(Map.Entry::getValue).toSet(),
+            View.of(correlatedEntries).map(Map.Entry::getKey).toSet())));
   }
 
   private static List<FeatureVector> vectors(Vocabulary vocabulary, Set<String> stopwords, Set<String> keywords,
