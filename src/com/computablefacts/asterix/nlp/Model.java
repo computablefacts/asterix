@@ -2,6 +2,7 @@ package com.computablefacts.asterix.nlp;
 
 import static com.computablefacts.asterix.ml.FeatureVector.dropEntries;
 import static com.computablefacts.asterix.ml.FeatureVector.findCorrelatedEntries;
+import static com.computablefacts.asterix.ml.FeatureVector.findZeroedEntries;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
@@ -68,14 +69,14 @@ final public class Model extends AbstractStack {
   private final Vocabulary vocabulary_;
   private final Set<String> stopwords_;
   private final Map<String, Double> keywords_;
-  private final Set<Integer> correlatedFeatures_;
+  private final Set<Integer> dropFeatures_;
   private AbstractBinaryClassifier classifier_;
   private Function<String, View<List<Span>>> tokenizer_;
   private Function<View<List<Span>>, FeatureVector> featurizer_;
   private Function<FeatureVector, FeatureVector> reducer_;
 
   public Model(String name, Vocabulary vocabulary, Set<String> stopwords, Map<String, Double> keywords,
-      Set<Integer> correlatedFeatures) {
+      Set<Integer> dropFeatures) {
 
     Preconditions.checkNotNull(name, "name should not be null");
     Preconditions.checkNotNull(vocabulary, "vocabulary should not be null");
@@ -86,7 +87,7 @@ final public class Model extends AbstractStack {
     vocabulary_ = vocabulary;
     stopwords_ = ImmutableSet.copyOf(stopwords);
     keywords_ = ImmutableMap.copyOf(keywords);
-    correlatedFeatures_ = ImmutableSet.copyOf(correlatedFeatures);
+    dropFeatures_ = dropFeatures == null ? null : ImmutableSet.copyOf(dropFeatures);
   }
 
   /**
@@ -150,7 +151,14 @@ final public class Model extends AbstractStack {
         List<FeatureVector> testVectors = vectors(vocabulary, stopwords, keywords.keySet(), test);
         List<Integer> testClasses = classes(test);
 
-        Set<Integer> correlatedFeatures = findCorrelatedEntries(trainVectors, eCorrelation.KENDALL, 50);
+        Set<Integer> zeroedEntries = findZeroedEntries(trainVectors);
+        Set<Map.Entry<Integer, Integer>> correlatedEntries = findCorrelatedEntries(trainVectors, eCorrelation.KENDALL,
+            0.85, 50);
+        Set<Integer> difference = Sets.newHashSet(
+            Sets.difference(View.of(correlatedEntries).map(Map.Entry::getValue).toSet(),
+                View.of(correlatedEntries).map(Map.Entry::getKey)
+                    .toSet())); // A correlated with B and B correlated with C does not imply A correlated with C
+        Set<Integer> dropFeatures = Sets.union(zeroedEntries, difference);
 
         @Var int idx = 1;
         List<Model> models = new ArrayList<>();
@@ -165,7 +173,7 @@ final public class Model extends AbstractStack {
           try {
 
             // Train/test model
-            Model model = new Model(label, vocabulary, stopwords, keywords, correlatedFeatures);
+            Model model = new Model(label, vocabulary, stopwords, keywords, dropFeatures);
             ConfusionMatrix confusionMatrixTrain = model.train(trainVectors, trainClasses, classifier);
             ConfusionMatrix confusionMatrixTest = model.test(testVectors, testClasses);
 
@@ -218,7 +226,8 @@ final public class Model extends AbstractStack {
         trainClasses.clear();
         testVectors.clear();
         testClasses.clear();
-        correlatedFeatures.clear();
+        zeroedEntries.clear();
+        correlatedEntries.clear();
         train.clear();
         test.clear();
 
@@ -348,7 +357,6 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(vectors, "vectors should not be null");
     Preconditions.checkNotNull(classes, "classes should not be null");
     Preconditions.checkNotNull(typeClassifier, "typeClassifier should not be null");
-    Preconditions.checkState(correlatedFeatures_ != null, "correlatedFeatures_ should not be null");
 
     classifier_ = classifier(typeClassifier);
     classifier_.train(new FeatureMatrix(View.of(vectors).map(reducer())), classes.stream().mapToInt(x -> x).toArray());
@@ -360,7 +368,6 @@ final public class Model extends AbstractStack {
 
     Preconditions.checkNotNull(vectors, "vectors should not be null");
     Preconditions.checkNotNull(classes, "classes should not be null");
-    Preconditions.checkState(correlatedFeatures_ != null, "correlatedFeatures_ should not be null");
 
     ConfusionMatrix confusionMatrix = new ConfusionMatrix();
     View.of(vectors).map(this::predict).index()
@@ -393,10 +400,7 @@ final public class Model extends AbstractStack {
 
   private Function<FeatureVector, FeatureVector> reducer() {
     if (reducer_ == null) {
-
-      Preconditions.checkState(correlatedFeatures_ != null, "correlatedFeatures should not be null");
-
-      reducer_ = vector -> dropEntries(vector, correlatedFeatures_);
+      reducer_ = dropFeatures_ == null ? Function.identity() : vector -> dropEntries(vector, dropFeatures_);
     }
     return reducer_;
   }

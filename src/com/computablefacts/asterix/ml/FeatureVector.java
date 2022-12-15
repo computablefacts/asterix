@@ -5,14 +5,18 @@ import com.computablefacts.asterix.View;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -102,16 +106,47 @@ final public class FeatureVector {
     return newVector;
   }
 
-  public static Set<Integer> findCorrelatedEntries(List<FeatureVector> vectors, eCorrelation correlation,
-      int nbIterations) {
+  public static Set<Integer> findZeroedEntries(List<FeatureVector> vectors) {
+
+    Preconditions.checkNotNull(vectors, "vectors should not be null");
+    Preconditions.checkArgument(vectors.size() > 0, "the number of vectors must be > 0");
+
+    FeatureVector sums = new FeatureVector(vectors.get(0).length());
+
+    vectors.forEach(vector -> {
+      for (int i = 0; i < vector.length(); i++) {
+        sums.set(i, sums.get(i) + vector.get(i));
+      }
+    });
+    return Sets.newHashSet(sums.zeroEntries());
+  }
+
+  public static Set<Integer> findNonZeroedEntries(List<FeatureVector> vectors) {
+
+    Preconditions.checkNotNull(vectors, "vectors should not be null");
+    Preconditions.checkArgument(vectors.size() > 0, "the number of vectors must be > 0");
+
+    FeatureVector sums = new FeatureVector(vectors.get(0).length());
+
+    vectors.forEach(vector -> {
+      for (int i = 0; i < vector.length(); i++) {
+        sums.set(i, sums.get(i) + vector.get(i));
+      }
+    });
+    return Sets.newHashSet(sums.nonZeroEntries());
+  }
+
+  public static Set<Map.Entry<Integer, Integer>> findCorrelatedEntries(List<FeatureVector> vectors,
+      eCorrelation correlation, double threshold, int nbIterations) {
 
     Preconditions.checkNotNull(vectors, "vectors should not be null");
     Preconditions.checkNotNull(correlation, "correlation should not be null");
+    Preconditions.checkArgument(threshold > 0.0, "threshold must be > 0");
     Preconditions.checkArgument(nbIterations > 0, "nbIterations must be > 0");
 
     // Transpose
     int length = vectors.get(0).length();
-
+    FeatureVector sums = new FeatureVector(length);
     List<double[]> matrix = new ArrayList<>(length);
 
     for (int i = 0; i < length; i++) {
@@ -120,40 +155,45 @@ final public class FeatureVector {
 
       for (int j = 0; j < vectors.size(); j++) {
         vector[j] = vectors.get(j).get(i);
+        sums.set(i, sums.get(i) + vectors.get(j).get(i));
       }
 
       matrix.add(vector);
     }
 
     // Compute correlation coefficient between each feature
-    Random random = new Random();
-    Set<Integer> correlatedFeatures = ConcurrentHashMap.newKeySet();
+    BigDecimal newThreshold = new BigDecimal(threshold).setScale(2, RoundingMode.HALF_UP);
+    Set<Map.Entry<Integer, Integer>> correlated = ConcurrentHashMap.newKeySet();
+    List<Integer> nonZeroed = View.of(sums.nonZeroEntries()).toList();
+    Collections.shuffle(nonZeroed);
 
-    View.iterate(random.nextInt(matrix.size()), x -> random.nextInt(matrix.size()))
-        .filter(col -> !correlatedFeatures.contains(col)).take(nbIterations).forEachRemainingInParallel(m -> {
+    View.of(nonZeroed).take(nbIterations).forEachRemainingInParallel(m -> {
 
-          double[] v1 = matrix.get(m);
+      double[] v1 = matrix.get(m);
 
-          for (int n = 0; n < matrix.size(); n++) {
-            if (!m.equals(n) && !correlatedFeatures.contains(m) && !correlatedFeatures.contains(n)) {
+      for (int k = 0; k < nonZeroed.size(); k++) {
 
-              double[] v2 = matrix.get(n);
-              CorTest test;
+        int n = nonZeroed.get(k);
 
-              if (eCorrelation.KENDALL.equals(correlation)) {
-                test = CorTest.kendall(v1, v2);
-              } else if (eCorrelation.SPEARMAN.equals(correlation)) {
-                test = CorTest.spearman(v1, v2);
-              } else { // PEARSON
-                test = CorTest.pearson(v1, v2);
-              }
-              if (test.cor >= 0.8 /* strong correlation */) {
-                correlatedFeatures.add(n);
-              }
-            }
+        if (!m.equals(n)) {
+
+          double[] v2 = matrix.get(n);
+          CorTest test;
+
+          if (eCorrelation.KENDALL.equals(correlation)) {
+            test = CorTest.kendall(v1, v2);
+          } else if (eCorrelation.SPEARMAN.equals(correlation)) {
+            test = CorTest.spearman(v1, v2);
+          } else { // PEARSON
+            test = CorTest.pearson(v1, v2);
           }
-        });
-    return correlatedFeatures;
+          if (newThreshold.compareTo(new BigDecimal(test.cor).setScale(2, RoundingMode.HALF_UP)) <= 0) {
+            correlated.add(n < m ? new SimpleImmutableEntry<>(n, m) : new SimpleImmutableEntry<>(m, n));
+          }
+        }
+      }
+    });
+    return correlated;
   }
 
   @Override
@@ -235,6 +275,10 @@ final public class FeatureVector {
     for (Map.Entry<Integer, Double> entry : nonZeroEntries.entrySet()) {
       set(entry.getKey() + 1, entry.getValue());
     }
+  }
+
+  public Set<Integer> zeroEntries() {
+    return Sets.difference(View.range(0, length_).toSet(), nonZeroEntries_.keySet());
   }
 
   public Set<Integer> nonZeroEntries() {
