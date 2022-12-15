@@ -161,7 +161,7 @@ final public class FeatureVector {
       matrix.add(vector);
     }
 
-    // Compute correlation coefficient between each feature
+    // Compute correlation coefficient between pairs of features
     BigDecimal newThreshold = new BigDecimal(threshold).setScale(2, RoundingMode.HALF_UP);
     Set<Map.Entry<Integer, Integer>> correlated = ConcurrentHashMap.newKeySet();
     List<Integer> nonZeroed = View.of(sums.nonZeroEntries()).toList();
