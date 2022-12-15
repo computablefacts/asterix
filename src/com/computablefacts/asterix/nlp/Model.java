@@ -1,6 +1,5 @@
 package com.computablefacts.asterix.nlp;
 
-import static com.computablefacts.asterix.ml.FeatureVector.dropEntries;
 import static com.computablefacts.asterix.ml.FeatureVector.findCorrelatedEntries;
 import static com.computablefacts.asterix.ml.FeatureVector.findZeroedEntries;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
@@ -68,26 +67,28 @@ final public class Model extends AbstractStack {
   private final String name_;
   private final Vocabulary vocabulary_;
   private final Set<String> stopwords_;
+  private final Set<String> includeTags_;
   private final Map<String, Double> keywords_;
-  private final Set<Integer> dropFeatures_;
+  private final Set<String> whitelist_;
   private AbstractBinaryClassifier classifier_;
   private Function<String, View<List<Span>>> tokenizer_;
   private Function<View<List<Span>>, FeatureVector> featurizer_;
-  private Function<FeatureVector, FeatureVector> reducer_;
 
-  public Model(String name, Vocabulary vocabulary, Set<String> stopwords, Map<String, Double> keywords,
-      Set<Integer> dropFeatures) {
+  public Model(String name, Vocabulary vocabulary, Set<String> stopwords, Set<String> includeTags,
+      Map<String, Double> keywords, Set<String> whitelist) {
 
     Preconditions.checkNotNull(name, "name should not be null");
     Preconditions.checkNotNull(vocabulary, "vocabulary should not be null");
     Preconditions.checkNotNull(stopwords, "stopwords should not be null");
+    Preconditions.checkNotNull(includeTags, "includeTags should not be null");
     Preconditions.checkNotNull(keywords, "keywords should not be null");
 
     name_ = name;
     vocabulary_ = vocabulary;
     stopwords_ = ImmutableSet.copyOf(stopwords);
+    includeTags_ = ImmutableSet.copyOf(includeTags);
     keywords_ = ImmutableMap.copyOf(keywords);
-    dropFeatures_ = dropFeatures == null ? null : ImmutableSet.copyOf(dropFeatures);
+    whitelist_ = whitelist == null ? null : ImmutableSet.copyOf(whitelist);
   }
 
   /**
@@ -97,8 +98,9 @@ final public class Model extends AbstractStack {
    * <li>{@code args[0]} the vocabulary as a gzipped TSV file.</li>
    * <li>{@code args[1]} the gold labels as a gzipped JSONL file.</li>
    * <li>{@code args[2]} the keywords extracted by the {@link DocSetLabeler} as a gzipped TSV file.</li>
-   * <li>{@code args[3]} a list of classifiers to train (optional, default is DecisionTree)</li>
-   * <li>{@code args[4]} a list of labels to train for (optional, default is all)</li>
+   * <li>{@code args[3]} the types of tokens to keep: WORD, PUNCTUATION, etc. (optional, default is {WORD, NUMBER, TERMINAL_MARK})</li>
+   * <li>{@code args[4]} a list of classifiers to train (optional, default is DecisionTree)</li>
+   * <li>{@code args[5]} a list of labels to train for (optional, default is all)</li>
    * </ul>
    */
   public static void main(String[] args) throws IOException {
@@ -106,11 +108,13 @@ final public class Model extends AbstractStack {
     File fileVocabulary = new File(args[0]);
     File fileGoldlabels = new File(args[1]);
     File fileKeywords = new File(args[2]);
-    Set<eBinaryClassifier> classifiers = args.length < 4 ? Sets.newHashSet(eBinaryClassifier.DT)
-        : Splitter.on(',').trimResults().omitEmptyStrings().splitToStream(args[3]).map(eBinaryClassifier::valueOf)
+    Set<String> includeTags = args.length < 4 ? Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK")
+        : Sets.newHashSet(Splitter.on(',').trimResults().omitEmptyStrings().split(args[3]));
+    Set<eBinaryClassifier> classifiers = args.length < 5 ? Sets.newHashSet(eBinaryClassifier.DT)
+        : Splitter.on(',').trimResults().omitEmptyStrings().splitToStream(args[4]).map(eBinaryClassifier::valueOf)
             .collect(Collectors.toSet());
-    Set<String> labels = args.length < 5 ? GoldLabel.load(fileGoldlabels).map(GoldLabel::label).toSet()
-        : Sets.newHashSet(Splitter.on(',').trimResults().omitEmptyStrings().splitToList(args[4]));
+    Set<String> labels = args.length < 6 ? GoldLabel.load(fileGoldlabels).map(GoldLabel::label).toSet()
+        : Sets.newHashSet(Splitter.on(',').trimResults().omitEmptyStrings().splitToList(args[5]));
 
     Preconditions.checkArgument(fileVocabulary.exists(), "missing vocabulary");
     Preconditions.checkArgument(fileGoldlabels.exists(), "missing gold labels");
@@ -150,13 +154,18 @@ final public class Model extends AbstractStack {
         DocSetLabeler.load(fileKeywords, label)
             .forEachRemaining(entry -> keywords.put(entry.getKey(), entry.getValue()));
 
-        List<FeatureVector> trainVectors = vectors(vocabulary, stopwords, keywords.keySet(), train);
+        @Var List<FeatureVector> trainVectors = vectors(vocabulary, stopwords, includeTags, keywords.keySet(), null,
+            View.of(train).concat(test).toList());
+        Set<String> whitelist = whitelist(vocabulary, trainVectors);
+
+        Preconditions.checkState(Sets.intersection(keywords.keySet(), whitelist).equals(keywords.keySet()));
+
+        trainVectors = vectors(vocabulary, stopwords, includeTags, keywords.keySet(), whitelist, train);
         List<Integer> trainClasses = classes(train);
 
-        List<FeatureVector> testVectors = vectors(vocabulary, stopwords, keywords.keySet(), test);
+        List<FeatureVector> testVectors = vectors(vocabulary, stopwords, includeTags, keywords.keySet(), whitelist,
+            test);
         List<Integer> testClasses = classes(test);
-
-        Set<Integer> dropFeatures = dropFeatures(trainVectors);
 
         @Var int idx = 1;
         List<Model> models = new ArrayList<>();
@@ -171,7 +180,7 @@ final public class Model extends AbstractStack {
           try {
 
             // Train/test model
-            Model model = new Model(label, vocabulary, stopwords, keywords, dropFeatures);
+            Model model = new Model(label, vocabulary, stopwords, includeTags, keywords, whitelist);
             ConfusionMatrix confusionMatrixTrain = model.train(trainVectors, trainClasses, classifier);
             ConfusionMatrix confusionMatrixTest = model.test(testVectors, testClasses);
 
@@ -224,7 +233,7 @@ final public class Model extends AbstractStack {
         trainClasses.clear();
         testVectors.clear();
         testClasses.clear();
-        dropFeatures.clear();
+        whitelist.clear();
         train.clear();
         test.clear();
 
@@ -243,26 +252,29 @@ final public class Model extends AbstractStack {
     }
   }
 
-  private static Set<Integer> dropFeatures(List<FeatureVector> vectors) {
+  private static Set<String> whitelist(Vocabulary vocabulary, List<FeatureVector> vectors) {
 
+    Preconditions.checkNotNull(vocabulary, "vocabulary should not be null");
     Preconditions.checkNotNull(vectors, "vectors should not be null");
 
-    Set<Integer> zeroedEntries = findZeroedEntries(vectors);
-    Set<Map.Entry<Integer, Integer>> correlatedEntries = findCorrelatedEntries(vectors, eCorrelation.KENDALL, 0.85, 50);
+    Set<Integer> zeroed = findZeroedEntries(vectors);
+    Set<Map.Entry<Integer, Integer>> correlated = findCorrelatedEntries(vectors, eCorrelation.KENDALL, 0.85, 50);
 
     // A correlated with B and B correlated with C does not imply A correlated with C
-    return Sets.newHashSet(Sets.union(zeroedEntries,
-        Sets.difference(View.of(correlatedEntries).map(Map.Entry::getValue).toSet(),
-            View.of(correlatedEntries).map(Map.Entry::getKey).toSet())));
+    Set<Integer> dropped = Sets.union(zeroed, Sets.difference(View.of(correlated).map(Map.Entry::getValue).toSet(),
+        View.of(correlated).map(Map.Entry::getKey).toSet()));
+
+    return View.of(Sets.difference(View.range(1, vocabulary.size()).toSet(), dropped))
+        .map(idx -> vocabulary.term(idx + 1)).toSet();
   }
 
-  private static List<FeatureVector> vectors(Vocabulary vocabulary, Set<String> stopwords, Set<String> keywords,
-      List<GoldLabel> goldLabels) {
+  private static List<FeatureVector> vectors(Vocabulary vocabulary, Set<String> stopwords, Set<String> includeTags,
+      Set<String> keywords, Set<String> whitelist, List<GoldLabel> goldLabels) {
 
     Preconditions.checkNotNull(goldLabels, "goldLabels should not be null");
 
     return View.of(goldLabels).map(GoldLabel::data)
-        .map(tokenize(vocabulary, stopwords, keywords).andThen(featurize(vocabulary))).toList();
+        .map(tokenize(vocabulary, stopwords, includeTags, keywords).andThen(featurize(vocabulary, whitelist))).toList();
   }
 
   private static List<Integer> classes(List<GoldLabel> goldLabels) {
@@ -273,24 +285,24 @@ final public class Model extends AbstractStack {
   }
 
   private static Function<String, View<List<Span>>> tokenize(Vocabulary vocabulary, Set<String> stopwords,
-      Set<String> keywords) {
+      Set<String> includeTags, Set<String> keywords) {
 
     Preconditions.checkState(vocabulary != null, "vocabulary should not be null");
     Preconditions.checkState(stopwords != null, "stopwords should not be null");
+    Preconditions.checkState(includeTags != null, "includeTags should not be null");
     Preconditions.checkState(keywords != null, "keywords should not be null");
 
-    return txt -> Vocabulary.tokenizer(Sets.newHashSet("WORD", "NUMBER", "TERMINAL_MARK"), 9)
-        .apply(Strings.nullToEmpty(txt))
+    return txt -> Vocabulary.tokenizer(includeTags, 9).apply(Strings.nullToEmpty(txt))
         .filter(tkn -> vocabulary.index(tkn.text()) != 0 /* UNK */ && !stopwords.contains(tkn.text()))
         .overlappingWindowWithStrictLength(3)
         .filter(tkns -> tkns.stream().anyMatch(tkn -> keywords.contains(tkn.text())));
   }
 
-  private static Function<View<List<Span>>, FeatureVector> featurize(Vocabulary vocabulary) {
+  private static Function<View<List<Span>>, FeatureVector> featurize(Vocabulary vocabulary, Set<String> whitelist) {
 
     Preconditions.checkState(vocabulary != null, "vocabulary should not be null");
 
-    TfIdfVectorizer vectorizer = new TfIdfVectorizer(vocabulary);
+    TfIdfVectorizer vectorizer = new TfIdfVectorizer(vocabulary, whitelist);
     return tkns -> vectorizer.apply(tkns.flatten(View::of).map(Span::text).toList());
   }
 
@@ -335,7 +347,7 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(vector, "vector should not be null");
     Preconditions.checkState(classifier_ != null, "classifier_ should not be null");
 
-    return classifier_.predict(reducer().apply(vector));
+    return classifier_.predict(vector);
   }
 
   @Override
@@ -368,7 +380,7 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(typeClassifier, "typeClassifier should not be null");
 
     classifier_ = classifier(typeClassifier);
-    classifier_.train(new FeatureMatrix(View.of(vectors).map(reducer())), classes.stream().mapToInt(x -> x).toArray());
+    classifier_.train(new FeatureMatrix(vectors), classes.stream().mapToInt(x -> x).toArray());
 
     return test(vectors, classes);
   }
@@ -390,9 +402,10 @@ final public class Model extends AbstractStack {
 
       Preconditions.checkState(vocabulary_ != null, "vocabulary should not be null");
       Preconditions.checkState(stopwords_ != null, "stopwords should not be null");
+      Preconditions.checkState(includeTags_ != null, "includeTags should not be null");
       Preconditions.checkState(keywords_ != null, "keywords should not be null");
 
-      tokenizer_ = tokenize(vocabulary_, stopwords_, keywords_.keySet());
+      tokenizer_ = tokenize(vocabulary_, stopwords_, includeTags_, keywords_.keySet());
     }
     return tokenizer_;
   }
@@ -401,17 +414,11 @@ final public class Model extends AbstractStack {
     if (featurizer_ == null) {
 
       Preconditions.checkState(vocabulary_ != null, "vocabulary should not be null");
+      Preconditions.checkState(whitelist_ != null, "whitelist_ should not be null");
 
-      featurizer_ = featurize(vocabulary_);
+      featurizer_ = featurize(vocabulary_, whitelist_);
     }
     return featurizer_;
-  }
-
-  private Function<FeatureVector, FeatureVector> reducer() {
-    if (reducer_ == null) {
-      reducer_ = dropFeatures_ == null ? Function.identity() : vector -> dropEntries(vector, dropFeatures_);
-    }
-    return reducer_;
   }
 
   private Set<Map.Entry<Span, Integer>> mergeSpans(Set<Span> spanz) {

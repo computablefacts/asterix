@@ -35,7 +35,8 @@ public class ModelTest {
 
     File stackCompressed = new File(String.format("%s/stack-contains_crowdsourcing.xml.gz", facts.getParent()));
     args = new String[]{vocabularyCompressed.getAbsolutePath(), goldLabelsCompressed.getAbsolutePath(),
-        keywordsCompressed.getAbsolutePath(), "DNB,FLD,KNN,MLP,SVM,RF,DT,GBT,AB,LOGIT", "contains_crowdsourcing"};
+        keywordsCompressed.getAbsolutePath(), "WORD,NUMBER", "DNB,FLD,KNN,MLP,SVM,RF,DT,GBT,AB,LOGIT",
+        "contains_crowdsourcing"};
     Model.main(args);
 
     Assert.assertTrue(stackCompressed.exists());
