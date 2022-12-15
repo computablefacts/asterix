@@ -158,8 +158,6 @@ final public class Model extends AbstractStack {
             View.of(train).concat(test).toList());
         Set<String> whitelist = whitelist(vocabulary, trainVectors);
 
-        Preconditions.checkState(Sets.intersection(keywords.keySet(), whitelist).equals(keywords.keySet()));
-
         trainVectors = vectors(vocabulary, stopwords, includeTags, keywords.keySet(), whitelist, train);
         List<Integer> trainClasses = classes(train);
 
