@@ -297,53 +297,6 @@
         </configuration>
       </plugin>
 
-      <!-- Enable git commit id -->
-      <plugin>
-        <groupId>pl.project13.maven</groupId>
-        <version>${git-commit-id-plugin.version}</version>
-        <artifactId>git-commit-id-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>get-the-git-infos</id>
-            <goals>
-              <goal>revision</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>validate-the-git-infos</id>
-            <goals>
-              <goal>validateRevision</goal>
-            </goals>
-            <phase>package</phase>
-          </execution>
-        </executions>
-        <configuration>
-          <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
-          <failOnNoGitDirectory>false</failOnNoGitDirectory>
-          <prefix>git</prefix>
-          <verbose>false</verbose>
-          <generateGitPropertiesFile>true</generateGitPropertiesFile>
-          <generateGitPropertiesFilename>
-            ${project.build.outputDirectory}/git.properties
-          </generateGitPropertiesFilename>
-          <format>json</format>
-          <gitDescribe>
-            <skip>false</skip>
-            <always>false</always>
-            <dirty>-dirty</dirty>
-          </gitDescribe>
-          <!--
-          <validationProperties>
-              <validationProperty>
-                  <name>validating git dirty</name>
-                  <value>${git.dirty}</value>
-                  <shouldMatchTo>false</shouldMatchTo>
-              </validationProperty>
-          </validationProperties>
-          -->
-        </configuration>
-      </plugin>
-
       <!-- Code Coverage Reports -->
       <plugin>
         <groupId>org.jacoco</groupId>
