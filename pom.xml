@@ -376,6 +376,7 @@
           <argLine>-Xmx4g --add-opens java.base/java.util=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
+    </plugins>
   </build>
 
   <profiles>
@@ -554,9 +555,9 @@
       </repositories>
       <distributionManagement>
         <repository>
-            <id>internal.repo</id>
-            <name>Temporary Staging Repository</name>
-            <url>file://${project.build.directory}/mvn-artifact</url>
+          <id>internal.repo</id>
+          <name>Temporary Staging Repository</name>
+          <url>file://${project.build.directory}/mvn-artifact</url>
         </repository>
       </distributionManagement>
     </profile>
