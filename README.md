@@ -1,8 +1,8 @@
 # Asterix
 
 ![Maven Central](https://img.shields.io/maven-central/v/com.computablefacts/asterix)
-[![Build Status](https://travis-ci.com/computablefacts/asterix.svg?branch=master)](https://travis-ci.com/computablefacts/asterix)
-[![codecov](https://codecov.io/gh/computablefacts/asterix/branch/master/graph/badge.svg)](https://codecov.io/gh/computablefacts/asterix)
+![Build Status](https://travis-ci.com/computablefacts/asterix.svg?branch=master)
+![codecov](https://codecov.io/gh/computablefacts/asterix/branch/master/graph/badge.svg)
 
 ## Adding Asterix to your build
 
@@ -11,7 +11,6 @@ Asterix's Maven group ID is `com.computablefacts` and its artifact ID is `asteri
 To add a dependency on Asterix using Maven, use the following:
 
 ```xml
-
 <dependency>
   <groupId>com.computablefacts</groupId>
   <artifactId>asterix</artifactId>
@@ -25,7 +24,6 @@ Snapshots of Asterix built from the `master` branch are available through Sonaty
 using the following dependency:
 
 ```xml
-
 <dependency>
   <groupId>com.computablefacts</groupId>
   <artifactId>asterix</artifactId>
@@ -37,7 +35,6 @@ In order to be able to download snapshots from Sonatype add the following profil
 to your project `pom.xml`:
 
 ```xml
-
 <profiles>
   <profile>
     <id>allow-snapshots</id>
