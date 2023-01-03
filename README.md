@@ -79,6 +79,7 @@ $ git push origin master
 - [Asterix](#asterix).  Core data structures and algorithms.
 - [Decima](#decima).  Decima is a proof-of-concept Java implementation of the probabilistic logic programming language ProbLog.
 - [Junon](#junon).  Junon is a data transfer object for Java compatible with our platform API.
+- [Jupiter](#jupiter).  Jupiter is an easy to use storage layer for Apache Accumulo.
 - [Nona](#nona).  Nona is an extensible Excel-like programming language.
 
 ## Asterix
@@ -447,6 +448,119 @@ clients("Anna", "Smith", "annasmith23@gmail.com").
 ## Junon
 
 [Junon](/src/com/computablefacts/junon) is a data transfer object for Java compatible with our platform API.
+
+## Jupiter
+
+[Jupiter](/src/com/computablefacts/jupiter)  implements 3 data stores on top of Apache Accumulo : one for blobs, one for terms and facts (a fact is a predicate expression that makes a declarative statement about a problem domain) and one for JSON objects.
+
+These data stores are not meant to be efficients but are intended to be easy to use.
+
+### BlobStore
+
+The [BlobStore](/src/com/computablefacts/jupiter/storage/blobstore) API allows
+your application to persist data objects. Methods are available to write and read
+opaque Strings, JSON and Files.
+
+```java
+Configurations configurations = ...;
+BlobStore blobStore = new BlobStore(configurations, "blobs" /* table name */);
+
+// Write blobs
+Set<String> noBlobSpecificVizLabels = Sets.newHashSet();
+
+try (BatchWriter writer = blobStore.writer()) {
+    
+    String str = ...;
+    blobStore.putString(writer, "my_strings", UUID.randomUUID().toString(), noBlobSpecificVizLabels, str);
+
+    Map<String, Object> json = ...;
+    blobStore.putJson(writer, "my_jsons", UUID.randomUUID().toString(), noBlobSpecificVizLabels, json);
+
+    File file = ...;
+    blobStore.putFile(writer, "my_files", UUID.randomUUID().toString(), noBlobSpecificVizLabels, file);
+}
+
+// Read blobs
+// For convenience, <dataset>_RAW_DATA authorizations are automatically added to each blob
+Authorizations auths = new Authorizations("MY_STRINGS_RAW_DATA", "MY_JSONS_RAW_DATA", "MY_FILES_RAW_DATA");
+
+blobStore.strings(auths, "my_strings", null, null).forEachRemaining(blob -> ...);
+blobStore.jsons(auths, "my_jsons", null, null).forEachRemaining(blob -> ...);
+blobStore.files(auths, "my_files", null, null).forEachRemaining(blob -> ...);
+```
+
+Note that it is possible to filter-out JSON fields at the tserver level before
+returning the JSON object to the client.
+
+```java
+Map<String, Object> json = new HashMap<>();
+json.put("first_name", "john");
+json.put("last_name", "doe");
+json.put("email", "john.doe@gmail.com");
+json.put("password", "&N?8LXtT7&f4@nH$");
+
+try (BatchWriter writer = blobStore.writer()) {
+    blobStore.putJson(writer, "my_jsons", UUID.randomUUID().toString(), Sets.newHashSet(), json);
+}
+
+Set<String> fieldsToKeep = Sets.newHashSet("first_name", "last_name", "email");
+Optional<Value> blob = blobStore.jsons(scanner, "my_jsons", null, fieldsToKeep).first();
+
+json.remove("password");
+Assert.assertEquals(json, Codecs.asObject(blob.get().toString()));
+```
+
+### TermStore
+
+The [TermStore](/src/com/computablefacts/jupiter/storage/termstore) API allows
+your application to persist buckets of key-value pairs. Numbers and dates are
+automatically lexicoded to maintain their native Java sort order.
+
+```java
+Configurations configurations = ...;
+TermStore termStore = new TermStore(configurations, "terms" /* table name */);
+
+Map<String, Object> bucket = new HashMap<>();
+bucket.put("first_name", "john");
+bucket.put("last_name", "doe");
+bucket.put("age", 37);
+bucket.put("last_seen", new Date());
+
+String dataset = "my_buckets";
+String bucketId = UUID.randomUUID().toString();
+Set<String> bucketSpecificLabels = Sets.newHashSet("MY_BUCKETS_RAW_DATA");
+
+// Write terms
+try (BatchWriter writer = termStore.writer()) {
+    
+    bucket.entrySet().forEach(keyValuePair -> {
+        
+        String field = keyValuePair.getKey();
+        Object value = keyValuePair.getValue();
+        Set<String> fieldSpecificLabels = Sets.newHashSet();
+        
+        boolean isOk = termStore.put(writer, dataset, bucketId, key, value, 1, bucketSpecificLabels, fieldSpecificLabels);
+    });
+}
+
+Authorizations auths = new Authorizations("MY_BUCKETS_RAW_DATA");
+
+/* Get the number of distinct buckets containing a given term */
+        
+// Wildcard query
+termStore.termCardinalityEstimationForBuckets(scanner, dataset, "joh*").forEachRemaining(estimation -> ...);
+
+// Range query
+termStore.termCardinalityEstimationForBuckets(scanner, dataset, null, 30, 40).forEachRemaining(estimation -> ...);
+
+/* Get buckets ids containing a given term */
+
+// Wildcard query
+termStore.bucketsIds(scanner, dataset, "joh*").forEachRemaining(term -> ...);
+        
+// Range query    
+termStore.bucketsIds(scanner, dataset, null, 30, 40, null).forEachRemaining(term -> ...);
+```
 
 ## Nona
 

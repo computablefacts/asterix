@@ -2,7 +2,7 @@ os: linux
 dist: focal
 language: java
 jdk:
-  - openjdk15
+  - openjdk11
 before_install:
   - sudo apt-get -q update
   - sudo apt-get -y install libmkl-dev
@@ -31,3 +31,5 @@ deploy:
       tags: true
 after_success:
   - bash <(curl -s https://codecov.io/bash) -t bb50f714-cd28-46ba-a397-cfcb188aa526
+after_failure:
+  - find /tmp/mac-*/logs -type f -exec cat {} +

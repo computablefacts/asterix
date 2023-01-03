@@ -42,6 +42,8 @@
     <logfmt.version>0.14</logfmt.version>
     <slf4j.version>2.0.3</slf4j.version>
     <guava.version>31.1-jre</guava.version>
+    <accumulo.version>1.10.1</accumulo.version>
+    <zookeeper.version>3.4.14</zookeeper.version>
     <re2j.version>1.7</re2j.version>
     <ahocorasick.version>0.6.3</ahocorasick.version>
     <carrot.version>2.4.5</carrot.version>
@@ -65,7 +67,6 @@
     <maven-jacoco-plugin.version>0.8.8</maven-jacoco-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <git-commit-id-plugin.version>2.2.4</git-commit-id-plugin.version>
   </properties>
 
   <dependencies>
@@ -88,6 +89,27 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.accumulo</groupId>
+      <artifactId>accumulo-core</artifactId>
+      <version>${accumulo.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.accumulo</groupId>
+      <artifactId>accumulo-server-base</artifactId>
+      <version>${accumulo.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.accumulo</groupId>
+      <artifactId>accumulo-minicluster</artifactId>
+      <version>${accumulo.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>${zookeeper.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.re2j</groupId>
@@ -252,6 +274,21 @@
                 <restrictImports
                   implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
                   <basePackages>
+                    <basePackage>com.computablefacts.jupiter.**</basePackage>
+                  </basePackages>
+                  <reason>Ban packages from being used in Jupiter</reason>
+                  <bannedImports>
+                    <bannedImport>com.computablefacts.decima.**</bannedImport>
+                    <bannedImport>com.computablefacts.junon.**</bannedImport>
+                    <bannedImport>com.computablefacts.morta.**</bannedImport>
+                    <bannedImport>com.computablefacts.nona.**</bannedImport>
+                    <bannedImport>java.util.logging.**</bannedImport>
+                    <bannedImport>java.sql.Date</bannedImport>
+                  </bannedImports>
+                </restrictImports>
+                <restrictImports
+                  implementation="de.skuzzle.enforcer.restrictimports.rule.RestrictImports">
+                  <basePackages>
                     <basePackage>com.computablefacts.nona.**</basePackage>
                   </basePackages>
                   <reason>Ban packages from being used in Nona</reason>
@@ -324,8 +361,9 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
-          <parallel>methods</parallel>
+          <parallel>classes</parallel>
           <threadCount>5</threadCount>
+          <reuseForks>false</reuseForks>
           <skipTests>false</skipTests>
           <argLine>-Xmx4g --add-opens java.base/java.util=ALL-UNNAMED</argLine>
         </configuration>
