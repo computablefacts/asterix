@@ -2,6 +2,7 @@ package com.computablefacts.jupiter.storage.datastore;
 
 import com.google.errorprone.annotations.CheckReturnValue;
 
+@Deprecated
 @CheckReturnValue
 public abstract class AbstractBlobProcessor implements AutoCloseable {
 

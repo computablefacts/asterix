@@ -154,4 +154,14 @@ public class GetTest {
 
     Assert.assertEquals(BoxedType.of(2), fn.evaluate(Function.definitions()));
   }
+
+  @Test
+  public void testGetObjectInObject() {
+
+    String json = "{\"root\":[{\"node\":{\"leaf\":1}}]}";
+
+    Function fn = new Function("GET(GET(GET(TO_JSON(" + Function.wrap(json) + "), root), 0), node)");
+
+    Assert.assertEquals(BoxedType.of(JsonCodec.asObject("{\"leaf\":1}")), fn.evaluate(Function.definitions()));
+  }
 }

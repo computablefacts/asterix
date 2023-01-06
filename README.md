@@ -11,6 +11,7 @@ Asterix's Maven group ID is `com.computablefacts` and its artifact ID is `asteri
 To add a dependency on Asterix using Maven, use the following:
 
 ```xml
+
 <dependency>
   <groupId>com.computablefacts</groupId>
   <artifactId>asterix</artifactId>
@@ -24,6 +25,7 @@ Snapshots of Asterix built from the `master` branch are available through Sonaty
 using the following dependency:
 
 ```xml
+
 <dependency>
   <groupId>com.computablefacts</groupId>
   <artifactId>asterix</artifactId>
@@ -35,6 +37,7 @@ In order to be able to download snapshots from Sonatype add the following profil
 to your project `pom.xml`:
 
 ```xml
+
 <profiles>
   <profile>
     <id>allow-snapshots</id>
@@ -76,11 +79,12 @@ $ git push origin master
 
 ## Packages Summary
 
-- [Asterix](#asterix).  Core data structures and algorithms.
-- [Decima](#decima).  Decima is a proof-of-concept Java implementation of the probabilistic logic programming language ProbLog.
-- [Junon](#junon).  Junon is a data transfer object for Java compatible with our platform API.
-- [Jupiter](#jupiter).  Jupiter is an easy to use storage layer for Apache Accumulo.
-- [Nona](#nona).  Nona is an extensible Excel-like programming language.
+- [Asterix](#asterix). Core data structures and algorithms.
+- [Decima](#decima). Decima is a proof-of-concept Java implementation of the probabilistic logic programming language
+  ProbLog.
+- [Junon](#junon). Junon is a data transfer object for Java compatible with our platform API.
+- [Jupiter](#jupiter). Jupiter is an easy to use storage layer for Apache Accumulo.
+- [Nona](#nona). Nona is an extensible Excel-like programming language.
 
 ## Asterix
 
@@ -109,13 +113,13 @@ and deal with overlaps between spans.
 ```java
 // Create a new Span object
 Span span=new Span("123456789",2,5);
-span.setFeature("has_digits","true");
-span.setFeature("has_letters","false");
+    span.setFeature("has_digits","true");
+    span.setFeature("has_letters","false");
 
 // Usage
-String text=span.text(); // "345"
-String rawText=span.rawText(); // "123456789"
-Map<String, String> features=span.features(); // {"has_digits":"true", "has_letters":"false"}
+    String text=span.text(); // "345"
+    String rawText=span.rawText(); // "123456789"
+    Map<String, String> features=span.features(); // {"has_digits":"true", "has_letters":"false"}
 ```
 
 ### SpanSequence
@@ -127,15 +131,15 @@ of spans.
 // Create a new SpanSequence object
 String text="123456789";
 
-Span span123=new Span(text,0,3);
-Span span456=new Span(text,3,6);
-Span span789=new Span(text,6,9);
+    Span span123=new Span(text,0,3);
+    Span span456=new Span(text,3,6);
+    Span span789=new Span(text,6,9);
 
-SpanSequence sequence=new SpanSequence(Lists.newArrayList(span123,span456,span789));
+    SpanSequence sequence=new SpanSequence(Lists.newArrayList(span123,span456,span789));
 
 // Usage
-int size=sequence.size() // 3
-Span span=sequence.span(1) // span456
+    int size=sequence.size() // 3
+    Span span=sequence.span(1) // span456
 ```
 
 ### ConfusionMatrix
@@ -162,15 +166,15 @@ Furthermore, two functions have been added to compute the following metrics :
 
 ```java
 ConfusionMatrix matrix=new ConfusionMatrix("");
-matrix.addTruePositives(620);
-matrix.addTrueNegatives(8820);
-matrix.addFalsePositives(180);
-matrix.addFalseNegatives(380);
+    matrix.addTruePositives(620);
+    matrix.addTrueNegatives(8820);
+    matrix.addFalsePositives(180);
+    matrix.addFalseNegatives(380);
 
-double mcc=matrix.matthewsCorrelationCoefficient(); // 0.0001
-double accuracy=matrix.accuracy(); // 0.000001
-double sensitivity=matrix.sensitivity(); // 0.000001
-...
+    double mcc=matrix.matthewsCorrelationCoefficient(); // 0.0001
+    double accuracy=matrix.accuracy(); // 0.000001
+    double sensitivity=matrix.sensitivity(); // 0.000001
+    ...
 ```
 
 ### StringIterator
@@ -183,18 +187,18 @@ hyphens, apostrophes, bullets, quotation marks, etc.
 ```java
 // Split a string on white-space characters
 String text="123 456 789";
-SpanSequence sequence=new SpanSequence();
-StringIterator iterator=new StringIterator(text);
+    SpanSequence sequence=new SpanSequence();
+    StringIterator iterator=new StringIterator(text);
 
-while(iterator.hasNext()){
+    while(iterator.hasNext()){
 
-  iterator.movePastWhitespace();
-  int begin=iterator.position();
-  iterator.moveToWhitespace();
-  int end=iterator.position();
-  
-  sequence.add(new Span(text,begin,end));
-}
+    iterator.movePastWhitespace();
+    int begin=iterator.position();
+    iterator.moveToWhitespace();
+    int end=iterator.position();
+
+    sequence.add(new Span(text,begin,end));
+    }
 
 // Here, sequence = ["123", "456", "789"]
 ```
@@ -207,16 +211,16 @@ selection of words (from a given list).
 
 ```java
 String text=
-  "Welcome to Yahoo!, the world’s most visited home page. Quickly find what you’re "+
-  "searching for, get in touch with friends and stay in-the-know with the latest news "+
-  "and information. CloudSponge provides an interface to easily enable your users to "+
-  "import contacts from a variety of the most popular webmail services including Yahoo, "+
-  "Gmail and Hotmail/MSN as well as popular desktop address books such as Mac Address Book "+
-  "and Outlook.";
+    "Welcome to Yahoo!, the world’s most visited home page. Quickly find what you’re "+
+    "searching for, get in touch with friends and stay in-the-know with the latest news "+
+    "and information. CloudSponge provides an interface to easily enable your users to "+
+    "import contacts from a variety of the most popular webmail services including Yahoo, "+
+    "Gmail and Hotmail/MSN as well as popular desktop address books such as Mac Address Book "+
+    "and Outlook.";
 
-String words=Lists.newArrayList("latest","news","CloudSponge");
+    String words=Lists.newArrayList("latest","news","CloudSponge");
 
-String snippet=SnippetExtractor.extract(words,text);
+    String snippet=SnippetExtractor.extract(words,text);
 
 // Here, snippet = "...touch with friends and stay in-the-know with the latest news and 
 //                  information. CloudSponge provides an interface to easily enable your 
@@ -236,19 +240,19 @@ The [Codecs](src/com/computablefacts/asterix/codecs) package contains helpers to
 
 ```java
 Pair<String, String> pair=new Pair<>("key1","value1");
-String json=JsonCodec.asString(pair); // {"key":"key1","value":"value1"}
+    String json=JsonCodec.asString(pair); // {"key":"key1","value":"value1"}
 
-List<Pair<?, ?>>pairs=Lists.newArrayList(new Pair<>("key1","value1"),new Pair<>("key2",2),new Pair<>("key3",false));
-String json=JsonCodec.asString(pairs); // "[{"key":"key1","value":"value1"},{"key":"key2","value":2},{"key":"key3","value":false}]"
+    List<Pair<?, ?>>pairs=Lists.newArrayList(new Pair<>("key1","value1"),new Pair<>("key2",2),new Pair<>("key3",false));
+    String json=JsonCodec.asString(pairs); // "[{"key":"key1","value":"value1"},{"key":"key2","value":2},{"key":"key3","value":false}]"
 
-Map<String, Object> json=JsonCodec.asObject("{\"key\":\"key1\",\"value\":\"value1\"}");
-Collection<Map<String, Object>>json=JsonCodec.asCollection("[{\"key\":\"key1\",\"value\":\"value1\"},{\"key\":\"key2\",\"value\":2},{\"key\":\"key3\",\"value\":false}]");
+    Map<String, Object> json=JsonCodec.asObject("{\"key\":\"key1\",\"value\":\"value1\"}");
+    Collection<Map<String, Object>>json=JsonCodec.asCollection("[{\"key\":\"key1\",\"value\":\"value1\"},{\"key\":\"key2\",\"value\":2},{\"key\":\"key3\",\"value\":false}]");
 
-Base64Codec.decodeB64(Base64.getDecoder(),"dGVzdA=="); // test
-Base64Codec.encodeB64(Base64.getEncoder(),"test"); // dGVzdA==
+    Base64Codec.decodeB64(Base64.getDecoder(),"dGVzdA=="); // test
+    Base64Codec.encodeB64(Base64.getEncoder(),"test"); // dGVzdA==
 
-BigDecimalCodec.encode(BigDecimal.valueOf(123456789L)); // ??9123456789*
-BigDecimalCodec.encode(BigDecimal.valueOf(-123456789L)); // **0876543210?
+    BigDecimalCodec.encode(BigDecimal.valueOf(123456789L)); // ??9123456789*
+    BigDecimalCodec.encode(BigDecimal.valueOf(-123456789L)); // **0876543210?
 ```
 
 ### AsciiProgressBar
@@ -260,15 +264,15 @@ an unbounded dataset.
 ```java
 // Progress bar on a bounded dataset
 AtomicInteger count=new AtomicInteger(0);
-AsciiProgressBar.ProgressBar bar=AsciiProgressBar.create();
-List<String> list=...
-list.peek(e->bar.update(count.incrementAndGet(),list.size())).forEach(System.out::println);
+    AsciiProgressBar.ProgressBar bar=AsciiProgressBar.create();
+    List<String> list=...
+    list.peek(e->bar.update(count.incrementAndGet(),list.size())).forEach(System.out::println);
 
 // Progress bar on an unbounded dataset
-AsciiProgressBar.IndeterminateProgressBar bar=AsciiProgressBar.createIndeterminate();
-Stream<String> stream=...
-stream.peek(e->bar.update()).forEach(System.out::println);
-bar.complete(); // reset
+    AsciiProgressBar.IndeterminateProgressBar bar=AsciiProgressBar.createIndeterminate();
+    Stream<String> stream=...
+    stream.peek(e->bar.update()).forEach(System.out::println);
+    bar.complete(); // reset
 ```
 
 ### AsciiTable
@@ -280,10 +284,10 @@ contains helpers to display a textual table.
 String[][]table=...
 
 // Display a table with header
-System.out.println(AsciiTable.format(table,true));
+    System.out.println(AsciiTable.format(table,true));
 
 // Display a table without header
-System.out.println(AsciiTable.format(table,false));
+    System.out.println(AsciiTable.format(table,false));
 ```
 
 ### DocSetLabeler
@@ -451,9 +455,7 @@ clients("Anna", "Smith", "annasmith23@gmail.com").
 
 ## Jupiter
 
-[Jupiter](/src/com/computablefacts/jupiter)  implements 3 data stores on top of Apache Accumulo : one for blobs, one for terms and facts (a fact is a predicate expression that makes a declarative statement about a problem domain) and one for JSON objects.
-
-These data stores are not meant to be efficients but are intended to be easy to use.
+[Jupiter](/src/com/computablefacts/jupiter)  implements a simple blob store on top of Apache Accumulo.
 
 ### BlobStore
 
@@ -462,104 +464,52 @@ your application to persist data objects. Methods are available to write and rea
 opaque Strings, JSON and Files.
 
 ```java
-Configurations configurations = ...;
-BlobStore blobStore = new BlobStore(configurations, "blobs" /* table name */);
+Configurations configurations=...;
+    BlobStore blobStore=new BlobStore(configurations,"blobs" /* table name */);
 
 // Write blobs
-Set<String> noBlobSpecificVizLabels = Sets.newHashSet();
+    Set<String> noBlobSpecificVizLabels=Sets.newHashSet();
 
-try (BatchWriter writer = blobStore.writer()) {
-    
-    String str = ...;
-    blobStore.putString(writer, "my_strings", UUID.randomUUID().toString(), noBlobSpecificVizLabels, str);
+    try(BatchWriter writer=blobStore.writer()){
 
-    Map<String, Object> json = ...;
-    blobStore.putJson(writer, "my_jsons", UUID.randomUUID().toString(), noBlobSpecificVizLabels, json);
+    String str=...;
+    blobStore.putString(writer,"my_strings",UUID.randomUUID().toString(),noBlobSpecificVizLabels,str);
 
-    File file = ...;
-    blobStore.putFile(writer, "my_files", UUID.randomUUID().toString(), noBlobSpecificVizLabels, file);
-}
+    Map<String, Object> json=...;
+    blobStore.putJson(writer,"my_jsons",UUID.randomUUID().toString(),noBlobSpecificVizLabels,json);
+
+    File file=...;
+    blobStore.putFile(writer,"my_files",UUID.randomUUID().toString(),noBlobSpecificVizLabels,file);
+    }
 
 // Read blobs
 // For convenience, <dataset>_RAW_DATA authorizations are automatically added to each blob
-Authorizations auths = new Authorizations("MY_STRINGS_RAW_DATA", "MY_JSONS_RAW_DATA", "MY_FILES_RAW_DATA");
+    Authorizations auths=new Authorizations("MY_STRINGS_RAW_DATA","MY_JSONS_RAW_DATA","MY_FILES_RAW_DATA");
 
-blobStore.strings(auths, "my_strings", null, null).forEachRemaining(blob -> ...);
-blobStore.jsons(auths, "my_jsons", null, null).forEachRemaining(blob -> ...);
-blobStore.files(auths, "my_files", null, null).forEachRemaining(blob -> ...);
+    blobStore.strings(auths,"my_strings",null,null).forEachRemaining(blob->...);
+    blobStore.jsons(auths,"my_jsons",null,null).forEachRemaining(blob->...);
+    blobStore.files(auths,"my_files",null,null).forEachRemaining(blob->...);
 ```
 
 Note that it is possible to filter-out JSON fields at the tserver level before
 returning the JSON object to the client.
 
 ```java
-Map<String, Object> json = new HashMap<>();
-json.put("first_name", "john");
-json.put("last_name", "doe");
-json.put("email", "john.doe@gmail.com");
-json.put("password", "&N?8LXtT7&f4@nH$");
+Map<String, Object> json=new HashMap<>();
+    json.put("first_name","john");
+    json.put("last_name","doe");
+    json.put("email","john.doe@gmail.com");
+    json.put("password","&N?8LXtT7&f4@nH$");
 
-try (BatchWriter writer = blobStore.writer()) {
-    blobStore.putJson(writer, "my_jsons", UUID.randomUUID().toString(), Sets.newHashSet(), json);
-}
+    try(BatchWriter writer=blobStore.writer()){
+    blobStore.putJson(writer,"my_jsons",UUID.randomUUID().toString(),Sets.newHashSet(),json);
+    }
 
-Set<String> fieldsToKeep = Sets.newHashSet("first_name", "last_name", "email");
-Optional<Value> blob = blobStore.jsons(scanner, "my_jsons", null, fieldsToKeep).first();
+    Set<String> fieldsToKeep=Sets.newHashSet("first_name","last_name","email");
+    Optional<Value> blob=blobStore.jsons(scanner,"my_jsons",null,fieldsToKeep).first();
 
-json.remove("password");
-Assert.assertEquals(json, Codecs.asObject(blob.get().toString()));
-```
-
-### TermStore
-
-The [TermStore](/src/com/computablefacts/jupiter/storage/termstore) API allows
-your application to persist buckets of key-value pairs. Numbers and dates are
-automatically lexicoded to maintain their native Java sort order.
-
-```java
-Configurations configurations = ...;
-TermStore termStore = new TermStore(configurations, "terms" /* table name */);
-
-Map<String, Object> bucket = new HashMap<>();
-bucket.put("first_name", "john");
-bucket.put("last_name", "doe");
-bucket.put("age", 37);
-bucket.put("last_seen", new Date());
-
-String dataset = "my_buckets";
-String bucketId = UUID.randomUUID().toString();
-Set<String> bucketSpecificLabels = Sets.newHashSet("MY_BUCKETS_RAW_DATA");
-
-// Write terms
-try (BatchWriter writer = termStore.writer()) {
-    
-    bucket.entrySet().forEach(keyValuePair -> {
-        
-        String field = keyValuePair.getKey();
-        Object value = keyValuePair.getValue();
-        Set<String> fieldSpecificLabels = Sets.newHashSet();
-        
-        boolean isOk = termStore.put(writer, dataset, bucketId, key, value, 1, bucketSpecificLabels, fieldSpecificLabels);
-    });
-}
-
-Authorizations auths = new Authorizations("MY_BUCKETS_RAW_DATA");
-
-/* Get the number of distinct buckets containing a given term */
-        
-// Wildcard query
-termStore.termCardinalityEstimationForBuckets(scanner, dataset, "joh*").forEachRemaining(estimation -> ...);
-
-// Range query
-termStore.termCardinalityEstimationForBuckets(scanner, dataset, null, 30, 40).forEachRemaining(estimation -> ...);
-
-/* Get buckets ids containing a given term */
-
-// Wildcard query
-termStore.bucketsIds(scanner, dataset, "joh*").forEachRemaining(term -> ...);
-        
-// Range query    
-termStore.bucketsIds(scanner, dataset, null, 30, 40, null).forEachRemaining(term -> ...);
+    json.remove("password");
+    Assert.assertEquals(json,Codecs.asObject(blob.get().toString()));
 ```
 
 ## Nona

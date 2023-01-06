@@ -3,8 +3,6 @@ package com.computablefacts.jupiter.shell;
 import static com.computablefacts.jupiter.Users.authorizations;
 import static com.computablefacts.jupiter.storage.Constants.SEPARATOR_NUL;
 import static com.computablefacts.jupiter.storage.datastore.DataStore.blobStoreName;
-import static com.computablefacts.jupiter.storage.datastore.DataStore.cacheName;
-import static com.computablefacts.jupiter.storage.datastore.DataStore.termStoreName;
 
 import com.computablefacts.asterix.Document;
 import com.computablefacts.asterix.IO;
@@ -14,12 +12,8 @@ import com.computablefacts.jupiter.Configurations;
 import com.computablefacts.jupiter.Users;
 import com.computablefacts.jupiter.storage.blobstore.Blob;
 import com.computablefacts.jupiter.storage.blobstore.BlobStore;
-import com.computablefacts.jupiter.storage.cache.Cache;
 import com.computablefacts.jupiter.storage.datastore.AccumuloBlobProcessor;
-import com.computablefacts.jupiter.storage.datastore.AccumuloHashProcessor;
-import com.computablefacts.jupiter.storage.datastore.AccumuloTermProcessor;
 import com.computablefacts.jupiter.storage.datastore.DataStore;
-import com.computablefacts.jupiter.storage.termstore.TermStore;
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -87,22 +81,6 @@ public class Shell {
         Preconditions.checkState(revokeAlterPermissionsOnBlobStore(configurations, datastore, getArg(args, "au")),
             "Revoke ALTER permission on BlobStore failed!");
         break;
-      case "termstore_grant_alter_permission":
-        Preconditions.checkState(grantAlterPermissionsOnTermStore(configurations, datastore, getArg(args, "au")),
-            "Set ALTER permission on TermStore failed!");
-        break;
-      case "termstore_revoke_alter_permission":
-        Preconditions.checkState(revokeAlterPermissionsOnTermStore(configurations, datastore, getArg(args, "au")),
-            "Revoke ALTER permission on TermStore failed!");
-        break;
-      case "cache_grant_alter_permission":
-        Preconditions.checkState(grantAlterPermissionsOnCache(configurations, datastore, getArg(args, "au")),
-            "Set ALTER permission on Cache failed!");
-        break;
-      case "cache_revoke_alter_permission":
-        Preconditions.checkState(revokeAlterPermissionsOnCache(configurations, datastore, getArg(args, "au")),
-            "Revoke ALTER permission on Cache failed!");
-        break;
       case "blobstore_grant_read_permission":
         Preconditions.checkState(grantReadPermissionOnBlobStore(configurations, datastore, getArg(args, "au")),
             "Set READ permission on BlobStore failed!");
@@ -110,22 +88,6 @@ public class Shell {
       case "blobstore_grant_write_permission":
         Preconditions.checkState(grantWritePermissionOnBlobStore(configurations, datastore, getArg(args, "au")),
             "Set WRITE permission on BlobStore failed!");
-        break;
-      case "termstore_grant_read_permission":
-        Preconditions.checkState(grantReadPermissionOnTermStore(configurations, datastore, getArg(args, "au")),
-            "Set READ permission on TermStore failed!");
-        break;
-      case "termstore_grant_write_permission":
-        Preconditions.checkState(grantWritePermissionOnTermStore(configurations, datastore, getArg(args, "au")),
-            "Set WRITE permission on TermStore failed!");
-        break;
-      case "cache_grant_read_permission":
-        Preconditions.checkState(grantReadPermissionOnCache(configurations, datastore, getArg(args, "au")),
-            "Set READ permission on Cache failed!");
-        break;
-      case "cache_grant_write_permission":
-        Preconditions.checkState(grantWritePermissionOnCache(configurations, datastore, getArg(args, "au")),
-            "Set WRITE permission on Cache failed!");
         break;
       case "create":
         Preconditions.checkState(create(configurations, datastore), "CREATE failed!");
@@ -150,10 +112,6 @@ public class Shell {
         Preconditions.checkState(
             ingest(configurations, datastore, Sets.newHashSet(Splitter.on(',').split(getArg(args, "ds"))),
                 getArg(args, "dir"), Boolean.parseBoolean(getArg(args, "hash", "false"))), "INGEST failed!");
-        break;
-      case "reindex":
-        Preconditions.checkState(reindex(configurations, datastore, getArg(args, "ds"), getArg(args, "auths")),
-            "REINDEX failed!");
         break;
       case "backup":
         Preconditions.checkState(
@@ -201,53 +159,6 @@ public class Shell {
         TablePermission.GRANT);
   }
 
-  public static boolean grantAlterPermissionsOnTermStore(Configurations configurations, String datastore,
-      String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    DataStore dataStore = new DataStore(configurations, datastore);
-
-    return Users.grantPermission(dataStore.configurations().connector(), username, dataStore.termStore().tableName(),
-        TablePermission.GRANT);
-  }
-
-  public static boolean revokeAlterPermissionsOnTermStore(Configurations configurations, String datastore,
-      String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    DataStore dataStore = new DataStore(configurations, datastore);
-
-    return Users.revokePermission(dataStore.configurations().connector(), username, dataStore.termStore().tableName(),
-        TablePermission.GRANT);
-  }
-
-  public static boolean grantAlterPermissionsOnCache(Configurations configurations, String datastore, String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    DataStore dataStore = new DataStore(configurations, datastore);
-
-    return Users.grantPermission(dataStore.configurations().connector(), username, dataStore.cache().tableName(),
-        TablePermission.GRANT);
-  }
-
-  public static boolean revokeAlterPermissionsOnCache(Configurations configurations, String datastore,
-      String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    DataStore dataStore = new DataStore(configurations, datastore);
-
-    return Users.revokePermission(dataStore.configurations().connector(), username, dataStore.cache().tableName(),
-        TablePermission.GRANT);
-  }
-
   public static boolean grantWritePermissionOnBlobStore(Configurations configurations, String datastore,
       String username) {
 
@@ -264,40 +175,6 @@ public class Shell {
     Preconditions.checkNotNull(datastore, "datastore should not be null");
 
     return new DataStore(configurations, datastore).grantReadPermissionOnBlobStore(username);
-  }
-
-  public static boolean grantWritePermissionOnTermStore(Configurations configurations, String datastore,
-      String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    return new DataStore(configurations, datastore).grantWritePermissionOnTermStore(username);
-  }
-
-  public static boolean grantReadPermissionOnTermStore(Configurations configurations, String datastore,
-      String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    return new DataStore(configurations, datastore).grantReadPermissionOnTermStore(username);
-  }
-
-  public static boolean grantWritePermissionOnCache(Configurations configurations, String datastore, String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    return new DataStore(configurations, datastore).grantWritePermissionOnCache(username);
-  }
-
-  public static boolean grantReadPermissionOnCache(Configurations configurations, String datastore, String username) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-
-    return new DataStore(configurations, datastore).grantReadPermissionOnCache(username);
   }
 
   public static boolean create(Configurations configurations, String datastore) {
@@ -341,8 +218,6 @@ public class Shell {
     try {
       DataStore ds = new DataStore(configurations, datastore);
       ds.blobStore().configurations().tableOperations().compact(ds.blobStore().tableName(), new CompactionConfig());
-      ds.termStore().configurations().tableOperations().compact(ds.termStore().tableName(), new CompactionConfig());
-      ds.cache().configurations().tableOperations().compact(ds.cache().tableName(), new CompactionConfig());
     } catch (AccumuloSecurityException | TableNotFoundException | AccumuloException e) {
       logger_.error(LogFormatter.create(true).message(e).formatError());
       return false;
@@ -365,14 +240,9 @@ public class Shell {
     AtomicInteger count = new AtomicInteger(0);
     Stopwatch stopwatch = Stopwatch.createStarted();
     BlobStore blobStore = new BlobStore(configurations, blobStoreName(datastore));
-    TermStore termStore = new TermStore(configurations, termStoreName(datastore));
-    Cache cache = new Cache(configurations, cacheName(datastore));
     AccumuloBlobProcessor blobProcessor = new AccumuloBlobProcessor(blobStore);
-    AccumuloTermProcessor termProcessor = new AccumuloTermProcessor(termStore);
-    AccumuloHashProcessor hashProcessor = hash ? new AccumuloHashProcessor(termStore) : null;
 
-    try (DataStore ds = new DataStore(datastore, blobStore, termStore, cache, blobProcessor, termProcessor,
-        hashProcessor)) {
+    try (DataStore ds = new DataStore(datastore, blobStore, blobProcessor)) {
       if (split) {
         try {
 
@@ -391,10 +261,6 @@ public class Shell {
           }
 
           ds.blobStore().configurations().tableOperations().addSplits(ds.blobStore().tableName(), splits);
-
-          ds.termStore().configurations().tableOperations().addSplits(ds.termStore().tableName(), splits);
-
-          ds.cache().configurations().tableOperations().addSplits(ds.cache().tableName(), splits);
 
         } catch (Exception e) {
           logger_.error(LogFormatter.create(true).message(e).formatError());
@@ -465,64 +331,6 @@ public class Shell {
           "INGEST of dataset %s for datastore %s failed", dataset, datastore);
 
       split = false;
-    }
-    return true;
-  }
-
-  public static boolean reindex(Configurations configurations, String datastore, String dataset, String auths) {
-
-    Preconditions.checkNotNull(configurations, "configurations should not be null");
-    Preconditions.checkNotNull(datastore, "datastore should not be null");
-    Preconditions.checkNotNull(dataset, "dataset should not be null");
-
-    AtomicInteger count = new AtomicInteger(0);
-    AtomicInteger ignored = new AtomicInteger(0);
-    Authorizations authorizations = authorizations(auths);
-    Stopwatch stopwatch = Stopwatch.createStarted();
-
-    try (DataStore ds = new DataStore(configurations, datastore)) {
-
-      if (!ds.termStore().removeDataset(dataset)) {
-        logger_.error(
-            LogFormatter.create(true).message(String.format("Dataset %s cannot be removed", dataset)).formatError());
-        return false;
-      }
-
-      View<Blob<Value>> iterator = ds.jsons(authorizations, dataset, null);
-
-      while (iterator.hasNext()) {
-
-        Blob<Value> blob = iterator.next();
-
-        if (count.incrementAndGet() % 100 == 0 && logger_.isInfoEnabled()) {
-          if (logger_.isInfoEnabled()) {
-            logger_.info(LogFormatter.create(true).message("Number of JSON written : " + count.get()).formatInfo());
-          }
-        }
-        if (!blob.isJson()) {
-          logger_.warn(LogFormatter.create(true).message("Total number of JSON ignored : " + ignored.incrementAndGet())
-              .formatWarn());
-          continue;
-        }
-
-        Map<String, Object> json = JsonCodec.asObject(blob.value().toString());
-        Document document = new Document(json);
-
-        if (!ds.reindex(dataset, document.docId(), json)) {
-          logger_.error(
-              LogFormatter.create(true).message("Re-indexation of " + document.docId() + " failed").formatError());
-          break;
-        }
-      }
-    }
-
-    stopwatch.stop();
-
-    if (logger_.isInfoEnabled()) {
-      logger_.info(LogFormatter.create(true).message("Total number of JSON processed : " + count.get()).formatInfo());
-      logger_.info(LogFormatter.create(true).message("Total number of JSON ignored : " + ignored.get()).formatInfo());
-      logger_.info(
-          LogFormatter.create(true).message("Elapsed time : " + stopwatch.elapsed(TimeUnit.SECONDS)).formatInfo());
     }
     return true;
   }

@@ -15,6 +15,7 @@ import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 @CheckReturnValue
 final public class AccumuloBlobProcessor extends AbstractBlobProcessor {
 
