@@ -1,7 +1,7 @@
 package com.computablefacts.decima.yaml;
 
 import com.computablefacts.Generated;
-import com.computablefacts.decima.problog.Clause;
+import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.Parser;
 import com.computablefacts.logfmt.LogFormatter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -103,7 +103,7 @@ final public class Rules {
 
     StringBuilder builder = new StringBuilder();
 
-    for (Rule rule : rules_) {
+    for (com.computablefacts.decima.yaml.Rule rule : rules_) {
       builder.append(rule.toString());
     }
     return builder.toString();
@@ -115,7 +115,7 @@ final public class Rules {
 
   private boolean isValid() {
 
-    Set<Clause> clauses = Parser.parseClauses(toString());
+    Set<AbstractClause> clauses = Parser.parseClauses(toString());
 
     for (Rule rule : rules_) {
       if (rule.tests_ != null) {

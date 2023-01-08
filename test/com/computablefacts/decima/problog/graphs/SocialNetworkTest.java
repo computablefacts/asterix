@@ -1,17 +1,19 @@
 package com.computablefacts.decima.problog.graphs;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
-import static com.computablefacts.decima.problog.Parser.parseClause;
-import static com.computablefacts.decima.problog.TestUtils.buildClause;
+import static com.computablefacts.decima.problog.Parser.parseFact;
+import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 import static com.computablefacts.decima.problog.TestUtils.checkProofs;
+import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.computablefacts.asterix.trie.Trie;
-import com.computablefacts.decima.problog.Clause;
+import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
+import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -35,8 +37,8 @@ public class SocialNetworkTest {
     // smokes(angelika)?
     Solver solver = new Solver(kb(), true);
     Literal query = new Literal("smokes", newConst("angelika"));
-    Set<Clause> proofs = solver.proofs(query);
-    Set<Clause> answers = Sets.newHashSet(solver.solve(query));
+    Set<AbstractClause> proofs = solver.proofs(query);
+    Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
     Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
@@ -47,9 +49,9 @@ public class SocialNetworkTest {
     Assert.assertEquals(1, answers.size());
     Assert.assertEquals(1, tries.size());
 
-    Clause answer1 = buildClause("smokes(angelika)",
+    Rule answer1 = newRule("smokes(angelika)",
         Lists.newArrayList("friend(angelika, jonas)", "person(jonas)", "person(angelika)", "person(jonas)"));
-    Clause answer2 = buildClause("smokes(angelika)", Lists.newArrayList("person(angelika)"));
+    Rule answer2 = newRule("smokes(angelika)", Lists.newArrayList("person(angelika)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
     Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2)));
@@ -91,8 +93,8 @@ public class SocialNetworkTest {
     // smokes(joris)?
     Solver solver = new Solver(kb(), true);
     Literal query = new Literal("smokes", newConst("joris"));
-    Set<Clause> proofs = solver.proofs(query);
-    Set<Clause> answers = Sets.newHashSet(solver.solve(query));
+    Set<AbstractClause> proofs = solver.proofs(query);
+    Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
     Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
@@ -103,14 +105,14 @@ public class SocialNetworkTest {
     Assert.assertEquals(1, answers.size());
     Assert.assertEquals(1, tries.size());
 
-    Clause answer1 = buildClause("smokes(joris)",
+    Rule answer1 = newRule("smokes(joris)",
         Lists.newArrayList("friend(joris, dimitar)", "person(dimitar)", "person(joris)", "person(dimitar)"));
-    Clause answer2 = buildClause("smokes(joris)", Lists.newArrayList("person(joris)"));
-    Clause answer3 = buildClause("smokes(joris)",
+    Rule answer2 = newRule("smokes(joris)", Lists.newArrayList("person(joris)"));
+    Rule answer3 = newRule("smokes(joris)",
         Lists.newArrayList("friend(joris, angelika)", "person(angelika)", "person(joris)", "person(angelika)"));
-    Clause answer4 = buildClause("smokes(joris)",
+    Rule answer4 = newRule("smokes(joris)",
         Lists.newArrayList("friend(joris, jonas)", "person(jonas)", "person(joris)", "person(jonas)"));
-    Clause answer5 = buildClause("smokes(joris)",
+    Rule answer5 = newRule("smokes(joris)",
         Lists.newArrayList("friend(joris, angelika)", "person(angelika)", "person(joris)", "friend(angelika, jonas)",
             "person(jonas)", "person(angelika)", "person(jonas)"));
 
@@ -169,21 +171,21 @@ public class SocialNetworkTest {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("person(angelika)."));
-    kb.azzert(parseClause("person(joris)."));
-    kb.azzert(parseClause("person(jonas)."));
-    kb.azzert(parseClause("person(dimitar)."));
-    kb.azzert(parseClause("friend(joris, jonas)."));
-    kb.azzert(parseClause("friend(joris, angelika)."));
-    kb.azzert(parseClause("friend(joris, dimitar)."));
-    kb.azzert(parseClause("friend(angelika, jonas)."));
+    kb.azzert(parseFact("person(angelika)."));
+    kb.azzert(parseFact("person(joris)."));
+    kb.azzert(parseFact("person(jonas)."));
+    kb.azzert(parseFact("person(dimitar)."));
+    kb.azzert(parseFact("friend(joris, jonas)."));
+    kb.azzert(parseFact("friend(joris, angelika)."));
+    kb.azzert(parseFact("friend(joris, dimitar)."));
+    kb.azzert(parseFact("friend(angelika, jonas)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("0.3::stress(X) :- person(X)."));
-    kb.azzert(parseClause("0.2::influences(X,Y) :- person(X), person(Y)."));
-    kb.azzert(parseClause("smokes(X) :- stress(X)."));
-    kb.azzert(parseClause("smokes(X) :- friend(X,Y), influences(Y,X), smokes(Y)."));
-    kb.azzert(parseClause("0.4::asthma(X) :- smokes(X)."));
+    kb.azzert(parseRule("0.3::stress(X) :- person(X)."));
+    kb.azzert(parseRule("0.2::influences(X,Y) :- person(X), person(Y)."));
+    kb.azzert(parseRule("smokes(X) :- stress(X)."));
+    kb.azzert(parseRule("smokes(X) :- friend(X,Y), influences(Y,X), smokes(Y)."));
+    kb.azzert(parseRule("0.4::asthma(X) :- smokes(X)."));
 
     return kb;
   }

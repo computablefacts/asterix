@@ -55,14 +55,15 @@ final public class BPlusTreeSubgoalFacts extends AbstractSubgoalFacts {
   }
 
   @Override
-  public boolean contains(Clause clause) {
-    String cacheKey = cacheKey(clause);
+  public boolean contains(Fact fact) {
+    String cacheKey = cacheKey(fact);
     return View.of(tree_.find(cacheKey.hashCode())).contains(value -> value.startsWith(cacheKey + SEPARATOR));
   }
 
   @Override
-  public Iterator<Clause> facts() {
-    return View.of(tree_.findAll()).map(value -> Parser.parseClause(value.substring(value.indexOf(SEPARATOR) + 1)));
+  public Iterator<Fact> facts() {
+    return View.of(tree_.findAll())
+        .map(value -> (Fact) Parser.parseClause(value.substring(value.indexOf(SEPARATOR) + 1)));
   }
 
   @Override
@@ -71,22 +72,21 @@ final public class BPlusTreeSubgoalFacts extends AbstractSubgoalFacts {
   }
 
   @Override
-  public void add(Clause clause) {
+  public void add(Fact fact) {
 
-    String cacheKey = cacheKey(clause);
-    tree_.insert(cacheKey.hashCode(), cacheKey + SEPARATOR + clause.toString() + ".");
+    String cacheKey = cacheKey(fact);
+    tree_.insert(cacheKey.hashCode(), cacheKey + SEPARATOR + fact.toString() + ".");
     nbFacts_++;
 
     if (peek_ != null) {
-      peek_.accept(clause.head());
+      peek_.accept(fact.head());
     }
   }
 
-  private String cacheKey(Clause clause) {
+  private String cacheKey(Fact fact) {
 
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isFact(), "clause should be a fact : %s", clause);
+    Preconditions.checkNotNull(fact, "fact should not be null");
 
-    return clause.head().id();
+    return fact.head().id();
   }
 }

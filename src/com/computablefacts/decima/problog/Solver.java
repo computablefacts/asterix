@@ -93,7 +93,7 @@ final public class Solver {
    * @param query goal.
    * @return proofs.
    */
-  public Set<Clause> proofs(Literal query) {
+  public Set<AbstractClause> proofs(Literal query) {
 
     Preconditions.checkNotNull(query, "query should not be null");
 
@@ -117,7 +117,7 @@ final public class Solver {
     search(root_);
 
     ProofAssistant assistant = new ProofAssistant(subgoals_.values());
-    Set<Clause> proofs = assistant.proofs(root_.literal());
+    Set<AbstractClause> proofs = assistant.proofs(root_.literal());
     return assistant.tableOfProofs();
   }
 
@@ -131,14 +131,18 @@ final public class Solver {
 
     Preconditions.checkNotNull(query, "query should not be null");
 
-    Set<Clause> proofs = proofs(query);
+    Set<AbstractClause> proofs = proofs(query);
     Map<Literal, Trie<Literal>> tries = new HashMap<>();
 
-    for (Clause proof : proofs) {
+    for (AbstractClause proof : proofs) {
       if (!tries.containsKey(proof.head())) {
         tries.put(proof.head(), new Trie<>());
       }
-      tries.get(proof.head()).insert(proof.body());
+      if (proof.isRule()) {
+        tries.get(proof.head()).insert(((Rule) proof).body());
+      } else {
+        tries.get(proof.head()).insert(Lists.newArrayList());
+      }
     }
     return tries;
   }
@@ -149,7 +153,7 @@ final public class Solver {
    * @param query goal.
    * @return facts answering the query.
    */
-  public Iterator<Clause> solve(Literal query) {
+  public Iterator<Fact> solve(Literal query) {
     return solve(query, -1);
   }
 
@@ -161,7 +165,7 @@ final public class Solver {
    *                      less than or equals to 0, returns all solutions.
    * @return facts answering the query.
    */
-  public Iterator<Clause> solve(Literal query, int maxSampleSize) {
+  public Iterator<Fact> solve(Literal query, int maxSampleSize) {
 
     Preconditions.checkNotNull(query, "query should not be null");
 
@@ -225,56 +229,55 @@ final public class Solver {
       String newPredicate = literal.predicate().name();
       List<AbstractTerm> newTerms = literal.terms().stream().map(t -> t.isConst() ? t : newConst("_"))
           .collect(Collectors.toList());
-      Iterator<Clause> facts = sub.facts();
+      Iterator<Fact> facts = sub.facts();
 
       if (!facts.hasNext()) {
 
         // The positive version of the rule yielded no fact
         // => resume the current rule evaluation
-        fact(subgoal, new Clause(new Literal(newPredicate, newTerms)));
+        fact(subgoal, new Fact(new Literal(newPredicate, newTerms)));
       } else {
 
         // The positive version of the rule yielded at least one fact
         // => fail the current rule evaluation iif the probability of the produced facts is 0
         while (facts.hasNext()) {
 
-          Clause fact = facts.next();
+          Fact fact = facts.next();
 
           if (fact.head().isRelevant(base)) {
             if (sub.rules().isEmpty()) {
 
               // Negate a probabilistic fact
-              Clause newFact = new Clause(
+              Fact newFact = new Fact(
                   new Literal(BigDecimal.ONE.subtract(fact.head().probability()), newPredicate, newTerms));
 
               if (!BigDecimal.ZERO.equals(newFact.head().probability())) {
                 fact(subgoal, newFact);
               } else {
-                subgoal.pop(new Clause(literal));
+                subgoal.pop(new Rule(literal));
               }
             } else {
 
               // Negate a probabilistic rule
               // i.e. if (q :- a, b) then ~q is rewritten as (~q :- ~a) or (~q :- ~b)
-              for (Clause rule : sub.rules()) {
+              for (Rule rule : sub.rules()) {
                 for (Literal lit : rule.body()) {
                   if (!lit.predicate().isPrimitive()) {
 
-                    Clause newRule = new Clause(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
+                    Rule newRule = new Rule(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
 
-                    subgoal.addRule(newRule);
+                    subgoal.add(newRule);
                   }
                 }
               }
 
-              List<Clause> rules = sub.proofs().stream().filter(Clause::isGrounded).collect(Collectors.toList());
+              List<Rule> rules = sub.proofs().stream().filter(Rule::isGrounded).collect(Collectors.toList());
 
-              for (Clause rule : rules) {
+              for (Rule rule : rules) {
                 for (Literal lit : rule.body()) {
                   if (!lit.predicate().isPrimitive()) {
 
-                    Clause newLiteral = new Clause(new Literal(newPredicate, newTerms),
-                        Lists.newArrayList(lit.negate()));
+                    Rule newLiteral = new Rule(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
 
                     rule(subgoal, newLiteral, false);
                   }
@@ -290,17 +293,16 @@ final public class Solver {
     } else {
 
       @Var boolean match = false;
-      Iterator<Clause> facts = kb_.facts(literal);
+      Iterator<Fact> facts = kb_.facts(literal);
 
       while (facts.hasNext()) {
 
-        Clause fact = facts.next();
-        Clause renamed = fact.rename();
-
-        Map<com.computablefacts.decima.problog.Var, AbstractTerm> env = literal.unify(renamed.head());
+        Fact fact = facts.next();
+        Literal renamed = fact.head();
+        Map<com.computablefacts.decima.problog.Var, AbstractTerm> env = literal.unify(renamed);
 
         if (env != null) {
-          fact(subgoal, renamed.subst(env));
+          fact(subgoal, new Fact(renamed.subst(env)));
           match = true;
         }
         if (maxSampleSizeReached()) {
@@ -308,13 +310,12 @@ final public class Solver {
         }
       }
 
-      Iterator<Clause> rules = kb_.rules(literal);
+      Iterator<Rule> rules = kb_.rules(literal);
 
       while (rules.hasNext()) {
 
-        Clause rule = rules.next();
-        Clause renamed = rule.rename();
-
+        Rule rule = rules.next();
+        Rule renamed = rule.rename();
         Map<com.computablefacts.decima.problog.Var, AbstractTerm> env = literal.unify(renamed.head());
 
         if (env != null) {
@@ -327,7 +328,7 @@ final public class Solver {
       }
 
       if (!match) {
-        subgoal.pop(new Clause(literal));
+        subgoal.pop(new Rule(literal));
       }
     }
   }
@@ -336,29 +337,28 @@ final public class Solver {
    * Store a fact, and inform all waiters of the fact too.
    *
    * @param subgoal subgoal.
-   * @param clause  fact.
+   * @param fact    the fact to add to the subgoal.
    */
-  private void fact(Subgoal subgoal, Clause clause) {
+  private void fact(Subgoal subgoal, Fact fact) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isFact(), "clause should be a fact : %s", clause);
+    Preconditions.checkNotNull(fact, "fact should not be null");
 
-    String hash = subgoal.literal().id() + clause.head().id();
+    String hash = subgoal.literal().id() + fact.head().id();
 
     if (!bf_.contains(hash)) {
       bf_.add(hash);
     } else {
-      if (subgoal.contains(clause)) { // Potentially expensive call...
+      if (subgoal.contains(fact)) { // Potentially expensive call...
         return;
       }
     }
 
-    subgoal.addFact(clause);
+    subgoal.add(fact);
 
-    for (Map.Entry<Subgoal, Clause> entry : subgoal.waiters()) {
+    for (Map.Entry<Subgoal, Rule> entry : subgoal.waiters()) {
 
-      ground(entry.getKey(), entry.getValue(), clause);
+      ground(entry.getKey(), entry.getValue(), fact);
 
       if (maxSampleSizeReached()) {
         return;
@@ -370,26 +370,26 @@ final public class Solver {
    * Evaluate a newly derived rule.
    *
    * @param subgoal subgoal.
-   * @param rule    rule.
+   * @param rule    the rule to add to the subgoal.
    * @param isInKb  true iif the rule has been loaded from the KB, false otherwise.
    */
-  private void rule(Subgoal subgoal, Clause rule, boolean isInKb) {
+  private void rule(Subgoal subgoal, Rule rule, boolean isInKb) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");
     Preconditions.checkArgument(rule.isRule(), "rule should be a rule : %s", rule);
 
-    subgoal.addRule(isInKb ? rule : null);
+    subgoal.add(isInKb ? rule : null);
     Literal first = rule.body().get(0);
 
     if (first.predicate().isPrimitive()) {
 
-      Iterator<Literal> literals = first.execute(kb_.definitions());
+      Iterator<Literal> facts = first.execute(kb_.definitions());
 
-      if (literals != null) {
-        while (literals.hasNext()) {
+      if (facts != null) {
+        while (facts.hasNext()) {
 
-          ground(subgoal, rule, new Clause(literals.next()));
+          ground(subgoal, rule, new Fact(facts.next()));
 
           if (maxSampleSizeReached()) {
             break;
@@ -404,18 +404,18 @@ final public class Solver {
     @Var Subgoal sub = subgoals_.get(first.tag());
 
     if (sub != null) {
-      sub.addWaiter(subgoal, rule);
+      sub.waiter(subgoal, rule);
     } else {
 
       sub = newSubgoal_.apply(first);
-      sub.addWaiter(subgoal, rule);
+      sub.waiter(subgoal, rule);
 
       subgoals_.put(sub.literal().tag(), sub);
 
       search(sub);
     }
 
-    Iterator<Clause> facts = sub.facts();
+    Iterator<Fact> facts = sub.facts();
 
     if (!facts.hasNext()) {
       subgoal.pop(rule);
@@ -435,32 +435,30 @@ final public class Solver {
    * Start grounding a rule.
    *
    * @param subgoal subgoal.
-   * @param rule    rule.
-   * @param fact    fact.
+   * @param rule    the rule to ground.
+   * @param fact    the fact associated with the rule's first body literal.
    */
-  private void ground(Subgoal subgoal, Clause rule, Clause fact) {
+  private void ground(Subgoal subgoal, Rule rule, Fact fact) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");
-    Preconditions.checkArgument(rule.isRule(), "clause should be a rule : %s", rule);
     Preconditions.checkNotNull(fact, "fact should not be null");
-    Preconditions.checkArgument(fact.isFact(), "clause should be a fact : %s", fact);
 
     // Rule with first body literal
-    Clause prevClause = rule.resolve(fact.head());
+    Rule prevRule = rule.resolve(fact.head());
 
-    Preconditions.checkState(prevClause != null, "resolution failed : rule = %s / head = %s", rule, fact);
+    Preconditions.checkState(prevRule != null, "resolution failed : rule = %s / head = %s", rule, fact);
 
     // Rule minus first body literal
-    Clause newClause = new Clause(prevClause.head(),
-        Collections.unmodifiableList(prevClause.body().subList(1, prevClause.body().size())));
+    Literal head = prevRule.head();
+    List<Literal> body = Collections.unmodifiableList(prevRule.body().subList(1, prevRule.body().size()));
 
-    subgoal.push(prevClause);
+    subgoal.push(prevRule);
 
-    if (newClause.isFact()) {
-      fact(subgoal, newClause);
+    if (body.isEmpty()) {
+      fact(subgoal, new Fact(head));
     } else {
-      rule(subgoal, newClause, false);
+      rule(subgoal, new Rule(head, body), false);
     }
   }
 }

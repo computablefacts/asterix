@@ -11,14 +11,14 @@ import javax.validation.constraints.NotNull;
 @CheckReturnValue
 final public class InMemoryKnowledgeBase extends AbstractKnowledgeBase {
 
-  private Map<Predicate, Set<Clause>> facts_ = new ConcurrentHashMap<>();
-  private Map<Predicate, Set<Clause>> rules_ = new ConcurrentHashMap<>();
+  private Map<Predicate, Set<Fact>> facts_ = new ConcurrentHashMap<>();
+  private Map<Predicate, Set<Rule>> rules_ = new ConcurrentHashMap<>();
 
   public InMemoryKnowledgeBase() {
   }
 
   @Override
-  protected void azzertFact(@NotNull Clause fact) {
+  protected void azzertFact(@NotNull Fact fact) {
 
     Literal head = fact.head();
     Predicate predicate = head.predicate();
@@ -30,7 +30,7 @@ final public class InMemoryKnowledgeBase extends AbstractKnowledgeBase {
   }
 
   @Override
-  protected void azzertRule(@NotNull Clause rule) {
+  protected void azzertRule(@NotNull Rule rule) {
 
     Literal head = rule.head();
     Predicate predicate = head.predicate();
@@ -42,24 +42,24 @@ final public class InMemoryKnowledgeBase extends AbstractKnowledgeBase {
   }
 
   @Override
-  protected Iterator<Clause> facts(@NotNull Literal literal) {
+  protected Iterator<Fact> facts(@NotNull Literal literal) {
     return facts_.getOrDefault(literal.predicate(), ConcurrentHashMap.newKeySet()).stream()
         .filter(f -> f.head().isRelevant(literal)).iterator();
   }
 
   @Override
-  protected Iterator<Clause> rules(@NotNull Literal literal) {
+  protected Iterator<Rule> rules(@NotNull Literal literal) {
     return rules_.getOrDefault(literal.predicate(), ConcurrentHashMap.newKeySet()).stream()
         .filter(r -> r.head().isRelevant(literal)).iterator();
   }
 
   @Override
-  public Iterator<Clause> facts() {
+  public Iterator<Fact> facts() {
     return facts_.values().stream().flatMap(Collection::stream).iterator();
   }
 
   @Override
-  public Iterator<Clause> rules() {
+  public Iterator<Rule> rules() {
     return rules_.values().stream().flatMap(Collection::stream).iterator();
   }
 }

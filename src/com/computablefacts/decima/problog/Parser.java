@@ -88,20 +88,20 @@ public final class Parser {
     return null;
   }
 
-  public static Set<Clause> parseClauses(String string) {
+  public static Set<AbstractClause> parseClauses(String string) {
 
     Preconditions.checkNotNull(string, "string should not be null");
 
     try {
 
-      Set<Clause> clauses = new HashSet<>();
+      Set<AbstractClause> clauses = new HashSet<>();
 
       for (String line : Splitter.on('\n').trimResults().omitEmptyStrings().split(string)) {
 
-        Clause clause = parseClause(new StringReader(line));
+        AbstractClause rule = parseClause(new StringReader(line));
 
-        if (clause != null) {
-          clauses.add(clause);
+        if (rule != null) {
+          clauses.add(rule);
         }
       }
       return clauses;
@@ -111,7 +111,17 @@ public final class Parser {
     return null;
   }
 
-  public static Clause parseClause(String string) {
+  public static Fact parseFact(String string) {
+    AbstractClause fact = parseClause(string);
+    return fact != null && fact.isFact() ? (Fact) fact : null;
+  }
+
+  public static Rule parseRule(String string) {
+    AbstractClause rule = parseClause(string);
+    return rule != null && rule.isRule() ? (Rule) rule : null;
+  }
+
+  public static AbstractClause parseClause(String string) {
 
     Preconditions.checkNotNull(string, "string should not be null");
 
@@ -145,14 +155,14 @@ public final class Parser {
     return head;
   }
 
-  private static Clause parseClause(Reader reader) throws IOException {
+  private static AbstractClause parseClause(Reader reader) throws IOException {
 
     Preconditions.checkNotNull(reader, "reader should not be null");
 
     return reorderBodyLiterals(parseClause(tokenizer(reader)));
   }
 
-  private static Clause parseClause(StreamTokenizer scan) throws IOException {
+  private static AbstractClause parseClause(StreamTokenizer scan) throws IOException {
 
     Preconditions.checkNotNull(scan, "scan should not be null");
 
@@ -180,16 +190,14 @@ public final class Parser {
       // Preconditions.checkState(scan.ttype == '.',
       // "[line " + scan.lineno() + "] Expected '.' after rule");
 
-      return new Clause(head, body);
+      return new Rule(head, body);
     }
 
     if (scan.ttype == '.') { // Fact
 
-      Clause fact = new Clause(head);
+      Preconditions.checkState(head.isGrounded(), head + " is not a valid fact (should be grounded)");
 
-      Preconditions.checkState(fact.isFact(), fact + " is not a valid fact");
-
-      return fact;
+      return new Fact(head);
     }
 
     // Query
@@ -205,7 +213,7 @@ public final class Parser {
     }
 
     if (scan.ttype == '?') {
-      return new Clause(goals.get(0));
+      return new Rule(goals.get(0));
     }
 
     Preconditions.checkState(false, "[line " + scan.lineno() + "] Expected '?' after query");
@@ -715,13 +723,17 @@ public final class Parser {
     return list;
   }
 
-  static Clause reorderBodyLiterals(Clause clause) {
+  static AbstractClause reorderBodyLiterals(AbstractClause clause) {
 
     if (clause == null) {
       return null;
     }
+    if (clause.isFact()) {
+      return clause;
+    }
 
-    List<Literal> body = new ArrayList<>(clause.body());
+    Rule rule = (Rule) clause;
+    List<Literal> body = new ArrayList<>(rule.body());
 
     // Reorder the rule body literals to :
     // - Ensure the output of one primitive is not used before it is computed
@@ -762,7 +774,7 @@ public final class Parser {
 
     Preconditions.checkState(list != null, "rule has cycles : %s", clause);
 
-    return new Clause(clause.head(), list);
+    return new Rule(clause.head(), list);
   }
 
   /**

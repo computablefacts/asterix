@@ -1,16 +1,18 @@
 package com.computablefacts.decima.problog.graphs;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
-import static com.computablefacts.decima.problog.Parser.parseClause;
-import static com.computablefacts.decima.problog.TestUtils.buildClause;
+import static com.computablefacts.decima.problog.Parser.parseFact;
+import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 import static com.computablefacts.decima.problog.TestUtils.checkProofs;
+import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.trie.Trie;
-import com.computablefacts.decima.problog.Clause;
+import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
+import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -35,23 +37,23 @@ public class GraphWithCycle2Test {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.1::edge(1, 2)."));
-    kb.azzert(parseClause("0.5::edge(1, 3)."));
-    kb.azzert(parseClause("0.7::edge(3, 1)."));
-    kb.azzert(parseClause("0.3::edge(2, 3)."));
-    kb.azzert(parseClause("0.2::edge(3, 2)."));
-    kb.azzert(parseClause("0.6::edge(2, 4)."));
+    kb.azzert(parseFact("0.1::edge(1, 2)."));
+    kb.azzert(parseFact("0.5::edge(1, 3)."));
+    kb.azzert(parseFact("0.7::edge(3, 1)."));
+    kb.azzert(parseFact("0.3::edge(2, 3)."));
+    kb.azzert(parseFact("0.2::edge(3, 2)."));
+    kb.azzert(parseFact("0.6::edge(2, 4)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("path(X, Y) :- edge(X, Y)."));
-    kb.azzert(parseClause("path(X, Y) :- path(X, Z), fn_eq(U, X, Z), fn_is_false(U), edge(Z, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- edge(X, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- path(X, Z), fn_eq(U, X, Z), fn_is_false(U), edge(Z, Y)."));
 
     // Query kb
     // path(1, 4)?
     Solver solver = new Solver(kb, true);
     Literal query = new Literal("path", newConst("1"), newConst("4"));
-    Set<Clause> proofs = solver.proofs(query);
-    Set<Clause> answers = Sets.newHashSet(solver.solve(query));
+    Set<AbstractClause> proofs = solver.proofs(query);
+    Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
     Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
@@ -62,12 +64,12 @@ public class GraphWithCycle2Test {
     Assert.assertEquals(1, answers.size());
     Assert.assertEquals(1, tries.size());
 
-    Clause answer1 = buildClause("path(1, 4)",
+    Rule answer1 = newRule("path(1, 4)",
         Lists.newArrayList("0.6::edge(2, 4)", "0.2::edge(3, 2)", "0.5::edge(1, 3)", "fn_eq(false, 1, 3)",
             "fn_is_false(false)", "fn_eq(false, 1, 2)", "fn_is_false(false)"));
-    Clause answer2 = buildClause("path(1, 4)",
+    Rule answer2 = newRule("path(1, 4)",
         Lists.newArrayList("0.6::edge(2, 4)", "0.1::edge(1, 2)", "fn_eq(false, 1, 2)", "fn_is_false(false)"));
-    Clause answer3 = buildClause("path(1, 4)",
+    Rule answer3 = newRule("path(1, 4)",
         Lists.newArrayList("0.6::edge(2, 4)", "0.2::edge(3, 2)", "0.3::edge(2, 3)", "0.1::edge(1, 2)",
             "fn_eq(false, 1, 2)", "fn_is_false(false)", "fn_eq(false, 1, 3)", "fn_is_false(false)",
             "fn_eq(false, 1, 2)", "fn_is_false(false)"));
@@ -90,16 +92,16 @@ public class GraphWithCycle2Test {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.1::edge(1, 2)."));
-    kb.azzert(parseClause("0.5::edge(1, 3)."));
-    kb.azzert(parseClause("0.7::edge(3, 1)."));
-    kb.azzert(parseClause("0.3::edge(2, 3)."));
-    kb.azzert(parseClause("0.2::edge(3, 2)."));
-    kb.azzert(parseClause("0.6::edge(2, 4)."));
+    kb.azzert(parseFact("0.1::edge(1, 2)."));
+    kb.azzert(parseFact("0.5::edge(1, 3)."));
+    kb.azzert(parseFact("0.7::edge(3, 1)."));
+    kb.azzert(parseFact("0.3::edge(2, 3)."));
+    kb.azzert(parseFact("0.2::edge(3, 2)."));
+    kb.azzert(parseFact("0.6::edge(2, 4)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("path(X, Y) :- edge(X, Y)."));
-    kb.azzert(parseClause("path(X, Y) :- path(X, Z), fn_eq(U, X, Z), fn_is_false(U), edge(Z, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- edge(X, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- path(X, Z), fn_eq(U, X, Z), fn_is_false(U), edge(Z, Y)."));
 
     // Query kb
     // path(1, 4)?

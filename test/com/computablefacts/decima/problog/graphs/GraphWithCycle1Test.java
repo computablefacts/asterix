@@ -1,15 +1,17 @@
 package com.computablefacts.decima.problog.graphs;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
-import static com.computablefacts.decima.problog.Parser.parseClause;
-import static com.computablefacts.decima.problog.TestUtils.buildClause;
+import static com.computablefacts.decima.problog.Parser.parseFact;
+import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
+import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.trie.Trie;
-import com.computablefacts.decima.problog.Clause;
+import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
+import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -34,33 +36,33 @@ public class GraphWithCycle1Test {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.9::edge(1, 2)."));//
-    // kb.azzert(parseClause("0.9::edge(2, 1)."));
-    kb.azzert(parseClause("0.2::edge(5, 4)."));//
-    kb.azzert(parseClause("0.4::edge(6, 5)."));//
-    // kb.azzert(parseClause("0.4::edge(5, 6)."));
-    // kb.azzert(parseClause("0.2::edge(4, 5)."));
-    kb.azzert(parseClause("0.8::edge(2, 3)."));//
-    // kb.azzert(parseClause("0.8::edge(3, 2)."));
-    kb.azzert(parseClause("0.7::edge(1, 6)."));//
-    kb.azzert(parseClause("0.5::edge(2, 6)."));//
-    kb.azzert(parseClause("0.5::edge(6, 2)."));//
-    // kb.azzert(parseClause("0.7::edge(6, 1)."));
-    kb.azzert(parseClause("0.7::edge(5, 3)."));//
-    kb.azzert(parseClause("0.7::edge(3, 5)."));//
-    kb.azzert(parseClause("0.6::edge(3, 4)."));//
-    // kb.azzert(parseClause("0.6::edge(4, 3)."));
+    kb.azzert(parseFact("0.9::edge(1, 2)."));//
+    // kb.azzert(parseFact("0.9::edge(2, 1)."));
+    kb.azzert(parseFact("0.2::edge(5, 4)."));//
+    kb.azzert(parseFact("0.4::edge(6, 5)."));//
+    // kb.azzert(parseFact("0.4::edge(5, 6)."));
+    // kb.azzert(parseFact("0.2::edge(4, 5)."));
+    kb.azzert(parseFact("0.8::edge(2, 3)."));//
+    // kb.azzert(parseFact("0.8::edge(3, 2)."));
+    kb.azzert(parseFact("0.7::edge(1, 6)."));//
+    kb.azzert(parseFact("0.5::edge(2, 6)."));//
+    kb.azzert(parseFact("0.5::edge(6, 2)."));//
+    // kb.azzert(parseFact("0.7::edge(6, 1)."));
+    kb.azzert(parseFact("0.7::edge(5, 3)."));//
+    kb.azzert(parseFact("0.7::edge(3, 5)."));//
+    kb.azzert(parseFact("0.6::edge(3, 4)."));//
+    // kb.azzert(parseFact("0.6::edge(4, 3)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("path(X, Y) :- edge(X, Y)."));
-    kb.azzert(parseClause("path(X, Y) :- edge(X, Z), fn_is_false(fn_eq(Z, Y)),  path(Z, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- edge(X, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- edge(X, Z), fn_is_false(fn_eq(Z, Y)),  path(Z, Y)."));
 
     // Query kb
     // path(1, 4)?
     Solver solver = new Solver(kb, true);
     Literal query = new Literal("path", newConst("1"), newConst("4"));
-    Set<Clause> proofs = solver.proofs(query);
-    Set<Clause> answers = Sets.newHashSet(solver.solve(query));
+    Set<AbstractClause> proofs = solver.proofs(query);
+    Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
     Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
@@ -71,58 +73,58 @@ public class GraphWithCycle1Test {
     Assert.assertEquals(1, answers.size());
     Assert.assertEquals(1, tries.size());
 
-    Clause answer1 = buildClause("path(1, 4)",
+    Rule answer1 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.8::edge(2, 3)", "0.7::edge(3, 5)",
             "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)", "fn_is_false(false)",
             "fn_eq(false, 2, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Clause answer2 = buildClause("path(1, 4)",
+    Rule answer2 = newRule("path(1, 4)",
         Lists.newArrayList("0.9::edge(1, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)",
             "0.6::edge(3, 4)", "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
             "fn_eq(false, 6, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Clause answer3 = buildClause("path(1, 4)",
+    Rule answer3 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)", "0.7::edge(3, 5)",
             "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)", "fn_is_false(false)",
             "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Clause answer4 = buildClause("path(1, 4)",
+    Rule answer4 = newRule("path(1, 4)",
         Lists.newArrayList("0.9::edge(1, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)",
             "0.7::edge(3, 5)", "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)",
             "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)",
             "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Clause answer5 = buildClause("path(1, 4)",
+    Rule answer5 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)", "0.6::edge(3, 4)",
             "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
             "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Clause answer6 = buildClause("path(1, 4)",
+    Rule answer6 = newRule("path(1, 4)",
         Lists.newArrayList("0.9::edge(1, 2)", "0.8::edge(2, 3)", "0.7::edge(3, 5)", "0.2::edge(5, 4)",
             "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)", "fn_is_false(false)",
             "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Clause answer7 = buildClause("path(1, 4)",
+    Rule answer7 = newRule("path(1, 4)",
         Lists.newArrayList("0.9::edge(1, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)", "0.2::edge(5, 4)",
             "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)",
             "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Clause answer8 = buildClause("path(1, 4)",
+    Rule answer8 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)",
             "0.7::edge(5, 3)", "0.6::edge(3, 4)", "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)",
             "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)",
             "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Clause answer9 = buildClause("path(1, 4)",
+    Rule answer9 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)",
             "0.7::edge(5, 3)", "0.7::edge(3, 5)", "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
             "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
             "fn_eq(false, 6, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)",
             "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Clause answer10 = buildClause("path(1, 4)",
+    Rule answer10 = newRule("path(1, 4)",
         Lists.newArrayList("0.9::edge(1, 2)", "0.8::edge(2, 3)", "0.6::edge(3, 4)", "fn_eq(false, 3, 4)",
             "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Clause answer11 = buildClause("path(1, 4)",
+    Rule answer11 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)",
             "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)",
             "fn_eq(false, 2, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Clause answer12 = buildClause("path(1, 4)",
+    Rule answer12 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.8::edge(2, 3)", "0.6::edge(3, 4)",
             "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)",
             "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Clause answer13 = buildClause("path(1, 4)",
+    Rule answer13 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.4::edge(6, 5)", "0.2::edge(5, 4)", "fn_eq(false, 5, 4)",
             "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
 
@@ -148,26 +150,26 @@ public class GraphWithCycle1Test {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.9::edge(1, 2)."));//
-    // kb.azzert(parseClause("0.9::edge(2, 1)."));
-    kb.azzert(parseClause("0.2::edge(5, 4)."));//
-    kb.azzert(parseClause("0.4::edge(6, 5)."));//
-    // kb.azzert(parseClause("0.4::edge(5, 6)."));
-    // kb.azzert(parseClause("0.2::edge(4, 5)."));
-    kb.azzert(parseClause("0.8::edge(2, 3)."));//
-    // kb.azzert(parseClause("0.8::edge(3, 2)."));
-    kb.azzert(parseClause("0.7::edge(1, 6)."));//
-    kb.azzert(parseClause("0.5::edge(2, 6)."));//
-    kb.azzert(parseClause("0.5::edge(6, 2)."));//
-    // kb.azzert(parseClause("0.7::edge(6, 1)."));
-    kb.azzert(parseClause("0.7::edge(5, 3)."));//
-    kb.azzert(parseClause("0.7::edge(3, 5)."));//
-    kb.azzert(parseClause("0.6::edge(3, 4)."));//
-    // kb.azzert(parseClause("0.6::edge(4, 3)."));
+    kb.azzert(parseFact("0.9::edge(1, 2)."));//
+    // kb.azzert(parseFact("0.9::edge(2, 1)."));
+    kb.azzert(parseFact("0.2::edge(5, 4)."));//
+    kb.azzert(parseFact("0.4::edge(6, 5)."));//
+    // kb.azzert(parseFact("0.4::edge(5, 6)."));
+    // kb.azzert(parseFact("0.2::edge(4, 5)."));
+    kb.azzert(parseFact("0.8::edge(2, 3)."));//
+    // kb.azzert(parseFact("0.8::edge(3, 2)."));
+    kb.azzert(parseFact("0.7::edge(1, 6)."));//
+    kb.azzert(parseFact("0.5::edge(2, 6)."));//
+    kb.azzert(parseFact("0.5::edge(6, 2)."));//
+    // kb.azzert(parseFact("0.7::edge(6, 1)."));
+    kb.azzert(parseFact("0.7::edge(5, 3)."));//
+    kb.azzert(parseFact("0.7::edge(3, 5)."));//
+    kb.azzert(parseFact("0.6::edge(3, 4)."));//
+    // kb.azzert(parseFact("0.6::edge(4, 3)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("path(X, Y) :- edge(X, Y)."));
-    kb.azzert(parseClause("path(X, Y) :- edge(X, Z), fn_is_false(fn_eq(Z, Y)),  path(Z, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- edge(X, Y)."));
+    kb.azzert(parseRule("path(X, Y) :- edge(X, Z), fn_is_false(fn_eq(Z, Y)),  path(Z, Y)."));
 
     // Query kb
     // path(1, 4)?

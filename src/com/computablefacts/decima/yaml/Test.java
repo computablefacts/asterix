@@ -1,7 +1,7 @@
 package com.computablefacts.decima.yaml;
 
 import com.computablefacts.Generated;
-import com.computablefacts.decima.problog.Clause;
+import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.Parser;
@@ -68,11 +68,11 @@ final public class Test {
     return builder.toString();
   }
 
-  public boolean matchOutput(Set<Clause> moreRules) {
+  public boolean matchOutput(Set<AbstractClause> moreRules) {
 
     if (!Strings.isNullOrEmpty(output_)) {
 
-      Set<Clause> facts = Parser.parseClauses(output_);
+      Set<AbstractClause> facts = Parser.parseClauses(output_);
       ProbabilityEstimator estimator = new ProbabilityEstimator(proofs(moreRules));
 
       return facts.stream().allMatch(fact -> {
@@ -83,14 +83,14 @@ final public class Test {
     return proofs(moreRules).isEmpty();
   }
 
-  private Set<Clause> proofs(Set<Clause> moreRules) {
+  private Set<AbstractClause> proofs(Set<AbstractClause> moreRules) {
 
-    Set<Clause> clauses =
+    Set<AbstractClause> rules =
         moreRules == null ? Parser.parseClauses(kb_) : Sets.union(moreRules, Parser.parseClauses(kb_));
     Literal query = Parser.parseQuery(query_);
 
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
-    kb.azzert(clauses);
+    kb.azzert(rules);
 
     Solver solver = new Solver(kb, true);
     return solver.proofs(query);

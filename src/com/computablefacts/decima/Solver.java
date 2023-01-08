@@ -4,9 +4,9 @@ import com.computablefacts.asterix.IO;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.console.ConsoleApp;
+import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.AbstractKnowledgeBase;
 import com.computablefacts.decima.problog.AbstractTerm;
-import com.computablefacts.decima.problog.Clause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.Parser;
@@ -117,8 +117,8 @@ final public class Solver extends ConsoleApp {
     Preconditions.checkArgument(facts.exists(), "Missing facts : %s", facts);
     Preconditions.checkArgument(queries.exists(), "Missing queries : %s", queries);
 
-    Set<Clause> clauses = View.of(rules).map(Parser::parseClause).concat(View.of(facts).map(Parser::parseClause))
-        .toSet();
+    Set<AbstractClause> clauses = View.of(rules).map(Parser::parseClause)
+        .concat(View.of(facts).map(Parser::parseClause)).toSet();
 
     Set<Literal> questions = View.of(queries).map(Parser::parseQuery).toSet();
 
@@ -126,41 +126,41 @@ final public class Solver extends ConsoleApp {
         : applyWithoutProbabilities(questions, clauses);
   }
 
-  private static Map<Literal, BigDecimal> applyWithProbabilities(Set<Literal> questions, Set<Clause> clauses) {
+  private static Map<Literal, BigDecimal> applyWithProbabilities(Set<Literal> questions, Set<AbstractClause> rules) {
 
     Preconditions.checkNotNull(questions, "questions should not be null");
-    Preconditions.checkNotNull(clauses, "clauses should not be null");
+    Preconditions.checkNotNull(rules, "clauses should not be null");
 
     Map<Literal, BigDecimal> answers = new HashMap<>();
     AbstractKnowledgeBase kb = new InMemoryKnowledgeBase();
-    clauses.forEach(kb::azzert);
+    rules.forEach(kb::azzert);
 
     com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb, true);
 
     for (Literal question : questions) {
 
       ProbabilityEstimator estimator = new ProbabilityEstimator(solver.proofs(question));
-      Map<Clause, BigDecimal> probabilities = estimator.probabilities();
+      Map<com.computablefacts.decima.problog.Fact, BigDecimal> probabilities = estimator.probabilities();
 
       probabilities.forEach((head, probability) -> answers.put(head.head(), probability));
     }
     return answers;
   }
 
-  private static Map<Literal, BigDecimal> applyWithoutProbabilities(Set<Literal> questions, Set<Clause> clauses) {
+  private static Map<Literal, BigDecimal> applyWithoutProbabilities(Set<Literal> questions, Set<AbstractClause> rules) {
 
     Preconditions.checkNotNull(questions, "questions should not be null");
-    Preconditions.checkNotNull(clauses, "clauses should not be null");
+    Preconditions.checkNotNull(rules, "clauses should not be null");
 
     Map<Literal, BigDecimal> answers = new HashMap<>();
     AbstractKnowledgeBase kb = new InMemoryKnowledgeBase();
-    clauses.forEach(kb::azzert);
+    rules.forEach(kb::azzert);
 
     com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb, false);
 
     for (Literal question : questions) {
 
-      Iterator<Clause> iterator = solver.solve(question);
+      Iterator<com.computablefacts.decima.problog.Fact> iterator = solver.solve(question);
 
       while (iterator.hasNext()) {
         answers.put(iterator.next().head(), BigDecimal.ONE);

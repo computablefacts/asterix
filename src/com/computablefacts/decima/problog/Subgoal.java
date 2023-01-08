@@ -30,12 +30,12 @@ final public class Subgoal {
   private final boolean computeProofs_;
 
   // Parent rules benefiting from this sub-goal resolution
-  private final Set<Map.Entry<Subgoal, Clause>> waiters_ = ConcurrentHashMap.newKeySet();
+  private final Set<Map.Entry<Subgoal, Rule>> waiters_ = ConcurrentHashMap.newKeySet();
 
   // Facts derived for this subgoal
   private final AbstractSubgoalFacts facts_;
-  private final List<Clause> rules_ = new ArrayList<>();
-  private final List<Clause> proofs_ = new ArrayList<>();
+  private final List<Rule> rules_ = new ArrayList<>();
+  private final List<Rule> proofs_ = new ArrayList<>();
 
   public Subgoal(Literal literal, AbstractSubgoalFacts facts, boolean computeProofs) {
 
@@ -76,28 +76,17 @@ final public class Subgoal {
   }
 
   @Generated
-  public Set<Clause> rules() {
+  public Set<Rule> rules() {
     return Sets.newHashSet(rules_);
   }
 
   @Generated
-  void addRule(Clause rule) {
-    if (rule != null) {
-      rules_.add(rule);
-    }
+  boolean contains(Fact fact) {
+    return facts_.contains(fact);
   }
 
   @Generated
-  boolean contains(Clause clause) {
-
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isFact(), "clause should be a fact : %s", clause);
-
-    return facts_.contains(clause);
-  }
-
-  @Generated
-  Iterator<Clause> facts() {
+  Iterator<Fact> facts() {
     return facts_.facts();
   }
 
@@ -107,50 +96,59 @@ final public class Subgoal {
   }
 
   @Generated
-  Set<Map.Entry<Subgoal, Clause>> waiters() {
+  Set<Map.Entry<Subgoal, Rule>> waiters() {
     return waiters_;
   }
 
-  void addWaiter(Subgoal subgoal, Clause clause) {
+  void waiter(Subgoal subgoal, Rule rule) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isRule(), "clause should be a rule : %s", clause);
+    Preconditions.checkNotNull(rule, "clause should not be null");
 
-    waiters_.add(new AbstractMap.SimpleEntry<>(subgoal, clause));
+    waiters_.add(new AbstractMap.SimpleEntry<>(subgoal, rule));
+  }
+
+  /**
+   * Add a rule to the subgoal.
+   *
+   * @param rule the rule to add.
+   */
+  void add(Rule rule) {
+    if (rule != null) {
+      rules_.add(rule);
+    }
   }
 
   /**
    * Add a fact to the subgoal.
    *
-   * @param clause the fact to add.
+   * @param fact the fact to add.
    */
-  void addFact(Clause clause) {
+  void add(Fact fact) {
 
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isFact(), "clause should be a fact : %s", clause);
+    Preconditions.checkNotNull(fact, "fact should not be null");
 
-    facts_.add(clause);
+    facts_.add(fact);
   }
 
-  Collection<Clause> proofs() {
+  Collection<Rule> proofs() {
     return proofs_;
   }
 
-  void push(Clause clause) {
+  void push(Rule rule) {
 
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isRule(), "clause should be a rule : %s", clause);
+    Preconditions.checkNotNull(rule, "clause should not be null");
+    Preconditions.checkArgument(rule.isRule(), "clause should be a rule : %s", rule);
 
     if (!computeProofs_) {
       return;
     }
 
-    @com.google.errorprone.annotations.Var Clause prev = null;
+    @com.google.errorprone.annotations.Var Rule prev = null;
 
     if (!proofs_.isEmpty()) {
       for (int i = proofs_.size() - 1; i >= 0; i--) {
-        if (proofs_.get(i).head().isRelevant(clause.head()) && proofs_.get(i).hasSuffix(clause.body())) {
+        if (proofs_.get(i).head().isRelevant(rule.head()) && proofs_.get(i).hasSuffix(rule.body())) {
           prev = proofs_.remove(i);
           break;
         }
@@ -159,7 +157,7 @@ final public class Subgoal {
 
     if (prev == null) {
       for (int i = rules_.size() - 1; i >= 0; i--) {
-        if (rules_.get(i).head().isRelevant(clause.head()) && rules_.get(i).hasSuffix(clause.body())) {
+        if (rules_.get(i).head().isRelevant(rule.head()) && rules_.get(i).hasSuffix(rule.body())) {
           prev = rules_.get(i);
           break;
         }
@@ -168,11 +166,11 @@ final public class Subgoal {
 
     Preconditions.checkState(prev != null, "prev should not be null");
 
-    @com.google.errorprone.annotations.Var Clause proof = merge(clause, prev);
+    @com.google.errorprone.annotations.Var Rule proof = merge(rule, prev);
 
-    if (!proof.isGrounded() && clause.isGrounded()) {
+    if (!proof.isGrounded() && rule.isGrounded()) {
 
-      int length = proof.body().size() - clause.body().size();
+      int length = proof.body().size() - rule.body().size();
       List<Literal> prefix = proof.body().subList(0, length);
 
       // If the clause is grounded but the proof is not, we must backtrack in the tree
@@ -185,7 +183,7 @@ final public class Subgoal {
           Preconditions.checkState(isGrounded, "proof should be grounded : %s", proofs_.get(i));
 
           body.addAll(proof.body().subList(length, proof.body().size()));
-          proof = new Clause(proof.head(), body);
+          proof = new Rule(proof.head(), body);
           break;
         }
       }
@@ -194,9 +192,9 @@ final public class Subgoal {
     proofs_.add(proof);
   }
 
-  void pop(Clause clause) {
+  void pop(Rule rule) {
 
-    Preconditions.checkNotNull(clause, "clause should not be null");
+    Preconditions.checkNotNull(rule, "clause should not be null");
 
     if (!computeProofs_) {
       return;
@@ -205,10 +203,10 @@ final public class Subgoal {
     // Deal with primitives
     if (!proofs_.isEmpty()) {
 
-      List<Clause> removed = new ArrayList<>();
+      List<Rule> removed = new ArrayList<>();
 
       for (int i = proofs_.size() - 1; i >= 0; i--) {
-        if (proofs_.get(i).head().isRelevant(clause.head()) && proofs_.get(i).hasSuffix(clause.body())) {
+        if (proofs_.get(i).head().isRelevant(rule.head()) && proofs_.get(i).hasSuffix(rule.body())) {
           removed.add(proofs_.get(i));
         }
       }
@@ -217,13 +215,13 @@ final public class Subgoal {
     }
 
     // Deal with negation
-    for (Map.Entry<Subgoal, Clause> waiter : waiters_) {
+    for (Map.Entry<Subgoal, Rule> waiter : waiters_) {
 
-      List<Clause> removed = new ArrayList<>();
-      List<Clause> stack = waiter.getKey().proofs_;
+      List<Rule> removed = new ArrayList<>();
+      List<Rule> stack = waiter.getKey().proofs_;
 
       for (int i = stack.size() - 1; i >= 0; i--) {
-        if (stack.get(i).body().get(stack.get(i).body().size() - 1).isRelevant(clause.head())) {
+        if (stack.get(i).body().get(stack.get(i).body().size() - 1).isRelevant(rule.head())) {
           removed.add(stack.get(i));
         }
       }
@@ -232,7 +230,7 @@ final public class Subgoal {
     }
   }
 
-  private Clause merge(Clause cur, Clause prev) {
+  private Rule merge(Rule cur, Rule prev) {
 
     Preconditions.checkNotNull(cur, "cur should not be null");
     Preconditions.checkArgument(cur.isRule(), "cur should be a rule : %s", cur);
@@ -253,7 +251,7 @@ final public class Subgoal {
     }
 
     // 2 - Fill prev rule
-    Clause merged = prev.subst(env);
+    Rule merged = prev.subst(env);
 
     // 3 - Transfer probabilities to the right literals
     Literal head = merged.head();
@@ -265,6 +263,6 @@ final public class Subgoal {
     }
 
     // 4 - Create a new cur
-    return new Clause(head, body);
+    return new Rule(head, body);
   }
 }

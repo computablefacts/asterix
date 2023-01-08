@@ -1,17 +1,19 @@
 package com.computablefacts.decima.problog.graphs;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
-import static com.computablefacts.decima.problog.Parser.parseClause;
-import static com.computablefacts.decima.problog.TestUtils.buildClause;
+import static com.computablefacts.decima.problog.Parser.parseFact;
+import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 import static com.computablefacts.decima.problog.TestUtils.checkProofs;
+import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.computablefacts.asterix.trie.Trie;
-import com.computablefacts.decima.problog.Clause;
+import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
+import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -32,21 +34,21 @@ public class ToothacheTest {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.10::cavity(a)."));
-    kb.azzert(parseClause("0.05::gum_disease(a)."));
+    kb.azzert(parseFact("0.10::cavity(a)."));
+    kb.azzert(parseFact("0.05::gum_disease(a)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("1.00::toothache(X) :- cavity(X), gum_disease(X)."));
-    kb.azzert(parseClause("0.60::toothache(X) :- cavity(X), ~gum_disease(X)."));
-    kb.azzert(parseClause("0.30::toothache(X) :- ~cavity(X), gum_disease(X)."));
-    kb.azzert(parseClause("0.05::toothache(X) :- ~cavity(X), ~gum_disease(X)."));
+    kb.azzert(parseRule("1.00::toothache(X) :- cavity(X), gum_disease(X)."));
+    kb.azzert(parseRule("0.60::toothache(X) :- cavity(X), ~gum_disease(X)."));
+    kb.azzert(parseRule("0.30::toothache(X) :- ~cavity(X), gum_disease(X)."));
+    kb.azzert(parseRule("0.05::toothache(X) :- ~cavity(X), ~gum_disease(X)."));
 
     // Query kb
     // path(1, 6)?
     Solver solver = new Solver(kb, true);
     Literal query = new Literal("toothache", newConst("a"));
-    Set<Clause> proofs = solver.proofs(query);
-    Set<Clause> answers = Sets.newHashSet(solver.solve(query));
+    Set<AbstractClause> proofs = solver.proofs(query);
+    Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
     Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
@@ -57,10 +59,10 @@ public class ToothacheTest {
     Assert.assertEquals(1, answers.size());
     Assert.assertEquals(1, tries.size());
 
-    Clause answer1 = buildClause("toothache(a)", Lists.newArrayList("0.9::~cavity(a)", "0.95::~gum_disease(a)"));
-    Clause answer2 = buildClause("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.05::gum_disease(a)"));
-    Clause answer3 = buildClause("toothache(a)", Lists.newArrayList("0.9::~cavity(a)", "0.05::gum_disease(a)"));
-    Clause answer4 = buildClause("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.95::~gum_disease(a)"));
+    Rule answer1 = newRule("toothache(a)", Lists.newArrayList("0.9::~cavity(a)", "0.95::~gum_disease(a)"));
+    Rule answer2 = newRule("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.05::gum_disease(a)"));
+    Rule answer3 = newRule("toothache(a)", Lists.newArrayList("0.9::~cavity(a)", "0.05::gum_disease(a)"));
+    Rule answer4 = newRule("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.95::~gum_disease(a)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3, answer4)));
     Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3, answer4)));
@@ -80,14 +82,14 @@ public class ToothacheTest {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.10::cavity(a)."));
-    kb.azzert(parseClause("0.05::gum_disease(a)."));
+    kb.azzert(parseFact("0.10::cavity(a)."));
+    kb.azzert(parseFact("0.05::gum_disease(a)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("1.00::toothache(X) :- cavity(X), gum_disease(X)."));
-    kb.azzert(parseClause("0.60::toothache(X) :- cavity(X), ~gum_disease(X)."));
-    kb.azzert(parseClause("0.30::toothache(X) :- ~cavity(X), gum_disease(X)."));
-    kb.azzert(parseClause("0.05::toothache(X) :- ~cavity(X), ~gum_disease(X)."));
+    kb.azzert(parseRule("1.00::toothache(X) :- cavity(X), gum_disease(X)."));
+    kb.azzert(parseRule("0.60::toothache(X) :- cavity(X), ~gum_disease(X)."));
+    kb.azzert(parseRule("0.30::toothache(X) :- ~cavity(X), gum_disease(X)."));
+    kb.azzert(parseRule("0.05::toothache(X) :- ~cavity(X), ~gum_disease(X)."));
 
     // Query kb
     // path(1, 6)?

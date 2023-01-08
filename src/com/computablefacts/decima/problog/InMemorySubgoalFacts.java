@@ -8,18 +8,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @CheckReturnValue
 final public class InMemorySubgoalFacts extends AbstractSubgoalFacts {
 
-  private final Set<Clause> facts_ = ConcurrentHashMap.newKeySet();
+  private final Set<Fact> facts_ = ConcurrentHashMap.newKeySet();
 
   public InMemorySubgoalFacts() {
   }
 
   @Override
-  public boolean contains(Clause clause) {
-    return facts_.contains(clause);
+  public boolean contains(Fact rule) {
+    return facts_.contains(rule);
   }
 
   @Override
-  public Iterator<Clause> facts() {
+  public Iterator<Fact> facts() {
     return facts_.iterator();
   }
 
@@ -29,7 +29,7 @@ final public class InMemorySubgoalFacts extends AbstractSubgoalFacts {
   }
 
   @Override
-  public void add(Clause clause) {
-    facts_.add(clause);
+  public void add(Fact rule) {
+    facts_.add(rule);
   }
 }

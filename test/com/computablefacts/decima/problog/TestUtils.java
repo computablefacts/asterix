@@ -18,18 +18,18 @@ final public class TestUtils {
   private TestUtils() {
   }
 
-  public static Clause buildClause(String head, List<String> body) {
+  public static Rule newRule(String head, List<String> body) {
 
     Literal newHead = parseClause(head + ".").head();
     List<Literal> newBody = body.stream().map(s -> parseClause(s + ".").head()).collect(Collectors.toList());
 
-    Clause clause = new Clause(newHead, newBody);
-    Preconditions.checkState(clause.isGrounded(), "invalid clause : %s", clause);
-    return clause;
+    Rule rule = new Rule(newHead, newBody);
+    Preconditions.checkState(rule.isGrounded(), "invalid clause : %s", rule);
+    return rule;
   }
 
-  public static boolean checkAnswers(Set<Clause> actual, Set<Clause> expected) {
-    for (Clause answer : expected) {
+  public static boolean checkAnswers(Set<? extends AbstractClause> actual, Set<? extends AbstractClause> expected) {
+    for (AbstractClause answer : expected) {
 
       System.out.println("Checking answer : " + answer);
       Stopwatch stopwatch = Stopwatch.createStarted();
@@ -43,12 +43,13 @@ final public class TestUtils {
     return true;
   }
 
-  public static boolean checkProofs(Map<Literal, Trie<Literal>> actual, Set<Clause> expected) {
+  public static boolean checkProofs(Map<Literal, Trie<Literal>> actual, Set<? extends AbstractClause> expected) {
     return checkProofs(actual, expected, false);
   }
 
-  public static boolean checkProofs(Map<Literal, Trie<Literal>> actual, Set<Clause> expected, boolean ignoreFunctions) {
-    for (Clause proof : expected) {
+  public static boolean checkProofs(Map<Literal, Trie<Literal>> actual, Set<? extends AbstractClause> expected,
+      boolean ignoreFunctions) {
+    for (AbstractClause proof : expected) {
 
       System.out.println("Checking proof : " + proof);
       Stopwatch stopwatch = Stopwatch.createStarted();
@@ -59,8 +60,9 @@ final public class TestUtils {
         }
       } else {
 
+        Rule rule = (Rule) proof;
         List<List<Literal>> bodies = new ArrayList<>();
-        permute(proof.body().stream().filter(b -> !ignoreFunctions || !b.predicate().isPrimitive())
+        permute(rule.body().stream().filter(b -> !ignoreFunctions || !b.predicate().isPrimitive())
             .collect(Collectors.toList()), bodies);
 
         if (bodies.stream().noneMatch(body -> {
@@ -84,7 +86,7 @@ final public class TestUtils {
     return true;
   }
 
-  private static boolean isValidAnswer(Set<Clause> answers, Literal fact) {
+  private static boolean isValidAnswer(Set<? extends AbstractClause> answers, Literal fact) {
 
     Preconditions.checkState(fact.isGrounded(), "invalid fact : %s", fact);
 

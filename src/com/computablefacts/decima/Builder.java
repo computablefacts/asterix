@@ -8,7 +8,7 @@ import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.console.ConsoleApp;
 import com.computablefacts.decima.problog.AbstractTerm;
-import com.computablefacts.decima.problog.Clause;
+import com.computablefacts.decima.problog.Fact;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
 import com.google.common.base.Preconditions;
@@ -30,22 +30,22 @@ final public class Builder extends ConsoleApp {
 
   private static final char SEPARATOR = '¤';
 
-  public static Clause json(String namespace, String uuid, String json) {
+  public static Fact json(String namespace, String uuid, String json) {
 
     Preconditions.checkNotNull(namespace, "namespace should not be null");
     Preconditions.checkNotNull(uuid, "uuid should not be null");
     Preconditions.checkNotNull(json, "json should not be null");
 
-    return new Clause(new Literal("json", Lists.newArrayList(newConst(namespace), newConst(uuid), newConst(json))));
+    return new Fact(new Literal("json", Lists.newArrayList(newConst(namespace), newConst(uuid), newConst(json))));
   }
 
-  public static Set<Clause> jsonPaths(String namespace, String uuid, String json) {
+  public static Set<Fact> jsonPaths(String namespace, String uuid, String json) {
 
     Preconditions.checkNotNull(namespace, "namespace should not be null");
     Preconditions.checkNotNull(uuid, "uuid should not be null");
     Preconditions.checkNotNull(json, "json should not be null");
 
-    Set<Clause> clauses = new HashSet<>();
+    Set<Fact> rules = new HashSet<>();
 
     JsonCodec.flatten(json, SEPARATOR).forEach((k, v) -> {
 
@@ -66,9 +66,9 @@ final public class Builder extends ConsoleApp {
       });
       terms.add(newConst(v == null ? "null" : v.toString()));
 
-      clauses.add(new Clause(new Literal("json_path", terms)));
+      rules.add(new Fact(new Literal("json_path", terms)));
     });
-    return clauses;
+    return rules;
   }
 
   public static void main(String[] args) {

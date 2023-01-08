@@ -1,7 +1,8 @@
 package com.computablefacts.decima.problog;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
-import static com.computablefacts.decima.problog.Parser.parseClause;
+import static com.computablefacts.decima.problog.Parser.parseFact;
+import static com.computablefacts.decima.problog.Parser.parseRule;
 
 import com.computablefacts.asterix.RandomString;
 import com.google.common.collect.HashMultiset;
@@ -26,19 +27,19 @@ public class BPlusTreeSubgoalFactsTest {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.5::f(1,2)."));
-    kb.azzert(parseClause("0.5::f(2,1)."));
-    kb.azzert(parseClause("0.5::f(1,3)."));
-    kb.azzert(parseClause("0.5::f(2,3)."));
-    kb.azzert(parseClause("0.5::b(1)."));
-    kb.azzert(parseClause("0.5::b(2)."));
-    kb.azzert(parseClause("0.5::b(3)."));
+    kb.azzert(parseFact("0.5::f(1,2)."));
+    kb.azzert(parseFact("0.5::f(2,1)."));
+    kb.azzert(parseFact("0.5::f(1,3)."));
+    kb.azzert(parseFact("0.5::f(2,3)."));
+    kb.azzert(parseFact("0.5::b(1)."));
+    kb.azzert(parseFact("0.5::b(2)."));
+    kb.azzert(parseFact("0.5::b(3)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("s1(X) :- b(X)."));
-    kb.azzert(parseClause("s1(X) :- f(X,Y),s1(Y)."));
-    kb.azzert(parseClause("s2(X) :- f(X,Y),s2(Y)."));
-    kb.azzert(parseClause("s2(X) :- b(X)."));
+    kb.azzert(parseRule("s1(X) :- b(X)."));
+    kb.azzert(parseRule("s1(X) :- f(X,Y),s1(Y)."));
+    kb.azzert(parseRule("s2(X) :- f(X,Y),s2(Y)."));
+    kb.azzert(parseRule("s2(X) :- b(X)."));
 
     // Query kb
     // s1(1)?
@@ -47,7 +48,7 @@ public class BPlusTreeSubgoalFactsTest {
     Solver solver = new Solver(kb, literal -> new Subgoal(literal,
         new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement()), true));
     Literal query = new Literal("s1", newConst(1));
-    List<Clause> proofs = Lists.newArrayList(solver.proofs(query));
+    List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
     // Verify BDD answer
     // 0.734375::s1(1).
@@ -67,19 +68,19 @@ public class BPlusTreeSubgoalFactsTest {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
 
     // Init kb with facts
-    kb.azzert(parseClause("0.5::f(1,2)."));
-    kb.azzert(parseClause("0.5::f(2,1)."));
-    kb.azzert(parseClause("0.5::f(1,3)."));
-    kb.azzert(parseClause("0.5::f(2,3)."));
-    kb.azzert(parseClause("0.5::b(1)."));
-    kb.azzert(parseClause("0.5::b(2)."));
-    kb.azzert(parseClause("0.5::b(3)."));
+    kb.azzert(parseFact("0.5::f(1,2)."));
+    kb.azzert(parseFact("0.5::f(2,1)."));
+    kb.azzert(parseFact("0.5::f(1,3)."));
+    kb.azzert(parseFact("0.5::f(2,3)."));
+    kb.azzert(parseFact("0.5::b(1)."));
+    kb.azzert(parseFact("0.5::b(2)."));
+    kb.azzert(parseFact("0.5::b(3)."));
 
     // Init kb with rules
-    kb.azzert(parseClause("s1(X) :- b(X)."));
-    kb.azzert(parseClause("s1(X) :- f(X,Y),s1(Y)."));
-    kb.azzert(parseClause("s2(X) :- f(X,Y),s2(Y)."));
-    kb.azzert(parseClause("s2(X) :- b(X)."));
+    kb.azzert(parseRule("s1(X) :- b(X)."));
+    kb.azzert(parseRule("s1(X) :- f(X,Y),s1(Y)."));
+    kb.azzert(parseRule("s2(X) :- f(X,Y),s2(Y)."));
+    kb.azzert(parseRule("s2(X) :- b(X)."));
 
     // Query kb
     // s2(1)?
@@ -90,7 +91,7 @@ public class BPlusTreeSubgoalFactsTest {
         new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement(), facts::add),
         true));
     Literal query = new Literal("s2", newConst(1));
-    List<Clause> proofs = Lists.newArrayList(solver.proofs(query));
+    List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
     // Verify subgoals' facts
     Assert.assertEquals(10, facts.size());

@@ -66,8 +66,8 @@ public abstract class AbstractKnowledgeBase {
   public String toString() {
 
     StringBuilder builder = new StringBuilder();
-    Iterator<Clause> facts = facts();
-    Iterator<Clause> rules = rules();
+    Iterator<Fact> facts = facts();
+    Iterator<Rule> rules = rules();
 
     while (facts.hasNext()) {
       builder.append(facts.next().toString());
@@ -90,78 +90,70 @@ public abstract class AbstractKnowledgeBase {
    *
    * @param clause fact or rule.
    */
-  public void azzert(Clause clause) {
+  public void azzert(AbstractClause clause) {
 
     Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isSafe(), "clause should be safe : %s", clause);
 
     if (clause.head().predicate().isPrimitive()) {
       return; // Ignore assertions for primitives
     }
 
-    Clause newClause;
+    BigDecimal probability = clause.head().probability();
+
+    Preconditions.checkState(!BigDecimal.ZERO.equals(probability), "head probability must be != 0.0 : %s", clause);
 
     if (clause.isFact()) {
-      newClause = clause;
+      azzertFact((Fact) clause);
     } else {
 
-      // Remove probability from the rule head (otherwise it is a no-op)
-      Pair<Clause, Clause> clauses = rewriteRuleHead(clause);
+      Rule rule = (Rule) clause;
+
+      Preconditions.checkArgument(rule.isSafe(), "clause should be safe : %s", rule);
+
+      // Remove probability from the clause head (otherwise it is a no-op)
+      Pair<Rule, Fact> clauses = rewriteRuleHead(rule);
 
       if (clauses.u != null) {
-        azzert(clauses.u); // Assert created fact (if any)
+        azzertFact(clauses.u); // Assert created fact (if any)
       }
 
-      newClause = clauses.t; // Assert rewritten rule
-    }
+      Rule newRule = clauses.t; // Assert rewritten clause
 
-    Literal head = newClause.head();
-    BigDecimal probability = head.probability();
+      for (int i = 0; i < newRule.body().size(); i++) {
 
-    Preconditions.checkState(!BigDecimal.ZERO.equals(probability), "head probability must be != 0.0 : %s", newClause);
-
-    if (clause.isFact()) {
-      azzertFact(newClause);
-    } else {
-
-      Preconditions.checkState(BigDecimal.ONE.equals(probability),
-          "rule head should not have a probability attached : %s", newClause);
-
-      for (int i = 0; i < newClause.body().size(); i++) {
-
-        Literal literal = newClause.body().get(i);
+        Literal literal = newRule.body().get(i);
 
         Preconditions.checkState(BigDecimal.ONE.equals(literal.probability()),
-            "body literals should not have probabilities attached : %s", newClause);
+            "body literals should not have probabilities attached : %s", newRule);
       }
 
-      azzertRule(newClause);
+      azzertRule(newRule);
     }
   }
 
   /**
    * Adds new facts or rules to the database.
    *
-   * @param clauses clauses.
+   * @param clauses facts or rules.
    */
-  public void azzert(Set<Clause> clauses) {
+  public void azzert(Set<? extends AbstractClause> clauses) {
 
     Preconditions.checkNotNull(clauses, "clauses should not be null");
 
     clauses.forEach(this::azzert);
   }
 
-  protected abstract void azzertFact(@NotNull Clause fact);
+  protected abstract void azzertFact(@NotNull Fact fact);
 
-  protected abstract void azzertRule(@NotNull Clause rule);
+  protected abstract void azzertRule(@NotNull Rule rule);
 
-  protected abstract Iterator<Clause> facts(@NotNull Literal literal);
+  protected abstract Iterator<Fact> facts(@NotNull Literal literal);
 
-  protected abstract Iterator<Clause> rules(@NotNull Literal literal);
+  protected abstract Iterator<Rule> rules(@NotNull Literal literal);
 
-  public abstract Iterator<Clause> facts();
+  public abstract Iterator<Fact> facts();
 
-  public abstract Iterator<Clause> rules();
+  public abstract Iterator<Rule> rules();
 
   public long nbFacts(@NotNull Literal literal) {
     return Iterators.size(facts(literal));
@@ -180,26 +172,26 @@ public abstract class AbstractKnowledgeBase {
   }
 
   @Beta
-  public List<Clause> compact() {
+  public List<Rule> compact() {
 
     // Find all rules that do not reference another rule (if any)
-    Map.Entry<List<Clause>, List<Clause>> rules = View.of(rules()).divide(rule -> rule.body().stream()
-        .noneMatch(literal -> View.of(rules()).map(Clause::head).anyMatch(head -> head.isRelevant(literal))));
-    List<Clause> dontReferenceOtherRules = rules.getKey();
-    List<Clause> referenceOtherRules = rules.getValue();
+    Map.Entry<List<Rule>, List<Rule>> rules = View.of(rules()).divide(rule -> rule.body().stream()
+        .noneMatch(literal -> View.of(rules()).map(Rule::head).anyMatch(head -> head.isRelevant(literal))));
+    List<Rule> dontReferenceOtherRules = rules.getKey();
+    List<Rule> referenceOtherRules = rules.getValue();
 
     // Inline all rules that are not referenced by another rule
-    List<Clause> newRules = referenceOtherRules.stream().flatMap(rule -> {
+    List<Rule> newRules = referenceOtherRules.stream().flatMap(rule -> {
 
-      @Var List<Clause> list = Lists.newArrayList(rule);
+      @Var List<Rule> list = Lists.newArrayList(rule);
 
       while (true) {
 
-        List<Clause> newList = new ArrayList<>();
+        List<Rule> newList = new ArrayList<>();
 
         for (int i = 0; newList.isEmpty() && i < list.size(); i++) {
 
-          Clause clause = list.get(i);
+          Rule clause = list.get(i);
 
           for (int j = 0; newList.isEmpty() && j < clause.body().size(); j++) {
 
@@ -208,11 +200,11 @@ public abstract class AbstractKnowledgeBase {
 
             newList.addAll(dontReferenceOtherRules.stream().filter(r -> r.head().isRelevant(literal)).map(or -> {
 
-              Clause referencingRule = clause.rename();
-              Clause referencedRule = or.rename();
-              Clause newClause = mergeRules(referencingRule, referencedRule, pos);
+              Rule referencingRule = clause.rename();
+              Rule referencedRule = or.rename();
+              Rule newRule = mergeRules(referencingRule, referencedRule, pos);
 
-              return reorderBodyLiterals(newClause);
+              return (Rule) reorderBodyLiterals(newRule);
             }).collect(Collectors.toList()));
           }
         }
@@ -349,10 +341,10 @@ public abstract class AbstractKnowledgeBase {
 
         String fact = predicate + "(" + Joiner.on(',').join(terms) + ")?";
         Literal query = Parser.parseQuery(fact);
-        Iterator<Clause> clauses = facts(query);
+        Iterator<Fact> facts = facts(query);
 
-        while (clauses.hasNext()) {
-          if (clauses.next().isFact()) {
+        while (facts.hasNext()) {
+          if (facts.next().isFact()) {
             return BoxedType.create(true);
           }
         }
@@ -560,22 +552,22 @@ public abstract class AbstractKnowledgeBase {
    * <li>Add a reference to the newly created fact in the clause body.</li>
    * </ul>
    *
-   * @param clause clause.
+   * @param rule clause.
    * @return a {@link Pair} with {@link Pair#t} containing the rewritten clause and {@link Pair#u} the newly created
    * fact.
    */
-  protected Pair<Clause, Clause> rewriteRuleHead(Clause clause) {
+  protected Pair<Rule, Fact> rewriteRuleHead(Rule rule) {
 
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isRule(), "clause should be a clause : %s", clause);
+    Preconditions.checkNotNull(rule, "clause should not be null");
+    Preconditions.checkArgument(rule.isRule(), "clause should be a clause : %s", rule);
 
-    Literal head = clause.head();
+    Literal head = rule.head();
 
     if (BigDecimal.ONE.compareTo(head.probability()) == 0) {
-      return new Pair<>(clause, null);
+      return new Pair<>(rule, null);
     }
 
-    Preconditions.checkState(!head.predicate().isNegated(), "the rule head should not be negated : %s", clause);
+    Preconditions.checkState(!head.predicate().isNegated(), "the rule head should not be negated : %s", rule);
 
     String predicate = head.predicate().name();
     BigDecimal probability = head.probability();
@@ -583,19 +575,19 @@ public abstract class AbstractKnowledgeBase {
     // Create fact
     String newPredicate = "proba_" + randomString_.nextString().toLowerCase();
     Literal newLiteral = new Literal(probability, newPredicate, newConst(true));
-    Clause newFact = new Clause(newLiteral);
+    Fact newFact = new Fact(newLiteral);
 
     // Rewrite clause
-    Literal newHead = new Literal(predicate, clause.head().terms());
-    List<Literal> newBody = new ArrayList<>(clause.body());
+    Literal newHead = new Literal(predicate, rule.head().terms());
+    List<Literal> newBody = new ArrayList<>(rule.body());
     newBody.add(new Literal(newPredicate, newConst(true)));
-    Clause newRule = new Clause(newHead, newBody);
+    Rule newRule = new Rule(newHead, newBody);
 
     return new Pair<>(newRule, newFact);
   }
 
   @Beta
-  protected Clause mergeRules(Clause referencingRule, Clause referencedRule, int pos) {
+  protected Rule mergeRules(Rule referencingRule, Rule referencedRule, int pos) {
 
     Preconditions.checkNotNull(referencingRule, "referencingRule should not be null");
     Preconditions.checkNotNull(referencedRule, "referencedRule should not be null");
@@ -607,8 +599,8 @@ public abstract class AbstractKnowledgeBase {
 
     Preconditions.checkState(env != null, "env should not be null");
 
-    Clause newReferencedRule = referencedRule.subst(env);
-    Clause newReferencingRule = referencingRule.subst(env);
+    Rule newReferencedRule = referencedRule.subst(env);
+    Rule newReferencingRule = referencingRule.subst(env);
 
     Literal newHead = newReferencingRule.head();
     List<Literal> newBody = new ArrayList<>();
@@ -620,6 +612,6 @@ public abstract class AbstractKnowledgeBase {
         newBody.addAll(newReferencedRule.body());
       }
     }
-    return new Clause(newHead, newBody);
+    return new Rule(newHead, newBody);
   }
 }

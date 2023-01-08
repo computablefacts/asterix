@@ -1,6 +1,5 @@
 package com.computablefacts.decima.problog;
 
-import com.computablefacts.Generated;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -10,30 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * A clause has a head literal, and a sequence of literals that form its body. If there are no literals in its body, the
- * clause is called a fact. If there is at least one literal in its body, it is called a rule.
- * <p>
- * A clause asserts that its head is true if every literal in its body is true.
- */
 @CheckReturnValue
-final public class Clause {
+final public class Rule extends AbstractClause {
 
-  private final Literal head_;
   private final List<Literal> body_;
-
   private Boolean isGrounded_ = null;
-  private Boolean isFact_ = null;
-
-  /**
-   * Initialize a fact.
-   *
-   * @param head literal.
-   */
-  @Generated
-  public Clause(Literal head) {
-    this(head, new ArrayList<>());
-  }
 
   /**
    * Initialize a rule.
@@ -41,7 +21,7 @@ final public class Clause {
    * @param head literal.
    * @param body body literals.
    */
-  public Clause(Literal head, Literal... body) {
+  public Rule(Literal head, Literal... body) {
     this(head, Lists.newArrayList(body));
   }
 
@@ -51,13 +31,13 @@ final public class Clause {
    * @param head literal.
    * @param body list of literals.
    */
-  public Clause(Literal head, List<Literal> body) {
+  public Rule(Literal head, List<Literal> body) {
 
-    Preconditions.checkNotNull(head, "head should not be null");
+    super(head);
+
     Preconditions.checkNotNull(body, "body should not be null");
     Preconditions.checkState(body.stream().noneMatch(Objects::isNull), "body literals should not be null");
 
-    head_ = head;
     body_ = new ArrayList<>(body);
   }
 
@@ -66,54 +46,43 @@ final public class Clause {
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof Clause)) {
+    if (!(obj instanceof Rule)) {
       return false;
     }
-
-    Clause clause = (Clause) obj;
-
-    if (clause.isFact()) {
-      return head_.equals(clause.head_);
-    }
-    return head_.equals(clause.head_) && body_.equals(clause.body_);
+    Rule rule = (Rule) obj;
+    return Objects.equals(head(), rule.head()) && Objects.equals(body_, rule.body_);
   }
 
   @Override
   public int hashCode() {
-    if (isFact()) {
-      return head_.hashCode();
-    }
-    return Objects.hash(head_, body_);
+    return Objects.hash(head(), body_);
   }
 
   @Override
   public String toString() {
 
     StringBuilder builder = new StringBuilder();
-    builder.append(head_.toString());
+    builder.append(head().toString());
+    builder.append(" :- ");
 
-    if (isRule()) {
-
-      builder.append(" :- ");
-
-      for (int i = 0; i < body_.size(); i++) {
-        if (i > 0) {
-          builder.append(", ");
-        }
-        Literal literal = body_.get(i);
-        builder.append(literal.toString());
+    for (int i = 0; i < body_.size(); i++) {
+      if (i > 0) {
+        builder.append(", ");
       }
+      Literal literal = body_.get(i);
+      builder.append(literal.toString());
     }
     return builder.toString();
   }
 
-  /**
-   * Get the current clause head.
-   *
-   * @return the clause head.
-   */
-  public Literal head() {
-    return head_;
+  @Override
+  public boolean isFact() {
+    return false;
+  }
+
+  @Override
+  public boolean isRule() {
+    return true;
   }
 
   /**
@@ -126,34 +95,13 @@ final public class Clause {
   }
 
   /**
-   * Check if the current clause is a fact.
-   *
-   * @return true iif the current clause is a fact.
-   */
-  public boolean isFact() {
-    if (isFact_ == null) {
-      isFact_ = head_.isGrounded() && body_.isEmpty();
-    }
-    return isFact_;
-  }
-
-  /**
-   * Check if the current clause is a rule.
-   *
-   * @return true iif the current clause is a rule.
-   */
-  public boolean isRule() {
-    return !body_.isEmpty();
-  }
-
-  /**
    * Check if the current clause is grounded.
    *
    * @return true iif the current clause is grounded.
    */
   public boolean isGrounded() {
     if (isGrounded_ == null) {
-      if (!head_.isGrounded()) {
+      if (!head().isGrounded()) {
         isGrounded_ = false;
         return isGrounded_;
       }
@@ -171,22 +119,21 @@ final public class Clause {
   /**
    * Check if two clauses can be unified.
    *
-   * @param clause clause.
+   * @param rule rule.
    * @return true iif the two clauses can be unified.
    */
-  public boolean isRelevant(Clause clause) {
+  public boolean isRelevant(Rule rule) {
 
-    Preconditions.checkNotNull(clause, "clause should not be null");
+    Preconditions.checkNotNull(rule, "rule should not be null");
 
-    if (!head_.isRelevant(clause.head_)) {
+    if (!head().isRelevant(rule.head())) {
       return false;
     }
-    if (body_.size() != clause.body_.size()) {
+    if (body_.size() != rule.body_.size()) {
       return false;
     }
-
     for (int i = 0; i < body_.size(); i++) {
-      if (!body_.get(i).isRelevant(clause.body_.get(i))) {
+      if (!body_.get(i).isRelevant(rule.body_.get(i))) {
         return false;
       }
     }
@@ -199,7 +146,7 @@ final public class Clause {
    * @return true iif the current clause is safe.
    */
   public boolean isSafe() {
-    for (AbstractTerm term : head_.terms()) {
+    for (AbstractTerm term : head().terms()) {
       if (!term.isConst()) {
         if (!bodyHasTerm(term)) {
           return false;
@@ -223,7 +170,6 @@ final public class Clause {
     if (body_.size() < literals.size()) {
       return false;
     }
-
     for (int i = 0; i < literals.size(); i++) {
       if (!body_.get(i).isRelevant(literals.get(i))) {
         return false;
@@ -263,7 +209,7 @@ final public class Clause {
    *
    * @return a new clause.
    */
-  public Clause rename() {
+  public Rule rename() {
 
     @com.google.errorprone.annotations.Var Map<Var, AbstractTerm> env = new HashMap<>();
 
@@ -279,19 +225,19 @@ final public class Clause {
    * @param env environment.
    * @return a new clause.
    */
-  public Clause subst(Map<Var, AbstractTerm> env) {
+  public Rule subst(Map<Var, AbstractTerm> env) {
 
     if (env == null || env.isEmpty()) {
       return this;
     }
 
-    Literal head = head_.subst(env);
+    Literal head = head().subst(env);
     List<Literal> body = new ArrayList<>(body_.size());
 
     for (Literal literal : body_) {
       body.add(literal.subst(env));
     }
-    return new Clause(head, body);
+    return new Rule(head, body);
   }
 
   /**
@@ -301,14 +247,10 @@ final public class Clause {
    * @param literal literal.
    * @return a new clause or null on error.
    */
-  public Clause resolve(Literal literal) {
+  public Rule resolve(Literal literal) {
 
     Preconditions.checkNotNull(literal, "literal should not be null");
     Preconditions.checkArgument(literal.isGrounded(), "literal should be grounded : %s", literal);
-
-    if (isFact()) {
-      return null;
-    }
 
     Literal first = body_.get(0);
     Map<Var, AbstractTerm> env = first.unify(literal.rename());
@@ -317,14 +259,14 @@ final public class Clause {
       return null;
     }
 
-    Literal head = head_.subst(env);
+    Literal head = head().subst(env);
     List<Literal> body = new ArrayList<>(body_.size());
     body.add(literal);
 
     for (int i = 1; i < body_.size(); i++) {
       body.add(body_.get(i).subst(env));
     }
-    return new Clause(head, body);
+    return new Rule(head, body);
   }
 
   /**

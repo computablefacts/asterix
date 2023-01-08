@@ -27,18 +27,19 @@ import java.util.stream.Collectors;
 final public class ProbabilityEstimator {
 
   private final RandomString randomString_ = new RandomString(7);
-  private final Set<Clause> proofs_;
+  private final Set<AbstractClause> proofs_;
 
-  public ProbabilityEstimator(Set<Clause> proofs) {
+  public ProbabilityEstimator(Set<AbstractClause> proofs) {
 
     Preconditions.checkNotNull(proofs, "proofs should not be null");
-    Preconditions.checkArgument(proofs.stream().allMatch(Clause::isGrounded), "All proofs should be grounded");
+    Preconditions.checkArgument(proofs.stream().allMatch(p -> p.isFact() || ((Rule) p).isGrounded()),
+        "All proofs should be grounded");
 
     proofs_ = proofs;
   }
 
   @Beta
-  public Map<Clause, BigDecimal> probabilities() {
+  public Map<Fact, BigDecimal> probabilities() {
     return probabilities(5);
   }
 
@@ -48,17 +49,17 @@ final public class ProbabilityEstimator {
    * @param nbSignificantDigits number of significant digits.
    * @return map between facts and probabilities.
    */
-  public Map<Clause, BigDecimal> probabilities(int nbSignificantDigits) {
+  public Map<Fact, BigDecimal> probabilities(int nbSignificantDigits) {
 
     if (proofs_.isEmpty()) {
       return new HashMap<>();
     }
 
-    Map<Clause, BigDecimal> probabilities = new HashMap<>();
+    Map<Fact, BigDecimal> probabilities = new HashMap<>();
 
-    for (Clause clause : proofs_) {
+    for (AbstractClause rule : proofs_) {
 
-      Clause fact = new Clause(clause.head());
+      Fact fact = new Fact(rule.head());
 
       if (!probabilities.containsKey(fact)) {
         probabilities.put(fact, probability(fact, nbSignificantDigits));
@@ -80,20 +81,19 @@ final public class ProbabilityEstimator {
 
     Preconditions.checkNotNull(literal, "literal should not be null");
 
-    return probability(new Clause(literal), nbSignificantDigits);
+    return probability(new Fact(literal), nbSignificantDigits);
   }
 
   /**
    * Compute the probability associated with a given clause.
    *
-   * @param clause              clause.
+   * @param fact                fact.
    * @param nbSignificantDigits number of significant digits.
    * @return probability.
    */
-  public BigDecimal probability(Clause clause, int nbSignificantDigits) {
+  public BigDecimal probability(Fact fact, int nbSignificantDigits) {
 
-    Preconditions.checkNotNull(clause, "clause should not be null");
-    Preconditions.checkArgument(clause.isFact(), "clause should be a fact : %s", clause);
+    Preconditions.checkNotNull(fact, "clause should not be null");
     Preconditions.checkArgument(nbSignificantDigits > 0, "nbSignificantDigits should be > 0");
 
     if (proofs_.isEmpty()) {
@@ -101,8 +101,7 @@ final public class ProbabilityEstimator {
     }
 
     ProbabilityEstimator estimator = new ProbabilityEstimator(
-        proofs_.stream().filter(p -> p.isGrounded() && p.head().tag().equals(clause.head().tag()))
-            .collect(Collectors.toSet()));
+        proofs_.stream().filter(p -> p.head().tag().equals(fact.head().tag())).collect(Collectors.toSet()));
     int newScale = nbSignificantDigits - estimator.probability().precision() + estimator.probability().scale();
 
     return estimator.probability().setScale(newScale, RoundingMode.HALF_UP);
@@ -120,10 +119,10 @@ final public class ProbabilityEstimator {
     BddManager mgr = new BddManager(10);
     BiMap<BddNode, Literal> bddVars = HashBiMap.create();
 
-    Set<Clause> newProofs = proofs_.stream().map(this::rewriteRuleBody).collect(Collectors.toSet());
+    Set<AbstractClause> newProofs = proofs_.stream().map(this::rewriteRuleBody).collect(Collectors.toSet());
 
-    newProofs.stream().flatMap(p -> p.isFact() ? ImmutableList.of(p.head()).stream() : p.body().stream()).distinct()
-        .forEach(literal -> {
+    newProofs.stream().flatMap(p -> p.isFact() ? ImmutableList.of(p.head()).stream() : ((Rule) p).body().stream())
+        .distinct().forEach(literal -> {
 
           // Literals with probability of 1 do not contribute to the final score
           if (BigDecimal.ONE.compareTo(literal.probability()) != 0) {
@@ -133,9 +132,9 @@ final public class ProbabilityEstimator {
 
     List<BddNode> trees = new ArrayList<>();
 
-    for (Clause proof : newProofs) {
+    for (AbstractClause proof : newProofs) {
 
-      List<Literal> body = proof.isFact() ? ImmutableList.of(proof.head()) : proof.body();
+      List<Literal> body = proof.isFact() ? ImmutableList.of(proof.head()) : ((Rule) proof).body();
       BddNode bddNode = and(mgr, bddVars.inverse(), body);
 
       if (bddNode != null) {
@@ -216,13 +215,13 @@ final public class ProbabilityEstimator {
   }
 
   /**
-   * Replace all probabilistic literals created by {@link AbstractKnowledgeBase#rewriteRuleHead(Clause)} with a unique
+   * Replace all probabilistic literals created by {@link AbstractKnowledgeBase#rewriteRuleHead(Rule)} with a unique
    * literal with the same probability.
    *
-   * @param clause fact or rule.
+   * @param clause a fact or a rule.
    * @return rewritten clause.
    */
-  private Clause rewriteRuleBody(Clause clause) {
+  private AbstractClause rewriteRuleBody(AbstractClause clause) {
 
     Preconditions.checkNotNull(clause, "clause should not be null");
 
@@ -230,10 +229,11 @@ final public class ProbabilityEstimator {
       return clause;
     }
 
-    Literal head = clause.head();
-    List<Literal> body = new ArrayList<>(clause.body().size());
+    Rule rule = (Rule) clause;
+    Literal head = rule.head();
+    List<Literal> body = new ArrayList<>(rule.body().size());
 
-    for (Literal literal : clause.body()) {
+    for (Literal literal : rule.body()) {
       if (!literal.predicate().baseName().startsWith("proba_")) {
         body.add(literal);
       } else {
@@ -242,6 +242,6 @@ final public class ProbabilityEstimator {
             literal.terms()));
       }
     }
-    return new Clause(head, body);
+    return new Rule(head, body);
   }
 }

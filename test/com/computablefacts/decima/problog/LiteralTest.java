@@ -2,7 +2,7 @@ package com.computablefacts.decima.problog;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.AbstractTerm.newVar;
-import static com.computablefacts.decima.problog.Parser.parseClause;
+import static com.computablefacts.decima.problog.Parser.parseRule;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -176,8 +176,8 @@ public class LiteralTest {
   public void testMergeFunctionsWithoutSubstitution() {
 
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
-    Clause clause = parseClause("is_ok(X) :- fn_eq(X, fn_add(1, 1), 2).");
-    Literal literal = clause.body().get(0);
+    Rule rule = parseRule("is_ok(X) :- fn_eq(X, fn_add(1, 1), 2).");
+    Literal literal = rule.body().get(0);
     Literal newLiteral = literal.execute(kb.definitions()).next();
 
     Assert.assertEquals(1, newLiteral.terms().size());
@@ -188,11 +188,11 @@ public class LiteralTest {
   public void testMergeFunctionsWithSubstitution() {
 
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
-    Clause clause = parseClause("is_ok(X, Y) :- fn_eq(X, fn_add(Y, 1), 2).");
-    Literal literal = clause.body().get(0);
+    Rule rule = parseRule("is_ok(X, Y) :- fn_eq(X, fn_add(Y, 1), 2).");
+    Literal literal = rule.body().get(0);
 
     Map<Var, AbstractTerm> subst = new HashMap<>(); // substitute Y with 1
-    subst.put((Var) clause.head().terms().get(1), newConst("1"));
+    subst.put((Var) rule.head().terms().get(1), newConst("1"));
 
     Literal newLiteral = literal.subst(subst).execute(kb.definitions()).next();
 
