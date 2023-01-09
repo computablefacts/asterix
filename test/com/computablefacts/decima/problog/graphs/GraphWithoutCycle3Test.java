@@ -109,16 +109,16 @@ public class GraphWithoutCycle3Test {
     List<String> table = solver.tableOfProofs(query);
 
     Assert.assertEquals(14, table.size());
-    Assert.assertEquals("[fact] depth=0, 0.2::edge(\"5\", \"6\")\n" + "[fact] depth=0, 0.3::edge(\"2\", \"6\")\n"
-        + "[fact] depth=1, 0.4::edge(\"2\", \"5\")\n" + "[fact] depth=1, 0.6::edge(\"1\", \"2\")\n"
-        + "[fact] depth=1, 0.8::edge(\"4\", \"5\")\n" + "[fact] depth=2, 0.3::edge(\"3\", \"4\")\n"
-        + "[fact] depth=3, 0.1::edge(\"1\", \"3\")\n"
-        + "[rule] depth=0, path(\"1\", \"6\") :- path(\"1\", \"2\"), 0.3::edge(\"2\", \"6\")\n"
-        + "[rule] depth=0, path(\"1\", \"6\") :- path(\"1\", \"5\"), 0.2::edge(\"5\", \"6\")\n"
-        + "[rule] depth=1, path(\"1\", \"2\") :- 0.6::edge(\"1\", \"2\")\n"
-        + "[rule] depth=1, path(\"1\", \"5\") :- path(\"1\", \"2\"), 0.4::edge(\"2\", \"5\")\n"
-        + "[rule] depth=1, path(\"1\", \"5\") :- path(\"1\", \"4\"), 0.8::edge(\"4\", \"5\")\n"
-        + "[rule] depth=2, path(\"1\", \"4\") :- path(\"1\", \"3\"), 0.3::edge(\"3\", \"4\")\n"
-        + "[rule] depth=3, path(\"1\", \"3\") :- 0.1::edge(\"1\", \"3\")", Joiner.on("\n").join(table));
+    Assert.assertEquals("[fact] depth=0, 0.2::edge(\"5\", \"6\").\n" + "[fact] depth=0, 0.3::edge(\"2\", \"6\").\n"
+        + "[fact] depth=1, 0.4::edge(\"2\", \"5\").\n" + "[fact] depth=1, 0.6::edge(\"1\", \"2\").\n"
+        + "[fact] depth=1, 0.8::edge(\"4\", \"5\").\n" + "[fact] depth=2, 0.3::edge(\"3\", \"4\").\n"
+        + "[fact] depth=3, 0.1::edge(\"1\", \"3\").\n"
+        + "[rule] depth=0, path(\"1\", \"6\") :- path(\"1\", \"2\"), 0.3::edge(\"2\", \"6\").\n"
+        + "[rule] depth=0, path(\"1\", \"6\") :- path(\"1\", \"5\"), 0.2::edge(\"5\", \"6\").\n"
+        + "[rule] depth=1, path(\"1\", \"2\") :- 0.6::edge(\"1\", \"2\").\n"
+        + "[rule] depth=1, path(\"1\", \"5\") :- path(\"1\", \"2\"), 0.4::edge(\"2\", \"5\").\n"
+        + "[rule] depth=1, path(\"1\", \"5\") :- path(\"1\", \"4\"), 0.8::edge(\"4\", \"5\").\n"
+        + "[rule] depth=2, path(\"1\", \"4\") :- path(\"1\", \"3\"), 0.3::edge(\"3\", \"4\").\n"
+        + "[rule] depth=3, path(\"1\", \"3\") :- 0.1::edge(\"1\", \"3\").", Joiner.on("\n").join(table));
   }
 }

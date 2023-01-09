@@ -110,17 +110,17 @@ public class GraphWithCycle2Test {
     List<String> table = solver.tableOfProofs(query);
 
     Assert.assertEquals(16, table.size());
-    Assert.assertEquals("[fact] depth=0, 0.6::edge(\"2\", \"4\")\n" + "[fact] depth=1, 0.1::edge(\"1\", \"2\")\n"
-            + "[fact] depth=1, 0.2::edge(\"3\", \"2\")\n" + "[fact] depth=2, 0.3::edge(\"2\", \"3\")\n"
-            + "[fact] depth=2, 0.5::edge(\"1\", \"3\")\n" + "[prim] depth=0, fn_eq(\"false\", \"1\", \"2\")\n"
-            + "[prim] depth=0, fn_is_false(\"false\")\n" + "[prim] depth=1, fn_eq(\"false\", \"1\", \"3\")\n"
-            + "[prim] depth=1, fn_is_false(\"false\")\n" + "[prim] depth=2, fn_eq(\"false\", \"1\", \"2\")\n"
-            + "[prim] depth=2, fn_is_false(\"false\")\n"
-            + "[rule] depth=0, path(\"1\", \"4\") :- path(\"1\", \"2\"), 0.6::edge(\"2\", \"4\"), fn_eq(\"false\", \"1\", \"2\"), fn_is_false(\"false\")\n"
-            + "[rule] depth=1, path(\"1\", \"2\") :- 0.1::edge(\"1\", \"2\")\n"
-            + "[rule] depth=1, path(\"1\", \"2\") :- path(\"1\", \"3\"), 0.2::edge(\"3\", \"2\"), fn_eq(\"false\", \"1\", \"3\"), fn_is_false(\"false\")\n"
-            + "[rule] depth=2, path(\"1\", \"3\") :- 0.5::edge(\"1\", \"3\")\n"
-            + "[rule] depth=2, path(\"1\", \"3\") :- path(\"1\", \"2\"), 0.3::edge(\"2\", \"3\"), fn_eq(\"false\", \"1\", \"2\"), fn_is_false(\"false\")",
+    Assert.assertEquals("[fact] depth=0, 0.6::edge(\"2\", \"4\").\n" + "[fact] depth=1, 0.1::edge(\"1\", \"2\").\n"
+            + "[fact] depth=1, 0.2::edge(\"3\", \"2\").\n" + "[fact] depth=2, 0.3::edge(\"2\", \"3\").\n"
+            + "[fact] depth=2, 0.5::edge(\"1\", \"3\").\n" + "[prim] depth=0, fn_eq(\"false\", \"1\", \"2\").\n"
+            + "[prim] depth=0, fn_is_false(\"false\").\n" + "[prim] depth=1, fn_eq(\"false\", \"1\", \"3\").\n"
+            + "[prim] depth=1, fn_is_false(\"false\").\n" + "[prim] depth=2, fn_eq(\"false\", \"1\", \"2\").\n"
+            + "[prim] depth=2, fn_is_false(\"false\").\n"
+            + "[rule] depth=0, path(\"1\", \"4\") :- path(\"1\", \"2\"), 0.6::edge(\"2\", \"4\"), fn_eq(\"false\", \"1\", \"2\"), fn_is_false(\"false\").\n"
+            + "[rule] depth=1, path(\"1\", \"2\") :- 0.1::edge(\"1\", \"2\").\n"
+            + "[rule] depth=1, path(\"1\", \"2\") :- path(\"1\", \"3\"), 0.2::edge(\"3\", \"2\"), fn_eq(\"false\", \"1\", \"3\"), fn_is_false(\"false\").\n"
+            + "[rule] depth=2, path(\"1\", \"3\") :- 0.5::edge(\"1\", \"3\").\n"
+            + "[rule] depth=2, path(\"1\", \"3\") :- path(\"1\", \"2\"), 0.3::edge(\"2\", \"3\"), fn_eq(\"false\", \"1\", \"2\"), fn_is_false(\"false\").",
         Joiner.on("\n").join(table));
   }
 }

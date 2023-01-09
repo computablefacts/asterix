@@ -131,15 +131,15 @@ public class GraphWithoutCycle2Test {
     List<String> table1 = solver.tableOfProofs(query1);
 
     Assert.assertEquals(12, table1.size());
-    Assert.assertEquals("[fact] depth=0, 0.5::edge(\"e\", \"d\")\n" + "[fact] depth=0, 0.9::edge(\"c\", \"d\")\n"
-        + "[fact] depth=1, 0.6::edge(\"b\", \"c\")\n" + "[fact] depth=1, 0.8::edge(\"a\", \"c\")\n"
-        + "[fact] depth=1, 0.8::edge(\"c\", \"e\")\n" + "[fact] depth=2, 0.7::edge(\"a\", \"b\")\n"
-        + "[rule] depth=0, path(\"a\", \"d\") :- path(\"a\", \"c\"), 0.9::edge(\"c\", \"d\")\n"
-        + "[rule] depth=0, path(\"a\", \"d\") :- path(\"a\", \"e\"), 0.5::edge(\"e\", \"d\")\n"
-        + "[rule] depth=1, path(\"a\", \"c\") :- 0.8::edge(\"a\", \"c\")\n"
-        + "[rule] depth=1, path(\"a\", \"c\") :- path(\"a\", \"b\"), 0.6::edge(\"b\", \"c\")\n"
-        + "[rule] depth=1, path(\"a\", \"e\") :- path(\"a\", \"c\"), 0.8::edge(\"c\", \"e\")\n"
-        + "[rule] depth=2, path(\"a\", \"b\") :- 0.7::edge(\"a\", \"b\")", Joiner.on("\n").join(table1));
+    Assert.assertEquals("[fact] depth=0, 0.5::edge(\"e\", \"d\").\n" + "[fact] depth=0, 0.9::edge(\"c\", \"d\").\n"
+        + "[fact] depth=1, 0.6::edge(\"b\", \"c\").\n" + "[fact] depth=1, 0.8::edge(\"a\", \"c\").\n"
+        + "[fact] depth=1, 0.8::edge(\"c\", \"e\").\n" + "[fact] depth=2, 0.7::edge(\"a\", \"b\").\n"
+        + "[rule] depth=0, path(\"a\", \"d\") :- path(\"a\", \"c\"), 0.9::edge(\"c\", \"d\").\n"
+        + "[rule] depth=0, path(\"a\", \"d\") :- path(\"a\", \"e\"), 0.5::edge(\"e\", \"d\").\n"
+        + "[rule] depth=1, path(\"a\", \"c\") :- 0.8::edge(\"a\", \"c\").\n"
+        + "[rule] depth=1, path(\"a\", \"c\") :- path(\"a\", \"b\"), 0.6::edge(\"b\", \"c\").\n"
+        + "[rule] depth=1, path(\"a\", \"e\") :- path(\"a\", \"c\"), 0.8::edge(\"c\", \"e\").\n"
+        + "[rule] depth=2, path(\"a\", \"b\") :- 0.7::edge(\"a\", \"b\").", Joiner.on("\n").join(table1));
 
     // Query kb
     // path(c, d)?
@@ -147,10 +147,10 @@ public class GraphWithoutCycle2Test {
     List<String> table2 = solver.tableOfProofs(query2);
 
     Assert.assertEquals(6, table2.size());
-    Assert.assertEquals("[fact] depth=0, 0.5::edge(\"e\", \"d\")\n" + "[fact] depth=0, 0.9::edge(\"c\", \"d\")\n"
-        + "[fact] depth=1, 0.8::edge(\"c\", \"e\")\n"
-        + "[rule] depth=0, path(\"c\", \"d\") :- 0.9::edge(\"c\", \"d\")\n"
-        + "[rule] depth=0, path(\"c\", \"d\") :- path(\"c\", \"e\"), 0.5::edge(\"e\", \"d\")\n"
-        + "[rule] depth=1, path(\"c\", \"e\") :- 0.8::edge(\"c\", \"e\")", Joiner.on("\n").join(table2));
+    Assert.assertEquals("[fact] depth=0, 0.5::edge(\"e\", \"d\").\n" + "[fact] depth=0, 0.9::edge(\"c\", \"d\").\n"
+        + "[fact] depth=1, 0.8::edge(\"c\", \"e\").\n"
+        + "[rule] depth=0, path(\"c\", \"d\") :- 0.9::edge(\"c\", \"d\").\n"
+        + "[rule] depth=0, path(\"c\", \"d\") :- path(\"c\", \"e\"), 0.5::edge(\"e\", \"d\").\n"
+        + "[rule] depth=1, path(\"c\", \"e\") :- 0.8::edge(\"c\", \"e\").", Joiner.on("\n").join(table2));
   }
 }

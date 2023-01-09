@@ -71,11 +71,11 @@ public abstract class AbstractKnowledgeBase {
 
     while (facts.hasNext()) {
       builder.append(facts.next().toString());
-      builder.append(".\n");
+      builder.append("\n");
     }
     while (rules.hasNext()) {
       builder.append(rules.next().toString());
-      builder.append(".\n");
+      builder.append("\n");
     }
     return builder.toString();
   }

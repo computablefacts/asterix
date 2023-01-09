@@ -75,7 +75,7 @@ final public class BPlusTreeSubgoalFacts extends AbstractSubgoalFacts {
   public void add(Fact fact) {
 
     String cacheKey = cacheKey(fact);
-    tree_.insert(cacheKey.hashCode(), cacheKey + SEPARATOR + fact.toString() + ".");
+    tree_.insert(cacheKey.hashCode(), cacheKey + SEPARATOR + fact.toString());
     nbFacts_++;
 
     if (peek_ != null) {

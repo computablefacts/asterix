@@ -72,6 +72,8 @@ final public class Rule extends AbstractClause {
       Literal literal = body_.get(i);
       builder.append(literal.toString());
     }
+
+    builder.append('.');
     return builder.toString();
   }
 

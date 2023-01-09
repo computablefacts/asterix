@@ -36,9 +36,8 @@ final public class Fact extends AbstractClause {
 
   @Override
   public String toString() {
-    return head().toString();
+    return head().toString() + ".";
   }
-
 
   @Override
   public boolean isFact() {

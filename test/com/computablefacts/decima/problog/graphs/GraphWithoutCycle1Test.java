@@ -110,11 +110,11 @@ public class GraphWithoutCycle1Test {
     List<String> table = solver.tableOfProofs(query);
 
     Assert.assertEquals(8, table.size());
-    Assert.assertEquals("[fact] depth=0, 0.3::edge(\"e\", \"f\")\n" + "[fact] depth=0, 0.5::edge(\"d\", \"f\")\n"
-        + "[fact] depth=1, 0.2::edge(\"b\", \"d\")\n" + "[fact] depth=1, 0.8::edge(\"b\", \"e\")\n"
-        + "[rule] depth=0, path(\"b\", \"f\") :- path(\"b\", \"d\"), 0.5::edge(\"d\", \"f\")\n"
-        + "[rule] depth=0, path(\"b\", \"f\") :- path(\"b\", \"e\"), 0.3::edge(\"e\", \"f\")\n"
-        + "[rule] depth=1, path(\"b\", \"d\") :- 0.2::edge(\"b\", \"d\")\n"
-        + "[rule] depth=1, path(\"b\", \"e\") :- 0.8::edge(\"b\", \"e\")", Joiner.on("\n").join(table));
+    Assert.assertEquals("[fact] depth=0, 0.3::edge(\"e\", \"f\").\n" + "[fact] depth=0, 0.5::edge(\"d\", \"f\").\n"
+        + "[fact] depth=1, 0.2::edge(\"b\", \"d\").\n" + "[fact] depth=1, 0.8::edge(\"b\", \"e\").\n"
+        + "[rule] depth=0, path(\"b\", \"f\") :- path(\"b\", \"d\"), 0.5::edge(\"d\", \"f\").\n"
+        + "[rule] depth=0, path(\"b\", \"f\") :- path(\"b\", \"e\"), 0.3::edge(\"e\", \"f\").\n"
+        + "[rule] depth=1, path(\"b\", \"d\") :- 0.2::edge(\"b\", \"d\").\n"
+        + "[rule] depth=1, path(\"b\", \"e\") :- 0.8::edge(\"b\", \"e\").", Joiner.on("\n").join(table));
   }
 }

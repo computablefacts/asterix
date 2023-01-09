@@ -74,16 +74,16 @@ public class SocialNetworkTest {
 
     Assert.assertEquals(13, table.size());
     Assert.assertTrue(WildcardMatcher.match(Joiner.on("\n").join(table),
-        "[fact] depth=0, friend(\"angelika\", \"jonas\")\n" + "[fact] depth=1, 0.2::proba(\"???????\")\n"
-            + "[fact] depth=1, 0.3::proba(\"???????\")\n" + "[fact] depth=1, person(\"angelika\")\n"
-            + "[fact] depth=1, person(\"jonas\")\n" + "[fact] depth=2, 0.3::proba(\"???????\")\n"
-            + "[fact] depth=2, person(\"jonas\")\n"
-            + "[rule] depth=0, smokes(\"angelika\") :- friend(\"angelika\", \"jonas\"), influences(\"jonas\", \"angelika\"), smokes(\"jonas\")\n"
-            + "[rule] depth=0, smokes(\"angelika\") :- stress(\"angelika\")\n"
-            + "[rule] depth=1, influences(\"jonas\", \"angelika\") :- person(\"jonas\"), person(\"angelika\"), 0.2::proba(\"???????\")\n"
-            + "[rule] depth=1, smokes(\"jonas\") :- stress(\"jonas\")\n"
-            + "[rule] depth=1, stress(\"angelika\") :- person(\"angelika\"), 0.3::proba(\"???????\")\n"
-            + "[rule] depth=2, stress(\"jonas\") :- person(\"jonas\"), 0.3::proba(\"???????\")"));
+        "[fact] depth=0, friend(\"angelika\", \"jonas\").\n" + "[fact] depth=1, 0.2::proba(\"???????\").\n"
+            + "[fact] depth=1, 0.3::proba(\"???????\").\n" + "[fact] depth=1, person(\"angelika\").\n"
+            + "[fact] depth=1, person(\"jonas\").\n" + "[fact] depth=2, 0.3::proba(\"???????\").\n"
+            + "[fact] depth=2, person(\"jonas\").\n"
+            + "[rule] depth=0, smokes(\"angelika\") :- friend(\"angelika\", \"jonas\"), influences(\"jonas\", \"angelika\"), smokes(\"jonas\").\n"
+            + "[rule] depth=0, smokes(\"angelika\") :- stress(\"angelika\").\n"
+            + "[rule] depth=1, influences(\"jonas\", \"angelika\") :- person(\"jonas\"), person(\"angelika\"), 0.2::proba(\"???????\").\n"
+            + "[rule] depth=1, smokes(\"jonas\") :- stress(\"jonas\").\n"
+            + "[rule] depth=1, stress(\"angelika\") :- person(\"angelika\"), 0.3::proba(\"???????\").\n"
+            + "[rule] depth=2, stress(\"jonas\") :- person(\"jonas\"), 0.3::proba(\"???????\")."));
   }
 
   @Test
@@ -138,31 +138,31 @@ public class SocialNetworkTest {
 
     Assert.assertEquals(33, table.size());
     Assert.assertTrue(WildcardMatcher.match(Joiner.on("\n").join(table),
-        "[fact] depth=0, friend(\"joris\", \"angelika\")\n" + "[fact] depth=0, friend(\"joris\", \"dimitar\")\n"
-            + "[fact] depth=0, friend(\"joris\", \"jonas\")\n" + "[fact] depth=1, 0.2::proba(\"???????\")\n"
-            + "[fact] depth=1, 0.3::proba(\"???????\")\n" + "[fact] depth=1, friend(\"angelika\", \"jonas\")\n"
-            + "[fact] depth=1, person(\"angelika\")\n" + "[fact] depth=1, person(\"dimitar\")\n"
-            + "[fact] depth=1, person(\"jonas\")\n" + "[fact] depth=1, person(\"joris\")\n"
-            + "[fact] depth=2, 0.2::proba(\"???????\")\n" + "[fact] depth=2, 0.3::proba(\"???????\")\n"
-            + "[fact] depth=2, person(\"angelika\")\n" + "[fact] depth=2, person(\"dimitar\")\n"
-            + "[fact] depth=2, person(\"jonas\")\n" + "[fact] depth=3, 0.3::proba(\"???????\")\n"
-            + "[fact] depth=3, person(\"jonas\")\n"
-            + "[rule] depth=0, smokes(\"joris\") :- friend(\"joris\", \"angelika\"), influences(\"angelika\", \"joris\"), smokes(\"angelika\")\n"
-            + "[rule] depth=0, smokes(\"joris\") :- friend(\"joris\", \"dimitar\"), influences(\"dimitar\", \"joris\"), smokes(\"dimitar\")\n"
-            + "[rule] depth=0, smokes(\"joris\") :- friend(\"joris\", \"jonas\"), influences(\"jonas\", \"joris\"), smokes(\"jonas\")\n"
-            + "[rule] depth=0, smokes(\"joris\") :- stress(\"joris\")\n"
-            + "[rule] depth=1, influences(\"angelika\", \"joris\") :- person(\"angelika\"), person(\"joris\"), 0.2::proba(\"???????\")\n"
-            + "[rule] depth=1, influences(\"dimitar\", \"joris\") :- person(\"dimitar\"), person(\"joris\"), 0.2::proba(\"???????\")\n"
-            + "[rule] depth=1, influences(\"jonas\", \"joris\") :- person(\"jonas\"), person(\"joris\"), 0.2::proba(\"???????\")\n"
-            + "[rule] depth=1, smokes(\"angelika\") :- friend(\"angelika\", \"jonas\"), influences(\"jonas\", \"angelika\"), smokes(\"jonas\")\n"
-            + "[rule] depth=1, smokes(\"angelika\") :- stress(\"angelika\")\n"
-            + "[rule] depth=1, smokes(\"dimitar\") :- stress(\"dimitar\")\n"
-            + "[rule] depth=1, stress(\"joris\") :- person(\"joris\"), 0.3::proba(\"???????\")\n"
-            + "[rule] depth=2, influences(\"jonas\", \"angelika\") :- person(\"jonas\"), person(\"angelika\"), 0.2::proba(\"???????\")\n"
-            + "[rule] depth=2, smokes(\"jonas\") :- stress(\"jonas\")\n"
-            + "[rule] depth=2, stress(\"angelika\") :- person(\"angelika\"), 0.3::proba(\"???????\")\n"
-            + "[rule] depth=2, stress(\"dimitar\") :- person(\"dimitar\"), 0.3::proba(\"???????\")\n"
-            + "[rule] depth=3, stress(\"jonas\") :- person(\"jonas\"), 0.3::proba(\"???????\")"));
+        "[fact] depth=0, friend(\"joris\", \"angelika\").\n" + "[fact] depth=0, friend(\"joris\", \"dimitar\").\n"
+            + "[fact] depth=0, friend(\"joris\", \"jonas\").\n" + "[fact] depth=1, 0.2::proba(\"???????\").\n"
+            + "[fact] depth=1, 0.3::proba(\"???????\").\n" + "[fact] depth=1, friend(\"angelika\", \"jonas\").\n"
+            + "[fact] depth=1, person(\"angelika\").\n" + "[fact] depth=1, person(\"dimitar\").\n"
+            + "[fact] depth=1, person(\"jonas\").\n" + "[fact] depth=1, person(\"joris\").\n"
+            + "[fact] depth=2, 0.2::proba(\"???????\").\n" + "[fact] depth=2, 0.3::proba(\"???????\").\n"
+            + "[fact] depth=2, person(\"angelika\").\n" + "[fact] depth=2, person(\"dimitar\").\n"
+            + "[fact] depth=2, person(\"jonas\").\n" + "[fact] depth=3, 0.3::proba(\"???????\").\n"
+            + "[fact] depth=3, person(\"jonas\").\n"
+            + "[rule] depth=0, smokes(\"joris\") :- friend(\"joris\", \"angelika\"), influences(\"angelika\", \"joris\"), smokes(\"angelika\").\n"
+            + "[rule] depth=0, smokes(\"joris\") :- friend(\"joris\", \"dimitar\"), influences(\"dimitar\", \"joris\"), smokes(\"dimitar\").\n"
+            + "[rule] depth=0, smokes(\"joris\") :- friend(\"joris\", \"jonas\"), influences(\"jonas\", \"joris\"), smokes(\"jonas\").\n"
+            + "[rule] depth=0, smokes(\"joris\") :- stress(\"joris\").\n"
+            + "[rule] depth=1, influences(\"angelika\", \"joris\") :- person(\"angelika\"), person(\"joris\"), 0.2::proba(\"???????\").\n"
+            + "[rule] depth=1, influences(\"dimitar\", \"joris\") :- person(\"dimitar\"), person(\"joris\"), 0.2::proba(\"???????\").\n"
+            + "[rule] depth=1, influences(\"jonas\", \"joris\") :- person(\"jonas\"), person(\"joris\"), 0.2::proba(\"???????\").\n"
+            + "[rule] depth=1, smokes(\"angelika\") :- friend(\"angelika\", \"jonas\"), influences(\"jonas\", \"angelika\"), smokes(\"jonas\").\n"
+            + "[rule] depth=1, smokes(\"angelika\") :- stress(\"angelika\").\n"
+            + "[rule] depth=1, smokes(\"dimitar\") :- stress(\"dimitar\").\n"
+            + "[rule] depth=1, stress(\"joris\") :- person(\"joris\"), 0.3::proba(\"???????\").\n"
+            + "[rule] depth=2, influences(\"jonas\", \"angelika\") :- person(\"jonas\"), person(\"angelika\"), 0.2::proba(\"???????\").\n"
+            + "[rule] depth=2, smokes(\"jonas\") :- stress(\"jonas\").\n"
+            + "[rule] depth=2, stress(\"angelika\") :- person(\"angelika\"), 0.3::proba(\"???????\").\n"
+            + "[rule] depth=2, stress(\"dimitar\") :- person(\"dimitar\"), 0.3::proba(\"???????\").\n"
+            + "[rule] depth=3, stress(\"jonas\") :- person(\"jonas\"), 0.3::proba(\"???????\")."));
   }
 
   private InMemoryKnowledgeBase kb() {
