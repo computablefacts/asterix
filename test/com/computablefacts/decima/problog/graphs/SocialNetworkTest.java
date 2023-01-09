@@ -35,7 +35,7 @@ public class SocialNetworkTest {
 
     // Query kb
     // smokes(angelika)?
-    Solver solver = new Solver(kb(), true);
+    Solver solver = new Solver(kb());
     Literal query = new Literal("smokes", newConst("angelika"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
@@ -68,7 +68,7 @@ public class SocialNetworkTest {
 
     // Query kb
     // smokes(angelika)?
-    Solver solver = new Solver(kb(), true);
+    Solver solver = new Solver(kb());
     Literal query = new Literal("smokes", newConst("angelika"));
     List<String> table = solver.tableOfProofs(query);
 
@@ -91,7 +91,7 @@ public class SocialNetworkTest {
 
     // Query kb
     // smokes(joris)?
-    Solver solver = new Solver(kb(), true);
+    Solver solver = new Solver(kb());
     Literal query = new Literal("smokes", newConst("joris"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
@@ -132,7 +132,7 @@ public class SocialNetworkTest {
 
     // Query kb
     // smokes(joris)?
-    Solver solver = new Solver(kb(), true);
+    Solver solver = new Solver(kb());
     Literal query = new Literal("smokes", newConst("joris"));
     List<String> table = solver.tableOfProofs(query);
 

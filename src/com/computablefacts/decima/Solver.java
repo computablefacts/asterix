@@ -135,7 +135,7 @@ final public class Solver extends ConsoleApp {
     AbstractKnowledgeBase kb = new InMemoryKnowledgeBase();
     rules.forEach(kb::azzert);
 
-    com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb, true);
+    com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb);
 
     for (Literal question : questions) {
 
@@ -156,7 +156,7 @@ final public class Solver extends ConsoleApp {
     AbstractKnowledgeBase kb = new InMemoryKnowledgeBase();
     rules.forEach(kb::azzert);
 
-    com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb, false);
+    com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb);
 
     for (Literal question : questions) {
 

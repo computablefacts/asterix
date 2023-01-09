@@ -45,7 +45,7 @@ public class ToothacheTest {
 
     // Query kb
     // path(1, 6)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("toothache", newConst("a"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
@@ -93,7 +93,7 @@ public class ToothacheTest {
 
     // Query kb
     // path(1, 6)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("toothache", newConst("a"));
     List<String> table = solver.tableOfProofs(query);
 

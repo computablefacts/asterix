@@ -53,7 +53,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // s1(1)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("s1", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
@@ -91,7 +91,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // s2(1)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("s2", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
@@ -130,7 +130,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // a(X)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("a", newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
 
@@ -172,7 +172,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // q(X)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("q", newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
 
@@ -201,7 +201,7 @@ public class ProbabilityEstimatorTest {
     kb.azzert(parseClause("0.3::p(1)."));
 
     // Query kb
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("~p", newConst(1));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
@@ -250,7 +250,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // someHeads(X)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("someHeads", newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
@@ -299,7 +299,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // twoHeads(X)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("twoHeads", newVar());
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
@@ -344,7 +344,7 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // p(1)?
     // p(2)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query1 = new Literal("p", newConst("1"));
     Set<AbstractClause> proofs1 = solver.proofs(query1);
     Set<Fact> answers1 = Sets.newHashSet(solver.solve(query1));
@@ -406,7 +406,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // ~p(1)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("~p", newConst("1"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
@@ -453,7 +453,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // p(1)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("p", newConst(1));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
@@ -501,7 +501,7 @@ public class ProbabilityEstimatorTest {
     // stressed(1)?
     // stressed(2)?
     // stressed(3)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
 
     Literal query1 = new Literal("stressed", newConst(1));
     Set<AbstractClause> proofs1 = solver.proofs(query1);

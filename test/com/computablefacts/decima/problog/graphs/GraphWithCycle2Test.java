@@ -50,7 +50,7 @@ public class GraphWithCycle2Test {
 
     // Query kb
     // path(1, 4)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("path", newConst("1"), newConst("4"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
@@ -105,7 +105,7 @@ public class GraphWithCycle2Test {
 
     // Query kb
     // path(1, 4)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("path", newConst("1"), newConst("4"));
     List<String> table = solver.tableOfProofs(query);
 

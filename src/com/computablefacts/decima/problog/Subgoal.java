@@ -3,7 +3,7 @@ package com.computablefacts.decima.problog;
 import com.computablefacts.Generated;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -27,24 +27,21 @@ import java.util.concurrent.ConcurrentHashMap;
 final public class Subgoal {
 
   private final Literal literal_;
-  private final boolean computeProofs_;
 
   // Parent rules benefiting from this sub-goal resolution
-  private final Set<Map.Entry<Subgoal, Rule>> waiters_ = ConcurrentHashMap.newKeySet();
+  private final Set<Map.Entry<Subgoal, Map.Entry<Rule, Integer>>> waiters_ = ConcurrentHashMap.newKeySet();
 
   // Facts derived for this subgoal
   private final AbstractSubgoalFacts facts_;
-  private final List<Rule> rules_ = new ArrayList<>();
   private final List<Rule> proofs_ = new ArrayList<>();
 
-  public Subgoal(Literal literal, AbstractSubgoalFacts facts, boolean computeProofs) {
+  public Subgoal(Literal literal, AbstractSubgoalFacts facts) {
 
     Preconditions.checkNotNull(literal, "literal should not be null");
     Preconditions.checkNotNull(facts, "facts should not be null");
 
     literal_ = literal;
     facts_ = facts;
-    computeProofs_ = computeProofs;
   }
 
   @Override
@@ -70,53 +67,63 @@ final public class Subgoal {
     return MoreObjects.toStringHelper(this).add("literal", literal_).toString();
   }
 
-  @Generated
   public Literal literal() {
     return literal_;
   }
 
-  @Generated
-  public Set<Rule> rules() {
-    return Sets.newHashSet(rules_);
-  }
-
-  @Generated
   boolean contains(Fact fact) {
     return facts_.contains(fact);
   }
 
-  @Generated
   Iterator<Fact> facts() {
     return facts_.facts();
   }
 
-  @Generated
   int nbFacts() {
     return facts_.size();
   }
 
-  @Generated
-  Set<Map.Entry<Subgoal, Rule>> waiters() {
+  Set<Map.Entry<Subgoal, Map.Entry<Rule, Integer>>> waiters() {
     return waiters_;
   }
 
-  void waiter(Subgoal subgoal, Rule rule) {
+  /**
+   * Add a new waiter i.e. a subgoal that should be resumed when this subgoal has been evaluated.
+   *
+   * @param subgoal the subgoal to resume.
+   * @param rule    the rule being evaluated.
+   * @param idx     the position of the rule body literal that should be evaluated next.
+   */
+  void waiter(Subgoal subgoal, Rule rule, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "clause should not be null");
+    Preconditions.checkArgument(0 <= idx && idx < rule.body().size(), "idx must be such as 0 <= idx < %s",
+        rule.body().size());
 
-    waiters_.add(new AbstractMap.SimpleEntry<>(subgoal, rule));
+    waiters_.add(new AbstractMap.SimpleEntry<>(subgoal, new AbstractMap.SimpleEntry<>(rule, idx)));
   }
 
   /**
-   * Add a rule to the subgoal.
+   * Get all the profs that entails the subgoal.
    *
-   * @param rule the rule to add.
+   * @return a set of proofs.
    */
-  void add(Rule rule) {
-    if (rule != null) {
-      rules_.add(rule);
-    }
+  Collection<Rule> proofs() {
+    return ImmutableList.copyOf(proofs_);
+  }
+
+  /**
+   * Add a proof to the subgoal.
+   *
+   * @param proof the proof to add.
+   */
+  void proof(Rule proof) {
+
+    Preconditions.checkNotNull(proof, "proof should not be null");
+    Preconditions.checkArgument(proof.isGrounded(), "proof should be grounded : %s", proof);
+
+    proofs_.add(proof);
   }
 
   /**
@@ -124,142 +131,10 @@ final public class Subgoal {
    *
    * @param fact the fact to add.
    */
-  void add(Fact fact) {
+  void fact(Fact fact) {
 
     Preconditions.checkNotNull(fact, "fact should not be null");
 
     facts_.add(fact);
-  }
-
-  Collection<Rule> proofs() {
-    return proofs_;
-  }
-
-  void push(Rule rule) {
-
-    Preconditions.checkNotNull(rule, "clause should not be null");
-
-    if (!computeProofs_) {
-      return;
-    }
-
-    @com.google.errorprone.annotations.Var Rule prev = null;
-
-    if (!proofs_.isEmpty()) {
-      for (int i = proofs_.size() - 1; i >= 0; i--) {
-        if (proofs_.get(i).head().isRelevant(rule.head()) && proofs_.get(i).hasSuffix(rule.body())) {
-          prev = proofs_.remove(i);
-          break;
-        }
-      }
-    }
-
-    if (prev == null) {
-      for (int i = rules_.size() - 1; i >= 0; i--) {
-        if (rules_.get(i).head().isRelevant(rule.head()) && rules_.get(i).hasSuffix(rule.body())) {
-          prev = rules_.get(i);
-          break;
-        }
-      }
-    }
-
-    Preconditions.checkState(prev != null, "prev should not be null");
-
-    @com.google.errorprone.annotations.Var Rule proof = merge(rule, prev);
-
-    if (!proof.isGrounded() && rule.isGrounded()) {
-
-      int length = proof.body().size() - rule.body().size();
-      List<Literal> prefix = proof.body().subList(0, length);
-
-      // If the clause is grounded but the proof is not, we must backtrack in the tree
-      for (int i = proofs_.size() - 1; i >= 0; i--) {
-        if (proofs_.get(i).hasPrefix(prefix)) {
-
-          List<Literal> body = new ArrayList<>(proofs_.get(i).body().subList(0, length));
-          boolean isGrounded = body.stream().allMatch(Literal::isGrounded);
-
-          Preconditions.checkState(isGrounded, "proof should be grounded : %s", proofs_.get(i));
-
-          body.addAll(proof.body().subList(length, proof.body().size()));
-          proof = new Rule(proof.head(), body);
-          break;
-        }
-      }
-    }
-
-    proofs_.add(proof);
-  }
-
-  void pop(Rule rule) {
-
-    Preconditions.checkNotNull(rule, "clause should not be null");
-
-    if (!computeProofs_) {
-      return;
-    }
-
-    // Deal with primitives
-    if (!proofs_.isEmpty()) {
-
-      List<Rule> removed = new ArrayList<>();
-
-      for (int i = proofs_.size() - 1; i >= 0; i--) {
-        if (proofs_.get(i).head().isRelevant(rule.head()) && proofs_.get(i).hasSuffix(rule.body())) {
-          removed.add(proofs_.get(i));
-        }
-      }
-
-      proofs_.removeAll(removed);
-    }
-
-    // Deal with negation
-    for (Map.Entry<Subgoal, Rule> waiter : waiters_) {
-
-      List<Rule> removed = new ArrayList<>();
-      List<Rule> stack = waiter.getKey().proofs_;
-
-      for (int i = stack.size() - 1; i >= 0; i--) {
-        if (stack.get(i).body().get(stack.get(i).body().size() - 1).isRelevant(rule.head())) {
-          removed.add(stack.get(i));
-        }
-      }
-
-      stack.removeAll(removed);
-    }
-  }
-
-  private Rule merge(Rule cur, Rule prev) {
-
-    Preconditions.checkNotNull(cur, "cur should not be null");
-    Preconditions.checkNotNull(prev, "prev should not be null");
-    Preconditions.checkArgument(cur.body().size() <= prev.body().size(), "mismatch in body length : %s vs %s",
-        prev.body(), cur.body());
-
-    // 1 - Build env
-    Map<Var, AbstractTerm> env = prev.head().unify(cur.head());
-
-    for (int i = 0; i < cur.body().size(); i++) {
-
-      Literal lit1 = prev.body().get(prev.body().size() - cur.body().size() + i);
-      Literal lit2 = cur.body().get(i);
-
-      env.putAll(lit1.unify(lit2));
-    }
-
-    // 2 - Fill prev rule
-    Rule merged = prev.subst(env);
-
-    // 3 - Transfer probabilities to the right literals
-    Literal head = merged.head();
-    List<Literal> body = new ArrayList<>(merged.body().subList(0, merged.body().size() - cur.body().size()));
-
-    if (!cur.body().isEmpty()) {
-      body.add(cur.body().get(0));
-      body.addAll(merged.body().subList(merged.body().size() - cur.body().size() + 1, merged.body().size()));
-    }
-
-    // 4 - Create a new cur
-    return new Rule(head, body);
   }
 }

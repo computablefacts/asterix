@@ -46,7 +46,7 @@ public class BPlusTreeSubgoalFactsTest {
     AtomicInteger id = new AtomicInteger(0);
     String tblName = "solver_subgoals_" + new RandomString().nextString();
     Solver solver = new Solver(kb, literal -> new Subgoal(literal,
-        new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement()), true));
+        new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement())));
     Literal query = new Literal("s1", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
@@ -88,8 +88,7 @@ public class BPlusTreeSubgoalFactsTest {
     AtomicInteger id = new AtomicInteger(0);
     String tblName = "solver_subgoals_" + new RandomString().nextString();
     Solver solver = new Solver(kb, literal -> new Subgoal(literal,
-        new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement(), facts::add),
-        true));
+        new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement(), facts::add)));
     Literal query = new Literal("s2", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 

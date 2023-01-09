@@ -59,7 +59,7 @@ public class GraphWithCycle1Test {
 
     // Query kb
     // path(1, 4)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("path", newConst("1"), newConst("4"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
@@ -173,7 +173,7 @@ public class GraphWithCycle1Test {
 
     // Query kb
     // path(1, 4)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("path", newConst("1"), newConst("4"));
     List<String> table = solver.tableOfProofs(query);
 
@@ -183,7 +183,7 @@ public class GraphWithCycle1Test {
             + "[fact] depth=2, 0.5::edge(\"2\", \"6\")\n" + "[fact] depth=2, 0.8::edge(\"2\", \"3\")\n"
             + "[fact] depth=3, 0.4::edge(\"6\", \"5\")\n" + "[fact] depth=3, 0.6::edge(\"3\", \"4\")\n"
             + "[fact] depth=3, 0.7::edge(\"3\", \"5\")\n" + "[fact] depth=4, 0.2::edge(\"5\", \"4\")\n"
-            + "[fact] depth=4, edge(\"5\", \"3\")\n" + "[prim] depth=0, fn_eq(\"false\", \"2\", \"4\")\n"
+            + "[fact] depth=4, 0.7::edge(\"5\", \"3\")\n" + "[prim] depth=0, fn_eq(\"false\", \"2\", \"4\")\n"
             + "[prim] depth=0, fn_eq(\"false\", \"6\", \"4\")\n" + "[prim] depth=0, fn_is_false(\"false\")\n"
             + "[prim] depth=1, fn_eq(\"false\", \"2\", \"4\")\n" + "[prim] depth=1, fn_eq(\"false\", \"5\", \"4\")\n"
             + "[prim] depth=1, fn_is_false(\"false\")\n" + "[prim] depth=2, fn_eq(\"false\", \"3\", \"4\")\n"
@@ -200,7 +200,7 @@ public class GraphWithCycle1Test {
             + "[rule] depth=3, path(\"3\", \"4\") :- 0.7::edge(\"3\", \"5\"), path(\"5\", \"4\"), fn_eq(\"false\", \"5\", \"4\"), fn_is_false(\"false\")\n"
             + "[rule] depth=3, path(\"6\", \"4\") :- 0.4::edge(\"6\", \"5\"), path(\"5\", \"4\"), fn_eq(\"false\", \"5\", \"4\"), fn_is_false(\"false\")\n"
             + "[rule] depth=4, path(\"5\", \"4\") :- 0.2::edge(\"5\", \"4\")\n"
-            + "[rule] depth=4, path(\"5\", \"4\") :- edge(\"5\", \"3\"), path(\"3\", \"4\"), fn_eq(\"false\", \"3\", \"4\"), fn_is_false(\"false\")",
+            + "[rule] depth=4, path(\"5\", \"4\") :- 0.7::edge(\"5\", \"3\"), path(\"3\", \"4\"), fn_eq(\"false\", \"3\", \"4\"), fn_is_false(\"false\")",
         Joiner.on("\n").join(table));
   }
 }

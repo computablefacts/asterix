@@ -53,7 +53,7 @@ public class GraphWithoutCycle1Test {
 
     // Query kb
     // path(b, f)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("path", newConst("b"), newConst("f"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
@@ -105,7 +105,7 @@ public class GraphWithoutCycle1Test {
 
     // Query kb
     // path(b, f)?
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     Literal query = new Literal("path", newConst("b"), newConst("f"));
     List<String> table = solver.tableOfProofs(query);
 

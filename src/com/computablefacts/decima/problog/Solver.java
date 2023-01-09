@@ -4,6 +4,7 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 
 import com.computablefacts.Generated;
 import com.computablefacts.asterix.BloomFilter;
+import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.trie.Trie;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -56,8 +57,8 @@ final public class Solver {
   private Subgoal root_ = null;
   private int maxSampleSize_ = -1;
 
-  public Solver(AbstractKnowledgeBase kb, boolean computeProofs) {
-    this(kb, literal -> new Subgoal(literal, new InMemorySubgoalFacts(), computeProofs));
+  public Solver(AbstractKnowledgeBase kb) {
+    this(kb, literal -> new Subgoal(literal, new InMemorySubgoalFacts()));
   }
 
   public Solver(AbstractKnowledgeBase kb, Function<Literal, Subgoal> newSubgoal) {
@@ -100,7 +101,7 @@ final public class Solver {
     root_ = newSubgoal_.apply(query);
     subgoals_.put(query.tag(), root_);
 
-    search(root_);
+    search(root_, 0);
 
     ProofAssistant assistant = new ProofAssistant(subgoals_.values());
     return assistant.proofs(root_.literal());
@@ -114,7 +115,7 @@ final public class Solver {
     root_ = newSubgoal_.apply(query);
     subgoals_.put(query.tag(), root_);
 
-    search(root_);
+    search(root_, 0);
 
     ProofAssistant assistant = new ProofAssistant(subgoals_.values());
     Set<AbstractClause> proofs = assistant.proofs(root_.literal());
@@ -173,22 +174,8 @@ final public class Solver {
     subgoals_.put(query.tag(), root_);
     maxSampleSize_ = maxSampleSize <= 0 ? -1 : maxSampleSize;
 
-    search(root_);
+    search(root_, 0);
     return root_.facts();
-  }
-
-  /**
-   * Dump the subgoals rules. This method will yield no result if {@code computeProofs} is set to {@code false}.
-   *
-   * @return the generated rules.
-   */
-  @Generated
-  public String dumpSubgoals() {
-    return subgoals_.values().stream().map(
-            subgoal -> subgoal.literal().toString() + " : " + subgoal.nbFacts() + "\n" + (subgoal.rules().isEmpty()
-                ? "  -> nil"
-                : subgoal.rules().stream().map(rule -> "  -> " + rule.toString()).collect(Collectors.joining("\n"))))
-        .collect(Collectors.joining("\n"));
   }
 
   /**
@@ -205,7 +192,7 @@ final public class Solver {
    *
    * @param subgoal subgoal.
    */
-  private void search(Subgoal subgoal) {
+  private void search(Subgoal subgoal, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
 
@@ -224,7 +211,7 @@ final public class Solver {
 
       subgoals_.put(sub.literal().tag(), sub);
 
-      search(sub);
+      search(sub, idx);
 
       String newPredicate = literal.predicate().name();
       List<AbstractTerm> newTerms = literal.terms().stream().map(t -> t.isConst() ? t : newConst("_"))
@@ -245,7 +232,7 @@ final public class Solver {
           Fact fact = facts.next();
 
           if (fact.head().isRelevant(base)) {
-            if (sub.rules().isEmpty()) {
+            if (sub.proofs().isEmpty()) {
 
               // Negate a probabilistic fact
               Fact newFact = new Fact(
@@ -253,20 +240,17 @@ final public class Solver {
 
               if (!BigDecimal.ZERO.equals(newFact.head().probability())) {
                 fact(subgoal, newFact);
-              } else {
-                subgoal.pop(new Rule(literal));
               }
             } else {
 
               // Negate a probabilistic rule
               // i.e. if (q :- a, b) then ~q is rewritten as (~q :- ~a) or (~q :- ~b)
-              for (Rule rule : sub.rules()) {
+              for (Rule rule : sub.proofs()) {
                 for (Literal lit : rule.body()) {
                   if (!lit.predicate().isPrimitive()) {
 
                     Rule newRule = new Rule(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
-
-                    subgoal.add(newRule);
+                    // TODO
                   }
                 }
               }
@@ -279,7 +263,7 @@ final public class Solver {
 
                     Rule newLiteral = new Rule(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
 
-                    rule(subgoal, newLiteral, false);
+                    rule(subgoal, newLiteral, idx);
                   }
                 }
               }
@@ -292,7 +276,6 @@ final public class Solver {
       }
     } else {
 
-      @Var boolean match = false;
       Iterator<Fact> facts = kb_.facts(literal);
 
       while (facts.hasNext()) {
@@ -303,7 +286,6 @@ final public class Solver {
 
         if (env != null) {
           fact(subgoal, new Fact(renamed.subst(env)));
-          match = true;
         }
         if (maxSampleSizeReached()) {
           break;
@@ -319,16 +301,11 @@ final public class Solver {
         Map<com.computablefacts.decima.problog.Var, AbstractTerm> env = literal.unify(renamed.head());
 
         if (env != null) {
-          rule(subgoal, renamed.subst(env), true);
-          match = true;
+          rule(subgoal, renamed.subst(env), idx);
         }
         if (maxSampleSizeReached()) {
           break;
         }
-      }
-
-      if (!match) {
-        subgoal.pop(new Rule(literal));
       }
     }
   }
@@ -354,11 +331,11 @@ final public class Solver {
       }
     }
 
-    subgoal.add(fact);
+    subgoal.fact(fact);
 
-    for (Map.Entry<Subgoal, Rule> entry : subgoal.waiters()) {
+    for (Map.Entry<Subgoal, Map.Entry<Rule, Integer>> entry : subgoal.waiters()) {
 
-      ground(entry.getKey(), entry.getValue(), fact);
+      ground(entry.getKey(), entry.getValue().getKey(), fact, entry.getValue().getValue());
 
       if (maxSampleSizeReached()) {
         return;
@@ -371,15 +348,14 @@ final public class Solver {
    *
    * @param subgoal subgoal.
    * @param rule    the rule to add to the subgoal.
-   * @param isInKb  true iif the rule has been loaded from the KB, false otherwise.
+   * @param idx     the next rule body literal to evaluate.
    */
-  private void rule(Subgoal subgoal, Rule rule, boolean isInKb) {
+  private void rule(Subgoal subgoal, Rule rule, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");
 
-    subgoal.add(isInKb ? rule : null);
-    Literal first = rule.body().get(0);
+    Literal first = rule.body().get(idx);
 
     if (first.predicate().isPrimitive()) {
 
@@ -388,7 +364,7 @@ final public class Solver {
       if (facts != null) {
         while (facts.hasNext()) {
 
-          ground(subgoal, rule, new Fact(facts.next()));
+          ground(subgoal, rule, new Fact(facts.next()), idx);
 
           if (maxSampleSizeReached()) {
             break;
@@ -396,36 +372,31 @@ final public class Solver {
         }
         return;
       }
-      subgoal.pop(rule);
       return;
     }
 
     @Var Subgoal sub = subgoals_.get(first.tag());
 
     if (sub != null) {
-      sub.waiter(subgoal, rule);
+      sub.waiter(subgoal, rule, idx);
     } else {
 
       sub = newSubgoal_.apply(first);
-      sub.waiter(subgoal, rule);
+      sub.waiter(subgoal, rule, idx);
 
       subgoals_.put(sub.literal().tag(), sub);
 
-      search(sub);
+      search(sub, 0);
     }
 
     Iterator<Fact> facts = sub.facts();
 
-    if (!facts.hasNext()) {
-      subgoal.pop(rule);
-    } else {
-      while (facts.hasNext()) {
+    while (facts.hasNext()) {
 
-        ground(subgoal, rule, facts.next());
+      ground(subgoal, rule, facts.next(), idx);
 
-        if (maxSampleSizeReached()) {
-          return;
-        }
+      if (maxSampleSizeReached()) {
+        return;
       }
     }
   }
@@ -437,27 +408,25 @@ final public class Solver {
    * @param rule    the rule to ground.
    * @param fact    the fact associated with the rule's first body literal.
    */
-  private void ground(Subgoal subgoal, Rule rule, Fact fact) {
+  private void ground(Subgoal subgoal, Rule rule, Fact fact, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");
     Preconditions.checkNotNull(fact, "fact should not be null");
 
-    // Rule with first body literal
-    Rule prevRule = rule.resolve(fact.head());
-
-    Preconditions.checkState(prevRule != null, "resolution failed : rule = %s / head = %s", rule, fact);
-
     // Rule minus first body literal
-    Literal head = prevRule.head();
-    List<Literal> body = Collections.unmodifiableList(prevRule.body().subList(1, prevRule.body().size()));
+    List<Literal> bodyTmp = Collections.unmodifiableList(rule.body().subList(idx, rule.body().size()));
+    Rule ruleTmp = new Rule(rule.head(), bodyTmp).resolve(fact.head());
 
-    subgoal.push(prevRule);
+    Preconditions.checkState(ruleTmp != null, "resolution failed : rule = %s / head = %s", rule, fact);
 
-    if (body.isEmpty()) {
-      fact(subgoal, new Fact(head));
+    Rule newRule = new Rule(ruleTmp.head(), View.of(rule.body().subList(0, idx)).concat(ruleTmp.body()).toList());
+
+    if (ruleTmp.body().size() == 1) {
+      subgoal.proof(newRule);
+      fact(subgoal, new Fact(newRule.head()));
     } else {
-      rule(subgoal, new Rule(head, body), false);
+      rule(subgoal, newRule, idx + 1);
     }
   }
 }

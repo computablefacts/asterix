@@ -92,7 +92,7 @@ final public class Test {
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
     kb.azzert(rules);
 
-    Solver solver = new Solver(kb, true);
+    Solver solver = new Solver(kb);
     return solver.proofs(query);
   }
 }
