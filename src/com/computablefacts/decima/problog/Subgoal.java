@@ -138,7 +138,6 @@ final public class Subgoal {
   void push(Rule rule) {
 
     Preconditions.checkNotNull(rule, "clause should not be null");
-    Preconditions.checkArgument(rule.isRule(), "clause should be a rule : %s", rule);
 
     if (!computeProofs_) {
       return;
@@ -233,9 +232,7 @@ final public class Subgoal {
   private Rule merge(Rule cur, Rule prev) {
 
     Preconditions.checkNotNull(cur, "cur should not be null");
-    Preconditions.checkArgument(cur.isRule(), "cur should be a rule : %s", cur);
     Preconditions.checkNotNull(prev, "prev should not be null");
-    Preconditions.checkArgument(prev.isRule(), "prev should be a rule : %s", cur);
     Preconditions.checkArgument(cur.body().size() <= prev.body().size(), "mismatch in body length : %s vs %s",
         prev.body(), cur.body());
 

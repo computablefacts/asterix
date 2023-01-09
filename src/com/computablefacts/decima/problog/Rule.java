@@ -165,7 +165,6 @@ final public class Rule extends AbstractClause {
   public boolean hasPrefix(List<Literal> literals) {
 
     Preconditions.checkNotNull(literals, "literals should not be null");
-    Preconditions.checkState(isRule(), "the clause should be a rule : %s", toString());
 
     if (body_.size() < literals.size()) {
       return false;
@@ -187,7 +186,6 @@ final public class Rule extends AbstractClause {
   public boolean hasSuffix(List<Literal> literals) {
 
     Preconditions.checkNotNull(literals, "literals should not be null");
-    Preconditions.checkState(isRule(), "the clause should be a rule : %s", toString());
 
     if (body_.size() < literals.size()) {
       return false;

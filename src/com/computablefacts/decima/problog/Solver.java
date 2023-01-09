@@ -377,7 +377,6 @@ final public class Solver {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");
-    Preconditions.checkArgument(rule.isRule(), "rule should be a rule : %s", rule);
 
     subgoal.add(isInKb ? rule : null);
     Literal first = rule.body().get(0);

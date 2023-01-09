@@ -559,7 +559,6 @@ public abstract class AbstractKnowledgeBase {
   protected Pair<Rule, Fact> rewriteRuleHead(Rule rule) {
 
     Preconditions.checkNotNull(rule, "clause should not be null");
-    Preconditions.checkArgument(rule.isRule(), "clause should be a clause : %s", rule);
 
     Literal head = rule.head();
 
