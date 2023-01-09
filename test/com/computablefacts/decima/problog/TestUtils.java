@@ -69,7 +69,7 @@ final public class TestUtils {
           if (actual.containsKey(proof.head())) {
 
             List<List<Literal>> proofs = actual.get(proof.head()).paths().stream().map(path -> path.stream()
-                    .filter(p -> !p.predicate().baseName().startsWith("proba_") /* ignore synthetic facts */)
+                    .filter(p -> !p.predicate().baseName().equals("proba") /* ignore synthetic facts */)
                     .filter(p -> !ignoreFunctions || !p.predicate().isPrimitive()).collect(Collectors.toList()))
                 .collect(Collectors.toList());
 

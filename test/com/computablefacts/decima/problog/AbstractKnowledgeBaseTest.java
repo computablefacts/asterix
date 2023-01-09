@@ -86,8 +86,8 @@ public class AbstractKnowledgeBaseTest {
     Fact firstFact = Iterables.get(facts, 0);
     Fact secondFact = Iterables.get(facts, 1);
 
-    Assert.assertTrue(firstFact.head().predicate().name().startsWith("proba_"));
-    Assert.assertTrue(secondFact.head().predicate().name().startsWith("proba_"));
+    Assert.assertTrue(firstFact.head().predicate().name().equals("proba"));
+    Assert.assertTrue(secondFact.head().predicate().name().equals("proba"));
 
     // Check rules
     Rule firstRule = Iterables.get(rules, 0);
@@ -138,7 +138,7 @@ public class AbstractKnowledgeBaseTest {
 
     Assert.assertEquals(BigDecimal.valueOf(0.3), newFact.head().probability());
     Assert.assertTrue(newFact.head().isRelevant(newRule.body().get(newRule.body().size() - 1)));
-    Assert.assertTrue(newFact.head().predicate().name().startsWith("proba_"));
+    Assert.assertTrue(newFact.head().predicate().name().equals("proba"));
   }
 
   @Test

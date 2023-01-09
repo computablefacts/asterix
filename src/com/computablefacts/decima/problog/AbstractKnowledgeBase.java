@@ -573,14 +573,15 @@ public abstract class AbstractKnowledgeBase {
     BigDecimal probability = head.probability();
 
     // Create fact
-    String newPredicate = "proba_" + randomString_.nextString().toLowerCase();
-    Literal newLiteral = new Literal(probability, newPredicate, newConst(true));
+    String uuid = randomString_.nextString().toLowerCase();
+    String newPredicate = "proba";
+    Literal newLiteral = new Literal(probability, newPredicate, newConst(uuid));
     Fact newFact = new Fact(newLiteral);
 
     // Rewrite clause
     Literal newHead = new Literal(predicate, rule.head().terms());
     List<Literal> newBody = new ArrayList<>(rule.body());
-    newBody.add(new Literal(newPredicate, newConst(true)));
+    newBody.add(new Literal(newPredicate, newConst(uuid)));
     Rule newRule = new Rule(newHead, newBody);
 
     return new Pair<>(newRule, newFact);

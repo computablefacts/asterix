@@ -234,7 +234,7 @@ final public class ProbabilityEstimator {
     List<Literal> body = new ArrayList<>(rule.body().size());
 
     for (Literal literal : rule.body()) {
-      if (!literal.predicate().baseName().startsWith("proba_")) {
+      if (!literal.predicate().baseName().equals("proba")) {
         body.add(literal);
       } else {
         String predicate = randomString_.nextString().toLowerCase();

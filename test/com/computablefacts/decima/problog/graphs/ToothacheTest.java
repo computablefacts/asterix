@@ -99,13 +99,13 @@ public class ToothacheTest {
 
     Assert.assertEquals(11, table.size());
     Assert.assertTrue(WildcardMatcher.match(Joiner.on("\n").join(table),
-        "[fact] depth=0, 0.05::gum_disease(\"a\")\n" + "[fact] depth=0, 0.05::proba_???????(\"true\")\n"
-            + "[fact] depth=0, 0.1::cavity(\"a\")\n" + "[fact] depth=0, 0.3::proba_???????(\"true\")\n"
-            + "[fact] depth=0, 0.6::proba_???????(\"true\")\n" + "[fact] depth=0, 0.95::~gum_disease(\"a\")\n"
+        "[fact] depth=0, 0.05::gum_disease(\"a\")\n" + "[fact] depth=0, 0.05::proba(\"???????\")\n"
+            + "[fact] depth=0, 0.1::cavity(\"a\")\n" + "[fact] depth=0, 0.3::proba(\"???????\")\n"
+            + "[fact] depth=0, 0.6::proba(\"???????\")\n" + "[fact] depth=0, 0.95::~gum_disease(\"a\")\n"
             + "[fact] depth=0, 0.9::~cavity(\"a\")\n"
-            + "[rule] depth=0, toothache(\"a\") :- 0.05::gum_disease(\"a\"), 0.9::~cavity(\"a\"), 0.3::proba_???????(\"true\")\n"
+            + "[rule] depth=0, toothache(\"a\") :- 0.05::gum_disease(\"a\"), 0.9::~cavity(\"a\"), 0.3::proba(\"???????\")\n"
             + "[rule] depth=0, toothache(\"a\") :- 0.1::cavity(\"a\"), 0.05::gum_disease(\"a\")\n"
-            + "[rule] depth=0, toothache(\"a\") :- 0.1::cavity(\"a\"), 0.95::~gum_disease(\"a\"), 0.6::proba_???????(\"true\")\n"
-            + "[rule] depth=0, toothache(\"a\") :- 0.9::~cavity(\"a\"), 0.95::~gum_disease(\"a\"), 0.05::proba_???????(\"true\")"));
+            + "[rule] depth=0, toothache(\"a\") :- 0.1::cavity(\"a\"), 0.95::~gum_disease(\"a\"), 0.6::proba(\"???????\")\n"
+            + "[rule] depth=0, toothache(\"a\") :- 0.9::~cavity(\"a\"), 0.95::~gum_disease(\"a\"), 0.05::proba(\"???????\")"));
   }
 }
