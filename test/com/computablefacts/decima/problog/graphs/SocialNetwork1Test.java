@@ -28,7 +28,7 @@ import org.junit.Test;
 /**
  * See http://csci431.artifice.cc/notes/problog.html
  */
-public class SocialNetworkTest {
+public class SocialNetwork1Test {
 
   @Test
   public void test1() {

@@ -3,13 +3,12 @@ package com.computablefacts.decima.problog;
 import com.computablefacts.Generated;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +32,7 @@ final public class Subgoal {
 
   // Facts derived for this subgoal
   private final AbstractSubgoalFacts facts_;
-  private final List<Rule> proofs_ = new ArrayList<>();
+  private final Set<Rule> proofs_ = new HashSet<>();
 
   public Subgoal(Literal literal, AbstractSubgoalFacts facts) {
 
@@ -110,7 +109,7 @@ final public class Subgoal {
    * @return a set of proofs.
    */
   Collection<Rule> proofs() {
-    return ImmutableList.copyOf(proofs_);
+    return ImmutableSet.copyOf(proofs_);
   }
 
   /**

@@ -235,35 +235,23 @@ final public class Solver {
             if (sub.proofs().isEmpty()) {
 
               // Negate a probabilistic fact
-              Fact newFact = new Fact(
+              Fact negatedFact = new Fact(
                   new Literal(BigDecimal.ONE.subtract(fact.head().probability()), newPredicate, newTerms));
 
-              if (!BigDecimal.ZERO.equals(newFact.head().probability())) {
-                fact(subgoal, newFact);
+              if (!BigDecimal.ZERO.equals(negatedFact.head().probability())) {
+                fact(subgoal, negatedFact);
               }
             } else {
 
               // Negate a probabilistic rule
               // i.e. if (q :- a, b) then ~q is rewritten as (~q :- ~a) or (~q :- ~b)
-              for (Rule rule : sub.proofs()) {
-                for (Literal lit : rule.body()) {
-                  if (!lit.predicate().isPrimitive()) {
-
-                    Rule newRule = new Rule(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
-                    // TODO
-                  }
-                }
-              }
-
               List<Rule> rules = sub.proofs().stream().filter(Rule::isGrounded).collect(Collectors.toList());
 
               for (Rule rule : rules) {
                 for (Literal lit : rule.body()) {
                   if (!lit.predicate().isPrimitive()) {
-
-                    Rule newLiteral = new Rule(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
-
-                    rule(subgoal, newLiteral, idx);
+                    Rule negatedRule = new Rule(new Literal(newPredicate, newTerms), Lists.newArrayList(lit.negate()));
+                    rule(subgoal, negatedRule, idx);
                   }
                 }
               }
