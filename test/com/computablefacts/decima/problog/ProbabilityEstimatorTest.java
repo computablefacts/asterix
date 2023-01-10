@@ -1,9 +1,8 @@
 package com.computablefacts.decima.problog;
 
-import static com.computablefacts.decima.problog.AbstractTerm.newConst;
-import static com.computablefacts.decima.problog.AbstractTerm.newVar;
 import static com.computablefacts.decima.problog.Parser.parseClause;
 import static com.computablefacts.decima.problog.Parser.parseFact;
+import static com.computablefacts.decima.problog.Parser.parseQuery;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 
@@ -22,7 +21,7 @@ public class ProbabilityEstimatorTest {
   @Test
   public void testComputeProbabilityWithoutProofs() {
     ProbabilityEstimator estimator = new ProbabilityEstimator(new HashSet<>());
-    Assert.assertEquals(BigDecimal.ZERO, estimator.probability(new Literal("fake", newConst(1))));
+    Assert.assertEquals(BigDecimal.ZERO, estimator.probability(parseFact("fake(1).")));
   }
 
   /**
@@ -52,13 +51,13 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // s1(1)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("s1", newConst(1));
+    Literal query = parseQuery("s1(1)?");
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
     // Verify BDD answer
     // 0.734375::s1(1).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(query, 6);
+    BigDecimal probability = estimator.probability(new Fact(query), 6);
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.734375).compareTo(probability));
   }
@@ -90,13 +89,13 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // s2(1)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("s2", newConst(1));
+    Literal query = parseQuery("s2(1)?");
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
     // Verify BDD answer
     // 0.734375::s2(1).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(query, 6);
+    BigDecimal probability = estimator.probability(new Fact(query), 6);
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.734375).compareTo(probability));
   }
@@ -129,7 +128,7 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // a(X)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("a", newVar());
+    Literal query = parseQuery("a(_)?");
     Set<AbstractClause> proofs = solver.proofs(query);
 
     // Verify BDD answer
@@ -139,9 +138,9 @@ public class ProbabilityEstimatorTest {
     ProbabilityEstimator estimator = new ProbabilityEstimator(proofs);
     Map<Fact, BigDecimal> probabilities = estimator.probabilities();
 
-    Fact a1 = new Fact(new Literal("a", newConst(1)));
-    Fact a2 = new Fact(new Literal("a", newConst(2)));
-    Fact a3 = new Fact(new Literal("a", newConst(3)));
+    Fact a1 = parseFact("a(1).");
+    Fact a2 = parseFact("a(2).");
+    Fact a3 = parseFact("a(3).");
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.2).compareTo(probabilities.get(a1)));
     Assert.assertEquals(0, BigDecimal.valueOf(0.2).compareTo(probabilities.get(a2)));
@@ -171,7 +170,7 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // q(X)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("q", newVar());
+    Literal query = parseQuery("q(_)?");
     Set<AbstractClause> proofs = solver.proofs(query);
 
     // Verify BDD answer
@@ -179,7 +178,7 @@ public class ProbabilityEstimatorTest {
     ProbabilityEstimator estimator = new ProbabilityEstimator(proofs);
     Map<Fact, BigDecimal> probabilities = estimator.probabilities();
 
-    Fact answer = new Fact(new Literal("q", newConst("unk")));
+    Fact answer = parseFact("q(unk).");
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.1).compareTo(probabilities.get(answer)));
   }
@@ -200,7 +199,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     Solver solver = new Solver(kb);
-    Literal query = new Literal("~p", newConst(1));
+    Literal query = parseQuery("~p(1)?");
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
 
@@ -215,7 +214,7 @@ public class ProbabilityEstimatorTest {
     // Verify BDD answer
     // 0.7::~p(1).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(query);
+    BigDecimal probability = estimator.probability(new Fact(query));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.7).compareTo(probability));
   }
@@ -246,7 +245,7 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // someHeads(X)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("someHeads", newVar());
+    Literal query = parseQuery("someHeads(_)?");
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
 
@@ -262,7 +261,7 @@ public class ProbabilityEstimatorTest {
     // Verify BDD answer
     // 0.8::someHeads(a).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(new Literal("someHeads", newConst("a")));
+    BigDecimal probability = estimator.probability(parseFact("someHeads(a)."));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.8).compareTo(probability));
   }
@@ -292,7 +291,7 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // twoHeads(X)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("twoHeads", newVar());
+    Literal query = parseQuery("twoHeads(_)?");
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
 
@@ -307,7 +306,7 @@ public class ProbabilityEstimatorTest {
     // Verify BDD answer
     // 0.3::twoHeads(a).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(new Literal("twoHeads", newConst("a")));
+    BigDecimal probability = estimator.probability(parseFact("twoHeads(a)."));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.3).compareTo(probability));
   }
@@ -334,11 +333,11 @@ public class ProbabilityEstimatorTest {
     // p(1)?
     // p(2)?
     Solver solver = new Solver(kb);
-    Literal query1 = new Literal("p", newConst("1"));
+    Literal query1 = parseQuery("p(1)?");
     Set<AbstractClause> proofs1 = solver.proofs(query1);
     Set<Fact> answers1 = Sets.newHashSet(solver.solve(query1));
 
-    Literal query2 = new Literal("p", newConst("2"));
+    Literal query2 = parseQuery("p(2)?");
     Set<AbstractClause> proofs2 = solver.proofs(query2);
     Set<Fact> answers2 = Sets.newHashSet(solver.solve(query2));
 
@@ -361,12 +360,12 @@ public class ProbabilityEstimatorTest {
     // 0.72::p(1).
     // 0.2::p(2).
     ProbabilityEstimator estimator1 = new ProbabilityEstimator(Sets.newHashSet(proofs1));
-    BigDecimal probability1 = estimator1.probability(query1);
+    BigDecimal probability1 = estimator1.probability(new Fact(query1));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.72).compareTo(probability1));
 
     ProbabilityEstimator estimator2 = new ProbabilityEstimator(Sets.newHashSet(proofs2));
-    BigDecimal probability2 = estimator2.probability(query2);
+    BigDecimal probability2 = estimator2.probability(new Fact(query2));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.2).compareTo(probability2));
   }
@@ -390,7 +389,7 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // ~p(1)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("~p", newConst("1"));
+    Literal query = parseQuery("~p(1)?");
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
 
@@ -405,7 +404,7 @@ public class ProbabilityEstimatorTest {
     // Verify BDD answer
     // 0.6::~p(1).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(query);
+    BigDecimal probability = estimator.probability(new Fact(query));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.6).compareTo(probability));
   }
@@ -434,7 +433,7 @@ public class ProbabilityEstimatorTest {
     // Query kb
     // p(1)?
     Solver solver = new Solver(kb);
-    Literal query = new Literal("p", newConst(1));
+    Literal query = parseQuery("p(1)?");
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
 
@@ -450,7 +449,7 @@ public class ProbabilityEstimatorTest {
     // Verify BDD answer
     // 0.85::p(1).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(query);
+    BigDecimal probability = estimator.probability(new Fact(query));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.85).compareTo(probability));
   }
@@ -480,23 +479,23 @@ public class ProbabilityEstimatorTest {
     // stressed(3)?
     Solver solver = new Solver(kb);
 
-    Literal query1 = new Literal("stressed", newConst(1));
+    Literal query1 = parseQuery("stressed(1)?");
     Set<AbstractClause> proofs1 = solver.proofs(query1);
     Set<Fact> answers1 = Sets.newHashSet(solver.solve(query1));
 
-    Literal query2 = new Literal("stressed", newConst(2));
+    Literal query2 = parseQuery("stressed(2)?");
     Set<AbstractClause> proofs2 = solver.proofs(query2);
     Set<Fact> answers2 = Sets.newHashSet(solver.solve(query2));
 
-    Literal query3 = new Literal("stressed", newConst(3));
+    Literal query3 = parseQuery("stressed(3)?");
     Set<AbstractClause> proofs3 = solver.proofs(query3);
     Set<Fact> answers3 = Sets.newHashSet(solver.solve(query3));
 
     // Verify answers
-    // stressed("1") :- athlet("1"), 0.2::proba_0sr9pjn("true")
-    // stressed("2") :- student("2"), 0.5::proba_8jyexcv("true")
-    // stressed("2") :- athlet("2"), 0.2::proba_0sr9pjn("true")
-    // stressed("3") :- student("3"), 0.5::proba_8jyexcv("true")
+    // stressed("1") :- athlet("1"), 0.2::proba("0sr9pjn").
+    // stressed("2") :- student("2"), 0.5::proba("8jyexcv").
+    // stressed("2") :- athlet("2"), 0.2::proba("0sr9pjn").
+    // stressed("3") :- student("3"), 0.5::proba("8jyexcv").
     Assert.assertEquals(1, proofs1.size());
     Assert.assertEquals(1, answers1.size());
     Assert.assertEquals(2, proofs2.size());
@@ -522,17 +521,17 @@ public class ProbabilityEstimatorTest {
     // 0.6::stressed(2).
     // 0.5::stressed(3).
     ProbabilityEstimator estimator1 = new ProbabilityEstimator(Sets.newHashSet(proofs1));
-    BigDecimal probability1 = estimator1.probability(query1);
+    BigDecimal probability1 = estimator1.probability(new Fact(query1));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.2).compareTo(probability1));
 
     ProbabilityEstimator estimator2 = new ProbabilityEstimator(Sets.newHashSet(proofs2));
-    BigDecimal probability2 = estimator2.probability(query2);
+    BigDecimal probability2 = estimator2.probability(new Fact(query2));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.6).compareTo(probability2));
 
     ProbabilityEstimator estimator3 = new ProbabilityEstimator(Sets.newHashSet(proofs3));
-    BigDecimal probability3 = estimator3.probability(query3);
+    BigDecimal probability3 = estimator3.probability(new Fact(query3));
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.5).compareTo(probability3));
   }

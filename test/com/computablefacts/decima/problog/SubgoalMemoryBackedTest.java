@@ -48,7 +48,7 @@ public class SubgoalMemoryBackedTest {
     // Verify BDD answer
     // 0.734375::s1(1).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(query, 6);
+    BigDecimal probability = estimator.probability(new Fact(query), 6);
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.734375).compareTo(probability));
   }
@@ -101,7 +101,7 @@ public class SubgoalMemoryBackedTest {
     // Verify BDD answer
     // 0.734375::s2(1).
     ProbabilityEstimator estimator = new ProbabilityEstimator(Sets.newHashSet(proofs));
-    BigDecimal probability = estimator.probability(query, 6);
+    BigDecimal probability = estimator.probability(new Fact(query), 6);
 
     Assert.assertEquals(0, BigDecimal.valueOf(0.734375).compareTo(probability));
   }

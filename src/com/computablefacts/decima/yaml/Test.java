@@ -2,6 +2,7 @@ package com.computablefacts.decima.yaml;
 
 import com.computablefacts.Generated;
 import com.computablefacts.decima.problog.AbstractClause;
+import com.computablefacts.decima.problog.Fact;
 import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.Parser;
@@ -76,7 +77,7 @@ final public class Test {
       ProbabilityEstimator estimator = new ProbabilityEstimator(proofs(moreRules));
 
       return facts.stream().allMatch(fact -> {
-        BigDecimal proba = estimator.probability(fact.head());
+        BigDecimal proba = estimator.probability((Fact) fact);
         return proba.compareTo(fact.head().probability()) == 0;
       });
     }

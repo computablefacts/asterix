@@ -68,24 +68,21 @@ final public class ProbabilityEstimator {
     return probabilities;
   }
 
-  @Beta
-  public BigDecimal probability(Literal literal) {
+  /**
+   * Compute the probability associated with a given fact.
+   *
+   * @param fact fact.
+   * @return probability.
+   */
+  public BigDecimal probability(Fact fact) {
 
-    Preconditions.checkNotNull(literal, "literal should not be null");
+    Preconditions.checkNotNull(fact, "fact should not be null");
 
-    return probability(literal, 5);
-  }
-
-  @Beta
-  public BigDecimal probability(Literal literal, int nbSignificantDigits) {
-
-    Preconditions.checkNotNull(literal, "literal should not be null");
-
-    return probability(new Fact(literal), nbSignificantDigits);
+    return probability(fact, 5);
   }
 
   /**
-   * Compute the probability associated with a given clause.
+   * Compute the probability associated with a given fact.
    *
    * @param fact                fact.
    * @param nbSignificantDigits number of significant digits.
