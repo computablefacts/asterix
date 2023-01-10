@@ -7,7 +7,7 @@ import com.computablefacts.asterix.console.ConsoleApp;
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.AbstractKnowledgeBase;
 import com.computablefacts.decima.problog.AbstractTerm;
-import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
+import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.Parser;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
@@ -132,7 +132,7 @@ final public class Solver extends ConsoleApp {
     Preconditions.checkNotNull(rules, "clauses should not be null");
 
     Map<Literal, BigDecimal> answers = new HashMap<>();
-    AbstractKnowledgeBase kb = new InMemoryKnowledgeBase();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     rules.forEach(kb::azzert);
 
     com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb);
@@ -153,7 +153,7 @@ final public class Solver extends ConsoleApp {
     Preconditions.checkNotNull(rules, "clauses should not be null");
 
     Map<Literal, BigDecimal> answers = new HashMap<>();
-    AbstractKnowledgeBase kb = new InMemoryKnowledgeBase();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     rules.forEach(kb::azzert);
 
     com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb);

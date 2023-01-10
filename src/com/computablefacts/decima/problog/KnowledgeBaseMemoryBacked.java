@@ -9,12 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.constraints.NotNull;
 
 @CheckReturnValue
-final public class InMemoryKnowledgeBase extends AbstractKnowledgeBase {
+final public class KnowledgeBaseMemoryBacked extends AbstractKnowledgeBase {
 
-  private Map<Predicate, Set<Fact>> facts_ = new ConcurrentHashMap<>();
-  private Map<Predicate, Set<Rule>> rules_ = new ConcurrentHashMap<>();
+  private final Map<Predicate, Set<Fact>> facts_ = new ConcurrentHashMap<>();
+  private final Map<Predicate, Set<Rule>> rules_ = new ConcurrentHashMap<>();
 
-  public InMemoryKnowledgeBase() {
+  public KnowledgeBaseMemoryBacked() {
   }
 
   @Override

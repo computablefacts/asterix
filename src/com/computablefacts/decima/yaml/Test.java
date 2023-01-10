@@ -2,7 +2,7 @@ package com.computablefacts.decima.yaml;
 
 import com.computablefacts.Generated;
 import com.computablefacts.decima.problog.AbstractClause;
-import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
+import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.Parser;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
@@ -89,7 +89,7 @@ final public class Test {
         moreRules == null ? Parser.parseClauses(kb_) : Sets.union(moreRules, Parser.parseClauses(kb_));
     Literal query = Parser.parseQuery(query_);
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(rules);
 
     Solver solver = new Solver(kb);

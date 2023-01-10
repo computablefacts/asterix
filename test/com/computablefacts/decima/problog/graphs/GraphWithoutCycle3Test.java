@@ -6,7 +6,7 @@ import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 
 import com.computablefacts.decima.problog.AbstractClause;
-import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
+import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.decima.problog.Rule;
@@ -28,7 +28,7 @@ public class GraphWithoutCycle3Test {
   public void testGraph() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseFact("0.6::edge(1, 2)."));
@@ -78,7 +78,7 @@ public class GraphWithoutCycle3Test {
   public void testExtractClausesInProofs() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseFact("0.6::edge(1, 2)."));

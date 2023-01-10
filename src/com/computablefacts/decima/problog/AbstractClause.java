@@ -26,7 +26,7 @@ public abstract class AbstractClause {
   public Literal head() {
     return head_;
   }
-  
+
   /**
    * Check if the current clause is a fact.
    *

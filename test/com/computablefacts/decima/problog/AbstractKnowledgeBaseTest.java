@@ -58,7 +58,7 @@ public class AbstractKnowledgeBaseTest {
     Fact fact1 = parseFact("0.3::edge(a, b).");
     Fact fact2 = parseFact("0.5::edge(b, c).");
 
-    InMemoryKnowledgeBase kb = kb();
+    KnowledgeBaseMemoryBacked kb = kb();
     kb.azzert(fact1);
     kb.azzert(fact2);
 
@@ -72,7 +72,7 @@ public class AbstractKnowledgeBaseTest {
     Rule rule1 = parseRule("0.2::path(A, B) :- edge(A, B).");
     Rule rule2 = parseRule("0.2::path(A, B) :- path(A, X), edge(X, B).");
 
-    InMemoryKnowledgeBase kb = kb();
+    KnowledgeBaseMemoryBacked kb = kb();
     kb.azzert(rule1);
     kb.azzert(rule2);
 
@@ -111,7 +111,7 @@ public class AbstractKnowledgeBaseTest {
     Rule rule1 = parseRule("0.2::path(A, B) :- edge(A, B).");
     Rule rule2 = parseRule("0.2::path(A, B) :- path(A, X), edge(X, B).");
 
-    InMemoryKnowledgeBase kb = kb();
+    KnowledgeBaseMemoryBacked kb = kb();
     kb.azzert(Sets.newHashSet(fact1, fact2, rule1, rule2));
 
     Assert.assertEquals(4, kb.nbFacts());
@@ -479,8 +479,8 @@ public class AbstractKnowledgeBaseTest {
             1).equals(fact1)));
   }
 
-  private InMemoryKnowledgeBase kb() {
-    return new InMemoryKnowledgeBase();
+  private KnowledgeBaseMemoryBacked kb() {
+    return new KnowledgeBaseMemoryBacked();
   }
 
   private AbstractKnowledgeBase addMockMaterializeFactsQueryDefinition1(AbstractKnowledgeBase kb) {

@@ -98,7 +98,7 @@ public class LiteralTest {
   @Test
   public void testFnEqBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_eq", newVar(), newConst(2), newConst(2));
     Literal newLiteral = literal.execute(kb.definitions()).next();
 
@@ -108,7 +108,7 @@ public class LiteralTest {
   @Test
   public void testGroundedFnIsBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is", newConst(2), newConst(2));
     Literal newLiteral = literal.execute(kb.definitions()).next();
 
@@ -118,7 +118,7 @@ public class LiteralTest {
   @Test
   public void testNotGroundedFnIsBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is", newVar(), newConst(2));
     Literal newLiteral = literal.execute(kb.definitions()).next();
 
@@ -128,7 +128,7 @@ public class LiteralTest {
   @Test
   public void testInvalidFnIsBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is", newConst(3), newConst(2));
 
     Assert.assertNull(literal.execute(kb.definitions()));
@@ -137,7 +137,7 @@ public class LiteralTest {
   @Test
   public void testFnIsTrueOfTrueBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_true", newConst(true));
     Literal newLiteral = literal.execute(kb.definitions()).next();
 
@@ -147,7 +147,7 @@ public class LiteralTest {
   @Test
   public void testFnIsTrueOfFalseBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_true", newConst(false));
 
     Assert.assertNull(literal.execute(kb.definitions()));
@@ -156,7 +156,7 @@ public class LiteralTest {
   @Test
   public void testFnIsFalseOfFalseBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_false", newConst(false));
     Literal newLiteral = literal.execute(kb.definitions()).next();
 
@@ -166,7 +166,7 @@ public class LiteralTest {
   @Test
   public void testFnIsFalseOfTrueBuiltin() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_false", newConst(true));
 
     Assert.assertNull(literal.execute(kb.definitions()));
@@ -175,7 +175,7 @@ public class LiteralTest {
   @Test
   public void testMergeFunctionsWithoutSubstitution() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Rule rule = parseRule("is_ok(X) :- fn_eq(X, fn_add(1, 1), 2).");
     Literal literal = rule.body().get(0);
     Literal newLiteral = literal.execute(kb.definitions()).next();
@@ -187,7 +187,7 @@ public class LiteralTest {
   @Test
   public void testMergeFunctionsWithSubstitution() {
 
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Rule rule = parseRule("is_ok(X, Y) :- fn_eq(X, fn_add(Y, 1), 2).");
     Literal literal = rule.body().get(0);
 

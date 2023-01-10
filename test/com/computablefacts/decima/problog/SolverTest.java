@@ -18,7 +18,7 @@ public class SolverTest {
   public void testSimpleQuery() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("girl(alice)."));
@@ -49,7 +49,7 @@ public class SolverTest {
   public void testComplexQuery() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("boy(bill)."));
@@ -80,7 +80,7 @@ public class SolverTest {
   public void testNegation() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("girl(alice)."));
@@ -113,7 +113,7 @@ public class SolverTest {
   public void testRecursion() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("edge(a,b)."));
@@ -146,7 +146,7 @@ public class SolverTest {
   public void testSimplePrimitive() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("one(1)."));
@@ -191,7 +191,7 @@ public class SolverTest {
   public void testIsTrue() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -226,7 +226,7 @@ public class SolverTest {
   public void testIsFalse() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -264,7 +264,7 @@ public class SolverTest {
   public void testSampleOfSizeMinus1() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -302,7 +302,7 @@ public class SolverTest {
   public void testSampleOfSize1() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -345,7 +345,7 @@ public class SolverTest {
   public void testSampleOfSize2() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -388,7 +388,7 @@ public class SolverTest {
   public void testSampleOfSize3() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -431,7 +431,7 @@ public class SolverTest {
   public void testSampleOfSize4() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -474,7 +474,7 @@ public class SolverTest {
   public void testSampleOfSize5() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("bagItems(\"red_bag\", 1)."));
@@ -517,7 +517,7 @@ public class SolverTest {
   public void testDoubleNegation() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("boy(a)."));
@@ -560,7 +560,7 @@ public class SolverTest {
   public void testNonGroundProbabilisticClause() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.4::b(1)."));
@@ -587,7 +587,7 @@ public class SolverTest {
   public void testVariableUnificationInQuery() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("a(2, 3)."));

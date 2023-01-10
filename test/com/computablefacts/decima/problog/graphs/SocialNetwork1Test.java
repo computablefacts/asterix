@@ -7,7 +7,7 @@ import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 
 import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.computablefacts.decima.problog.AbstractClause;
-import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
+import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.decima.problog.Rule;
@@ -152,10 +152,10 @@ public class SocialNetwork1Test {
             + "[rule] depth=3, stress(\"jonas\") :- person(\"jonas\"), 0.3::proba(\"???????\")."));
   }
 
-  private InMemoryKnowledgeBase kb() {
+  private KnowledgeBaseMemoryBacked kb() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseFact("person(angelika)."));

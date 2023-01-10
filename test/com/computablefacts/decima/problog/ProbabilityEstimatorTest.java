@@ -32,7 +32,7 @@ public class ProbabilityEstimatorTest {
   public void testLiteralsSwapping1() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.5::f(1,2)."));
@@ -70,7 +70,7 @@ public class ProbabilityEstimatorTest {
   public void testLiteralsSwapping2() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.5::f(1,2)."));
@@ -110,7 +110,7 @@ public class ProbabilityEstimatorTest {
   public void testNonGroundQuery() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.1::b(1)."));
@@ -157,7 +157,7 @@ public class ProbabilityEstimatorTest {
   public void testGroundNonGroundQuery4() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.1::p(1)."));
@@ -193,7 +193,7 @@ public class ProbabilityEstimatorTest {
   public void testNegativeQuery() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.3::p(1)."));
@@ -233,7 +233,7 @@ public class ProbabilityEstimatorTest {
   public void testTrivialOr() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.5::heads1(a)."));
@@ -280,7 +280,7 @@ public class ProbabilityEstimatorTest {
   public void testTrivialAnd() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.5::heads1(a)."));
@@ -323,7 +323,7 @@ public class ProbabilityEstimatorTest {
   public void testTrivialDuplicate() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.3::p(1)."));
@@ -382,7 +382,7 @@ public class ProbabilityEstimatorTest {
   public void testTrivialNot() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.4::p(1)."));
@@ -421,7 +421,7 @@ public class ProbabilityEstimatorTest {
   public void testTrivialNotAnd() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("0.5::t(1)."));
@@ -462,7 +462,7 @@ public class ProbabilityEstimatorTest {
   public void testRuleWithProbabilityInHead() {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseClause("athlet(1)."));

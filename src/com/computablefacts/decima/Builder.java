@@ -9,7 +9,7 @@ import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.console.ConsoleApp;
 import com.computablefacts.decima.problog.AbstractTerm;
 import com.computablefacts.decima.problog.Fact;
-import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
+import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -80,7 +80,7 @@ final public class Builder extends ConsoleApp {
     boolean showLogs = getBooleanCommand(args, "show_logs", false);
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Fill KB from ND-JSON file (see http://ndjson.org for details)
     RandomString rnd = new RandomString(8);

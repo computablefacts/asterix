@@ -22,7 +22,7 @@ public class SubgoalMemoryBackedTest {
   public void testLiteralsSwapping1() throws Exception {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseFact("0.5::f(1,2)."));
@@ -60,7 +60,7 @@ public class SubgoalMemoryBackedTest {
   public void testLiteralsSwapping2() throws Exception {
 
     // Create kb
-    InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
 
     // Init kb with facts
     kb.azzert(parseFact("0.5::f(1,2)."));
