@@ -4,11 +4,9 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.checkProofs;
 import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.nlp.WildcardMatcher;
-import com.computablefacts.asterix.trie.Trie;
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
@@ -20,7 +18,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,7 +36,6 @@ public class SocialNetwork1Test {
     Literal query = new Literal("smokes", newConst("angelika"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
     Assert.assertEquals(11, solver.nbSubgoals());
@@ -47,14 +43,12 @@ public class SocialNetwork1Test {
     // Verify answers
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer1 = newRule("smokes(angelika)",
         Lists.newArrayList("friend(angelika, jonas)", "person(jonas)", "person(angelika)", "person(jonas)"));
     Rule answer2 = newRule("smokes(angelika)", Lists.newArrayList("person(angelika)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2)));
 
     // Verify BDD answer
     // 0.342::smokes(angelika).
@@ -95,7 +89,6 @@ public class SocialNetwork1Test {
     Literal query = new Literal("smokes", newConst("joris"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
     Assert.assertEquals(22, solver.nbSubgoals());
@@ -103,7 +96,6 @@ public class SocialNetwork1Test {
     // Verify answers
     Assert.assertEquals(5, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer1 = newRule("smokes(joris)",
         Lists.newArrayList("friend(joris, dimitar)", "person(dimitar)", "person(joris)", "person(dimitar)"));
@@ -117,7 +109,6 @@ public class SocialNetwork1Test {
             "person(jonas)", "person(angelika)", "person(jonas)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3, answer4, answer5)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3, answer4, answer5)));
 
     // Verify BDD answer
     // 0.42301296::smokes(joris).

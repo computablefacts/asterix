@@ -4,11 +4,9 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.checkProofs;
 import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.nlp.WildcardMatcher;
-import com.computablefacts.asterix.trie.Trie;
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
@@ -20,7 +18,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,7 +46,6 @@ public class ToothacheTest {
     Literal query = new Literal("toothache", newConst("a"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
     Assert.assertEquals(8, solver.nbSubgoals());
@@ -57,7 +53,6 @@ public class ToothacheTest {
     // Verify answers
     Assert.assertEquals(4, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer1 = newRule("toothache(a)", Lists.newArrayList("0.9::~cavity(a)", "0.95::~gum_disease(a)"));
     Rule answer2 = newRule("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.05::gum_disease(a)"));
@@ -65,7 +60,6 @@ public class ToothacheTest {
     Rule answer4 = newRule("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.95::~gum_disease(a)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3, answer4)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3, answer4)));
 
     // Verify BDD answer
     // 0.11825::toothache(a).

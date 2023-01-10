@@ -6,11 +6,8 @@ import static com.computablefacts.decima.problog.Parser.parseClause;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.checkProofs;
 
-import com.computablefacts.asterix.trie.Trie;
 import com.google.common.collect.Sets;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,18 +34,15 @@ public class SolverTest {
     Literal query = new Literal("child", newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(2, answers.size());
-    Assert.assertEquals(2, tries.size());
 
     Rule answer1 = parseRule("child(alice) :- girl(alice).");
     Rule answer2 = parseRule("child(alex) :- boy(alex).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2)));
   }
 
   @Test
@@ -72,17 +66,14 @@ public class SolverTest {
     Literal query = new Literal("son", newVar(), newConst("alice"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(1, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer = parseRule("son(bill, alice) :- mother(alice, bill), boy(bill).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer)));
   }
 
   @Test
@@ -107,18 +98,15 @@ public class SolverTest {
     Literal query = new Literal("human", newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(2, answers.size());
-    Assert.assertEquals(2, tries.size());
 
     Rule answer1 = parseRule("human(alice) :- girl(alice), ~boy(alice).");
     Rule answer2 = parseRule("human(alex) :- boy(alex), ~girl(alex).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2)));
   }
 
   @Test
@@ -142,19 +130,16 @@ public class SolverTest {
     Literal query = new Literal("path", newConst("a"), newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(3, proofs.size());
     Assert.assertEquals(3, answers.size());
-    Assert.assertEquals(3, tries.size());
 
     Rule answer1 = parseRule("path(a, b) :- edge(a, b).");
     Rule answer2 = parseRule("path(a, c) :- edge(a, b), edge(b, c).");
     Rule answer3 = parseRule("path(a, d) :- edge(a, d).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3)));
   }
 
   @Test
@@ -177,35 +162,29 @@ public class SolverTest {
     Literal query1 = new Literal("three", newVar());
     Set<AbstractClause> proofs1 = solver.proofs(query1);
     Set<Fact> answers1 = Sets.newHashSet(solver.solve(query1));
-    Map<Literal, Trie<Literal>> tries1 = solver.tries(query1);
 
     // Verify answers
     Assert.assertEquals(1, proofs1.size());
     Assert.assertEquals(1, answers1.size());
-    Assert.assertEquals(1, tries1.size());
 
     Rule answer1 = parseRule("three(3) :- one(1), two(2), fn_add(3, 1, 2), fn_int(3, 3).");
 
     Assert.assertTrue(checkAnswers(answers1, Sets.newHashSet(answer1)));
-    Assert.assertTrue(checkProofs(tries1, Sets.newHashSet(answer1)));
 
     // Query kb
     // four(Z)?
     Literal query2 = new Literal("four", newVar());
     Set<AbstractClause> proofs2 = solver.proofs(query2);
     Set<Fact> answers2 = Sets.newHashSet(solver.solve(query2));
-    Map<Literal, Trie<Literal>> tries2 = solver.tries(query2);
 
     // Verify answers
     Assert.assertEquals(1, proofs2.size());
     Assert.assertEquals(1, answers2.size());
-    Assert.assertEquals(1, tries1.size());
 
     Rule answer2 = parseRule(
         "four(4) :- one(1), two(2), fn_add(3, 1, 2), fn_int(3, 3), fn_add(4, 3, 1), fn_int(4, 4).");
 
     Assert.assertTrue(checkAnswers(answers2, Sets.newHashSet(answer2)));
-    Assert.assertTrue(checkProofs(tries2, Sets.newHashSet(answer2)));
   }
 
   @Test
@@ -228,12 +207,10 @@ public class SolverTest {
     Literal query = new Literal("hasMoreItems", newVar(), newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(3, proofs.size());
     Assert.assertEquals(3, answers.size());
-    Assert.assertEquals(3, tries.size());
 
     Rule answer1 = parseRule(
         "hasMoreItems(green_bag, red_bag) :- bagItems(green_bag, 2), bagItems(red_bag, 1), fn_gt(true, 2, 1), fn_is_true(true).");
@@ -243,7 +220,6 @@ public class SolverTest {
         "hasMoreItems(blue_bag, green_bag) :- bagItems(blue_bag, 3), bagItems(green_bag, 2), fn_gt(true, 3, 2), fn_is_true(true).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3)));
   }
 
   @Test
@@ -267,12 +243,10 @@ public class SolverTest {
     Literal query = new Literal("hasDifferentNumberOfItems", newVar(), newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(4, proofs.size());
     Assert.assertEquals(4, answers.size());
-    Assert.assertEquals(4, tries.size());
 
     Rule answer1 = parseRule(
         "hasDifferentNumberOfItems(red_bag, green_bag) :- bagItems(red_bag, 1), bagItems(green_bag, 2), fn_eq(false, 1, 2), fn_is_false(false).");
@@ -284,7 +258,6 @@ public class SolverTest {
         "hasDifferentNumberOfItems(blue_bag, red_bag) :- bagItems(blue_bag, 2), bagItems(red_bag, 1), fn_eq(false, 2, 1), fn_is_false(false).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3, answer4)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3, answer4)));
   }
 
   @Test
@@ -308,11 +281,9 @@ public class SolverTest {
     Literal query = new Literal("hasDifferentNumberOfItems", newVar(), newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query, -1));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(4, answers.size());
-    Assert.assertEquals(4, tries.size());
     Assert.assertEquals(4, proofs.size());
 
     Rule answer1 = parseRule(
@@ -325,7 +296,6 @@ public class SolverTest {
         "hasDifferentNumberOfItems(\"blue_bag\", \"red_bag\") :- bagItems(\"blue_bag\", \"2\"), bagItems(\"red_bag\", \"1\"), fn_eq(\"false\", \"2\", \"1\"), fn_is_false(\"false\").");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3, answer4)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3, answer4)));
   }
 
   @Test
@@ -349,12 +319,10 @@ public class SolverTest {
     Literal query = new Literal("hasDifferentNumberOfItems", newVar(), newVar());
     Set<Fact> answers = Sets.newHashSet(solver.solve(query, 1));
     Set<AbstractClause> proofs = solver.proofs(query);
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(1, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer1 = parseRule(
         "hasDifferentNumberOfItems(\"green_bag\", \"red_bag\") :- bagItems(\"green_bag\", \"2\"), bagItems(\"red_bag\", \"1\"), fn_eq(\"false\", \"2\", \"1\"), fn_is_false(\"false\").");
@@ -394,12 +362,10 @@ public class SolverTest {
     Literal query = new Literal("hasDifferentNumberOfItems", newVar(), newVar());
     Set<Fact> answers = Sets.newHashSet(solver.solve(query, 2));
     Set<AbstractClause> proofs = solver.proofs(query);
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(2, answers.size());
-    Assert.assertEquals(2, tries.size());
 
     Rule answer1 = parseRule(
         "hasDifferentNumberOfItems(\"green_bag\", \"red_bag\") :- bagItems(\"green_bag\", \"2\"), bagItems(\"red_bag\", \"1\"), fn_eq(\"false\", \"2\", \"1\"), fn_is_false(\"false\").");
@@ -439,12 +405,10 @@ public class SolverTest {
     Literal query = new Literal("hasDifferentNumberOfItems", newVar(), newVar());
     Set<Fact> answers = Sets.newHashSet(solver.solve(query, 3));
     Set<AbstractClause> proofs = solver.proofs(query);
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(3, proofs.size());
     Assert.assertEquals(3, answers.size());
-    Assert.assertEquals(3, tries.size());
 
     Rule answer1 = parseRule(
         "hasDifferentNumberOfItems(\"green_bag\", \"red_bag\") :- bagItems(\"green_bag\", \"2\"), bagItems(\"red_bag\", \"1\"), fn_eq(\"false\", \"2\", \"1\"), fn_is_false(\"false\").");
@@ -484,12 +448,10 @@ public class SolverTest {
     Literal query = new Literal("hasDifferentNumberOfItems", newVar(), newVar());
     Set<Fact> answers = Sets.newHashSet(solver.solve(query, 4));
     Set<AbstractClause> proofs = solver.proofs(query);
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(4, proofs.size());
     Assert.assertEquals(4, answers.size());
-    Assert.assertEquals(4, tries.size());
 
     Rule answer1 = parseRule(
         "hasDifferentNumberOfItems(\"green_bag\", \"red_bag\") :- bagItems(\"green_bag\", \"2\"), bagItems(\"red_bag\", \"1\"), fn_eq(\"false\", \"2\", \"1\"), fn_is_false(\"false\").");
@@ -506,7 +468,6 @@ public class SolverTest {
     count += checkAnswers(proofs, Sets.newHashSet(answer4)) ? 1 : 0;
 
     Assert.assertEquals(4, count);
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3, answer4)));
   }
 
   @Test
@@ -530,12 +491,10 @@ public class SolverTest {
     Literal query = new Literal("hasDifferentNumberOfItems", newVar(), newVar());
     Set<Fact> answers = Sets.newHashSet(solver.solve(query, 5));
     Set<AbstractClause> proofs = solver.proofs(query);
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(4, proofs.size());
     Assert.assertEquals(4, answers.size());
-    Assert.assertEquals(4, tries.size());
 
     Rule answer1 = parseRule(
         "hasDifferentNumberOfItems(\"green_bag\", \"red_bag\") :- bagItems(\"green_bag\", \"2\"), bagItems(\"red_bag\", \"1\"), fn_eq(\"false\", \"2\", \"1\"), fn_is_false(\"false\").");
@@ -552,7 +511,6 @@ public class SolverTest {
     count += checkAnswers(proofs, Sets.newHashSet(answer4)) ? 1 : 0;
 
     Assert.assertEquals(4, count);
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3, answer4)));
   }
 
   @Test
@@ -580,18 +538,15 @@ public class SolverTest {
     Literal query = new Literal("match", newVar(), newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(1, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer = parseRule(
         "match(b, c) :- boy(b), ~girl(b), ~isGirl(b), ~isGirlNotBoy(b), girl(c), ~boy(c), ~isBoy(c), ~isBoyNotGirl(c).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer)));
   }
 
   /**
@@ -649,28 +604,21 @@ public class SolverTest {
     Literal query1 = new Literal("a", x, x);
     Set<Fact> answers1 = Sets.newHashSet(solver.solve(query1));
     Set<AbstractClause> proofs1 = solver.proofs(query1);
-    Map<Literal, Trie<Literal>> tries1 = solver.tries(query1);
 
     Literal query2 = new Literal("p", x);
     Set<Fact> answers2 = Sets.newHashSet(solver.solve(query2));
     Set<AbstractClause> proofs2 = solver.proofs(query2);
-    Map<Literal, Trie<Literal>> tries2 = solver.tries(query2);
 
     // Verify answers
     // a(1,1).
     // p(1) :- a(1, 1).
     Assert.assertEquals(1, proofs1.size());
-    Assert.assertEquals(1, tries1.size());
     Assert.assertEquals(1, proofs2.size());
-    Assert.assertEquals(1, tries2.size());
 
     Fact fact = parseFact("a(1, 1).");
     Rule answer = parseRule("p(1) :- a(1, 1).");
 
     Assert.assertTrue(checkAnswers(answers1, Sets.newHashSet(fact)));
-    Assert.assertTrue(checkProofs(tries1, Sets.newHashSet(fact)));
-
     Assert.assertTrue(checkAnswers(answers2, Sets.newHashSet(answer)));
-    Assert.assertTrue(checkProofs(tries2, Sets.newHashSet(answer)));
   }
 }

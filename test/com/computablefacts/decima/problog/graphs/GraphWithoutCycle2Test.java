@@ -4,10 +4,8 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.checkProofs;
 import static com.computablefacts.decima.problog.TestUtils.newRule;
 
-import com.computablefacts.asterix.trie.Trie;
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
@@ -19,7 +17,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,7 +51,6 @@ public class GraphWithoutCycle2Test {
     Literal query1 = new Literal("path", newConst("a"), newConst("d"));
     Set<AbstractClause> proofs1 = solver.proofs(query1);
     Set<AbstractClause> answers1 = Sets.newHashSet(solver.solve(query1));
-    Map<Literal, Trie<Literal>> tries1 = solver.tries(query1);
 
     // Verify subgoals
     Assert.assertEquals(12, solver.nbSubgoals());
@@ -62,7 +58,6 @@ public class GraphWithoutCycle2Test {
     // Verify answers
     Assert.assertEquals(4, proofs1.size());
     Assert.assertEquals(1, answers1.size());
-    Assert.assertEquals(1, tries1.size());
 
     Rule answer1 = newRule("path(a, d)", Lists.newArrayList("0.8::edge(a, c)", "0.9::edge(c, d)"));
     Rule answer2 = newRule("path(a, d)", Lists.newArrayList("0.7::edge(a, b)", "0.6::edge(b, c)", "0.9::edge(c, d)"));
@@ -71,7 +66,6 @@ public class GraphWithoutCycle2Test {
         Lists.newArrayList("0.7::edge(a, b)", "0.6::edge(b, c)", "0.8::edge(c, e)", "0.5::edge(e, d)"));
 
     Assert.assertTrue(checkAnswers(answers1, Sets.newHashSet(answer1, answer2, answer3, answer4)));
-    Assert.assertTrue(checkProofs(tries1, Sets.newHashSet(answer1, answer2, answer3, answer4)));
 
     // Verify BDD answer
     // 0.83096::path(a, d).
@@ -85,18 +79,15 @@ public class GraphWithoutCycle2Test {
     Literal query2 = new Literal("path", newConst("c"), newConst("d"));
     Set<AbstractClause> proofs2 = solver.proofs(query2);
     Set<AbstractClause> answers2 = Sets.newHashSet(solver.solve(query2));
-    Map<Literal, Trie<Literal>> tries2 = solver.tries(query2);
 
     // Verify proofs
     Assert.assertEquals(2, proofs2.size());
     Assert.assertEquals(1, answers2.size());
-    Assert.assertEquals(1, tries2.size());
 
     Rule answer5 = newRule("path(c, d)", Lists.newArrayList("0.8::edge(c, e)", "0.5::edge(e, d)"));
     Rule answer6 = newRule("path(c, d)", Lists.newArrayList("0.9::edge(c, d)"));
 
     Assert.assertTrue(checkAnswers(answers2, Sets.newHashSet(answer5, answer6)));
-    Assert.assertTrue(checkProofs(tries2, Sets.newHashSet(answer5, answer6)));
 
     // Verify BDD answer
     // 0.94::path(c, d).

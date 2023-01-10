@@ -5,10 +5,8 @@ import static com.computablefacts.decima.problog.AbstractTerm.newVar;
 import static com.computablefacts.decima.problog.Parser.parseClause;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.checkProofs;
 import static com.computablefacts.decima.problog.TestUtils.newRule;
 
-import com.computablefacts.asterix.trie.Trie;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
@@ -205,17 +203,14 @@ public class ProbabilityEstimatorTest {
     Literal query = new Literal("~p", newConst(1));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(1, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Fact answer = parseFact("0.7::~p(1).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer)));
 
     // Verify BDD answer
     // 0.7::~p(1).
@@ -254,18 +249,15 @@ public class ProbabilityEstimatorTest {
     Literal query = new Literal("someHeads", newVar());
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer1 = newRule("someHeads(a)", Lists.newArrayList("0.5::heads1(a)"));
     Rule answer2 = newRule("someHeads(a)", Lists.newArrayList("0.6::heads2(a)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2)));
 
     // Verify BDD answer
     // 0.8::someHeads(a).
@@ -303,17 +295,14 @@ public class ProbabilityEstimatorTest {
     Literal query = new Literal("twoHeads", newVar());
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(1, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer = newRule("twoHeads(a)", Lists.newArrayList("0.5::heads1(a)", "0.6::heads2(a)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer)));
 
     // Verify BDD answer
     // 0.3::twoHeads(a).
@@ -348,31 +337,25 @@ public class ProbabilityEstimatorTest {
     Literal query1 = new Literal("p", newConst("1"));
     Set<AbstractClause> proofs1 = solver.proofs(query1);
     Set<Fact> answers1 = Sets.newHashSet(solver.solve(query1));
-    Map<Literal, Trie<Literal>> tries1 = solver.tries(query1);
 
     Literal query2 = new Literal("p", newConst("2"));
     Set<AbstractClause> proofs2 = solver.proofs(query2);
     Set<Fact> answers2 = Sets.newHashSet(solver.solve(query2));
-    Map<Literal, Trie<Literal>> tries2 = solver.tries(query2);
 
     // Verify answers
     Assert.assertEquals(2, proofs1.size());
-    Assert.assertEquals(2, tries1.size());
     Assert.assertEquals(2, answers1.size());
     Assert.assertEquals(1, proofs2.size());
-    Assert.assertEquals(1, tries2.size());
     Assert.assertEquals(1, answers2.size());
 
     Fact answer1 = parseFact("0.3::p(1).");
     Fact answer2 = parseFact("0.6::p(1).");
 
     Assert.assertTrue(checkAnswers(answers1, Sets.newHashSet(answer1, answer2)));
-    Assert.assertTrue(checkProofs(tries1, Sets.newHashSet(answer1, answer2)));
 
     Fact answer3 = parseFact("0.2::p(2).");
 
     Assert.assertTrue(checkAnswers(answers2, Sets.newHashSet(answer3)));
-    Assert.assertTrue(checkProofs(tries2, Sets.newHashSet(answer3)));
 
     // Verify BDD answer
     // 0.72::p(1).
@@ -410,17 +393,14 @@ public class ProbabilityEstimatorTest {
     Literal query = new Literal("~p", newConst("1"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(1, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Fact answer = parseFact("0.6::~p(1).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer)));
 
     // Verify BDD answer
     // 0.6::~p(1).
@@ -457,18 +437,15 @@ public class ProbabilityEstimatorTest {
     Literal query = new Literal("p", newConst(1));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify answers
     Assert.assertEquals(2, proofs.size());
-    Assert.assertEquals(1, tries.size());
     Assert.assertEquals(1, answers.size());
 
     Rule answer1 = newRule("p(1)", Lists.newArrayList("0.5::~t(1)"));
     Rule answer2 = newRule("p(1)", Lists.newArrayList("0.7::~t(2)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2)));
 
     // Verify BDD answer
     // 0.85::p(1).
@@ -506,17 +483,14 @@ public class ProbabilityEstimatorTest {
     Literal query1 = new Literal("stressed", newConst(1));
     Set<AbstractClause> proofs1 = solver.proofs(query1);
     Set<Fact> answers1 = Sets.newHashSet(solver.solve(query1));
-    Map<Literal, Trie<Literal>> tries1 = solver.tries(query1);
 
     Literal query2 = new Literal("stressed", newConst(2));
     Set<AbstractClause> proofs2 = solver.proofs(query2);
     Set<Fact> answers2 = Sets.newHashSet(solver.solve(query2));
-    Map<Literal, Trie<Literal>> tries2 = solver.tries(query2);
 
     Literal query3 = new Literal("stressed", newConst(3));
     Set<AbstractClause> proofs3 = solver.proofs(query3);
     Set<Fact> answers3 = Sets.newHashSet(solver.solve(query3));
-    Map<Literal, Trie<Literal>> tries3 = solver.tries(query3);
 
     // Verify answers
     // stressed("1") :- athlet("1"), 0.2::proba_0sr9pjn("true")
@@ -525,29 +499,23 @@ public class ProbabilityEstimatorTest {
     // stressed("3") :- student("3"), 0.5::proba_8jyexcv("true")
     Assert.assertEquals(1, proofs1.size());
     Assert.assertEquals(1, answers1.size());
-    Assert.assertEquals(1, tries1.size());
     Assert.assertEquals(2, proofs2.size());
     Assert.assertEquals(1, answers2.size());
-    Assert.assertEquals(1, tries2.size());
     Assert.assertEquals(1, proofs3.size());
     Assert.assertEquals(1, answers3.size());
-    Assert.assertEquals(1, tries3.size());
 
     Rule answer1 = newRule("stressed(1)", Lists.newArrayList("athlet(1)"));
 
     Assert.assertTrue(checkAnswers(answers1, Sets.newHashSet(answer1)));
-    Assert.assertTrue(checkProofs(tries1, Sets.newHashSet(answer1)));
 
     Rule answer2 = newRule("stressed(2)", Lists.newArrayList("student(2)"));
     Rule answer3 = newRule("stressed(2)", Lists.newArrayList("athlet(2)"));
 
     Assert.assertTrue(checkAnswers(answers2, Sets.newHashSet(answer2, answer3)));
-    Assert.assertTrue(checkProofs(tries2, Sets.newHashSet(answer2, answer3)));
 
     Rule answer4 = newRule("stressed(3)", Lists.newArrayList("student(3)"));
 
     Assert.assertTrue(checkAnswers(answers3, Sets.newHashSet(answer4)));
-    Assert.assertTrue(checkProofs(tries3, Sets.newHashSet(answer4)));
 
     // Verify BDD answer
     // 0.2::stressed(1).

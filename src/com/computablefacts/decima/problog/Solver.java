@@ -5,7 +5,6 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import com.computablefacts.Generated;
 import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.asterix.View;
-import com.computablefacts.asterix.trie.Trie;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -13,7 +12,6 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -120,32 +118,6 @@ final public class Solver {
     ProofAssistant assistant = new ProofAssistant(subgoals_.values());
     Set<AbstractClause> proofs = assistant.proofs(root_.literal());
     return assistant.tableOfProofs();
-  }
-
-  /**
-   * Map each proof to a trie.
-   *
-   * @param query goal.
-   * @return proofs.
-   */
-  public Map<Literal, Trie<Literal>> tries(Literal query) {
-
-    Preconditions.checkNotNull(query, "query should not be null");
-
-    Set<AbstractClause> proofs = proofs(query);
-    Map<Literal, Trie<Literal>> tries = new HashMap<>();
-
-    for (AbstractClause proof : proofs) {
-      if (!tries.containsKey(proof.head())) {
-        tries.put(proof.head(), new Trie<>());
-      }
-      if (proof.isRule()) {
-        tries.get(proof.head()).insert(((Rule) proof).body());
-      } else {
-        tries.get(proof.head()).insert(Lists.newArrayList());
-      }
-    }
-    return tries;
   }
 
   /**

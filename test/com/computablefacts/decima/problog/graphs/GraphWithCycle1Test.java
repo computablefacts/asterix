@@ -6,7 +6,6 @@ import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
 import static com.computablefacts.decima.problog.TestUtils.newRule;
 
-import com.computablefacts.asterix.trie.Trie;
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
@@ -18,7 +17,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,7 +61,6 @@ public class GraphWithCycle1Test {
     Literal query = new Literal("path", newConst("1"), newConst("4"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
     Assert.assertEquals(18, solver.nbSubgoals());
@@ -71,7 +68,6 @@ public class GraphWithCycle1Test {
     // Verify proofs
     // Assert.assertEquals(13, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer1 = newRule("path(1, 4)",
         Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.8::edge(2, 3)", "0.7::edge(3, 5)",

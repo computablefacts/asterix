@@ -4,10 +4,8 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.checkProofs;
 import static com.computablefacts.decima.problog.TestUtils.newRule;
 
-import com.computablefacts.asterix.trie.Trie;
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
 import com.computablefacts.decima.problog.Literal;
@@ -19,7 +17,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,7 +51,6 @@ public class GraphWithoutCycle3Test {
     Literal query = new Literal("path", newConst("1"), newConst("6"));
     Set<AbstractClause> proofs = solver.proofs(query);
     Set<AbstractClause> answers = Sets.newHashSet(solver.solve(query));
-    Map<Literal, Trie<Literal>> tries = solver.tries(query);
 
     // Verify subgoals
     Assert.assertEquals(14, solver.nbSubgoals());
@@ -65,7 +61,6 @@ public class GraphWithoutCycle3Test {
     // path(1, 6) :- 0.1::edge(1, 3), 0.3::edge(3, 4), 0.8::edge(4, 5), 0.2::edge(5, 6).
     Assert.assertEquals(3, proofs.size());
     Assert.assertEquals(1, answers.size());
-    Assert.assertEquals(1, tries.size());
 
     Rule answer1 = newRule("path(1, 6)", Lists.newArrayList("0.6::edge(1, 2)", "0.3::edge(2, 6)"));
     Rule answer2 = newRule("path(1, 6)", Lists.newArrayList("0.6::edge(1, 2)", "0.4::edge(2, 5)", "0.2::edge(5, 6)"));
@@ -73,7 +68,6 @@ public class GraphWithoutCycle3Test {
         Lists.newArrayList("0.1::edge(1, 3)", "0.3::edge(3, 4)", "0.8::edge(4, 5)", "0.2::edge(5, 6)"));
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3)));
-    Assert.assertTrue(checkProofs(tries, Sets.newHashSet(answer1, answer2, answer3)));
 
     // Verify BDD answer
     // 0.2167296::path(1, 6).

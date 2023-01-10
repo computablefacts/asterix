@@ -2,13 +2,11 @@ package com.computablefacts.decima.problog;
 
 import static com.computablefacts.decima.problog.Parser.parseClause;
 
-import com.computablefacts.asterix.trie.Trie;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -39,49 +37,6 @@ final public class TestUtils {
       }
       stopwatch.stop();
       System.out.println("Answer checked in " + stopwatch.elapsed(TimeUnit.MILLISECONDS) + " ms : " + answer);
-    }
-    return true;
-  }
-
-  public static boolean checkProofs(Map<Literal, Trie<Literal>> actual, Set<? extends AbstractClause> expected) {
-    return checkProofs(actual, expected, false);
-  }
-
-  public static boolean checkProofs(Map<Literal, Trie<Literal>> actual, Set<? extends AbstractClause> expected,
-      boolean ignoreFunctions) {
-    for (AbstractClause proof : expected) {
-
-      System.out.println("Checking proof : " + proof);
-      Stopwatch stopwatch = Stopwatch.createStarted();
-
-      if (proof.isFact()) {
-        if (!actual.containsKey(proof.head())) {
-          return false;
-        }
-      } else {
-
-        Rule rule = (Rule) proof;
-        List<List<Literal>> bodies = new ArrayList<>();
-        permute(rule.body().stream().filter(b -> !ignoreFunctions || !b.predicate().isPrimitive())
-            .collect(Collectors.toList()), bodies);
-
-        if (bodies.stream().noneMatch(body -> {
-          if (actual.containsKey(proof.head())) {
-
-            List<List<Literal>> proofs = actual.get(proof.head()).paths().stream().map(path -> path.stream()
-                    .filter(p -> !p.predicate().baseName().equals("proba") /* ignore synthetic facts */)
-                    .filter(p -> !ignoreFunctions || !p.predicate().isPrimitive()).collect(Collectors.toList()))
-                .collect(Collectors.toList());
-
-            return proofs.contains(body);
-          }
-          return false;
-        })) {
-          return false;
-        }
-      }
-      stopwatch.stop();
-      System.out.println("Proof checked in " + stopwatch.elapsed(TimeUnit.MILLISECONDS) + " ms : " + proof);
     }
     return true;
   }
