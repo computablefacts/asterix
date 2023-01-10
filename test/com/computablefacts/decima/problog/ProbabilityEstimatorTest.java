@@ -4,8 +4,8 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.AbstractTerm.newVar;
 import static com.computablefacts.decima.problog.Parser.parseClause;
 import static com.computablefacts.decima.problog.Parser.parseFact;
+import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -254,8 +254,8 @@ public class ProbabilityEstimatorTest {
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer1 = newRule("someHeads(a)", Lists.newArrayList("0.5::heads1(a)"));
-    Rule answer2 = newRule("someHeads(a)", Lists.newArrayList("0.6::heads2(a)"));
+    Rule answer1 = parseRule("someHeads(a) :- 0.5::heads1(a).");
+    Rule answer2 = parseRule("someHeads(a) :- 0.6::heads2(a).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
 
@@ -300,7 +300,7 @@ public class ProbabilityEstimatorTest {
     Assert.assertEquals(1, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer = newRule("twoHeads(a)", Lists.newArrayList("0.5::heads1(a)", "0.6::heads2(a)"));
+    Rule answer = parseRule("twoHeads(a) :- 0.5::heads1(a), 0.6::heads2(a).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer)));
 
@@ -442,8 +442,8 @@ public class ProbabilityEstimatorTest {
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer1 = newRule("p(1)", Lists.newArrayList("0.5::~t(1)"));
-    Rule answer2 = newRule("p(1)", Lists.newArrayList("0.7::~t(2)"));
+    Rule answer1 = parseRule("p(1) :- 0.5::~t(1).");
+    Rule answer2 = parseRule("p(1) :- 0.7::~t(2).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
 
@@ -504,16 +504,16 @@ public class ProbabilityEstimatorTest {
     Assert.assertEquals(1, proofs3.size());
     Assert.assertEquals(1, answers3.size());
 
-    Rule answer1 = newRule("stressed(1)", Lists.newArrayList("athlet(1)"));
+    Rule answer1 = parseRule("stressed(1) :- athlet(1).");
 
     Assert.assertTrue(checkAnswers(answers1, Sets.newHashSet(answer1)));
 
-    Rule answer2 = newRule("stressed(2)", Lists.newArrayList("student(2)"));
-    Rule answer3 = newRule("stressed(2)", Lists.newArrayList("athlet(2)"));
+    Rule answer2 = parseRule("stressed(2) :- student(2).");
+    Rule answer3 = parseRule("stressed(2) :- athlet(2).");
 
     Assert.assertTrue(checkAnswers(answers2, Sets.newHashSet(answer2, answer3)));
 
-    Rule answer4 = newRule("stressed(3)", Lists.newArrayList("student(3)"));
+    Rule answer4 = parseRule("stressed(3) :- student(3).");
 
     Assert.assertTrue(checkAnswers(answers3, Sets.newHashSet(answer4)));
 

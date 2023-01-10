@@ -4,7 +4,6 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
@@ -13,7 +12,6 @@ import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
@@ -69,60 +67,32 @@ public class GraphWithCycle1Test {
     // Assert.assertEquals(13, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer1 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.8::edge(2, 3)", "0.7::edge(3, 5)",
-            "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)", "fn_is_false(false)",
-            "fn_eq(false, 2, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Rule answer2 = newRule("path(1, 4)",
-        Lists.newArrayList("0.9::edge(1, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)",
-            "0.6::edge(3, 4)", "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
-            "fn_eq(false, 6, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Rule answer3 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)", "0.7::edge(3, 5)",
-            "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)", "fn_is_false(false)",
-            "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Rule answer4 = newRule("path(1, 4)",
-        Lists.newArrayList("0.9::edge(1, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)",
-            "0.7::edge(3, 5)", "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)",
-            "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)",
-            "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Rule answer5 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.4::edge(6, 5)", "0.7::edge(5, 3)", "0.6::edge(3, 4)",
-            "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
-            "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Rule answer6 = newRule("path(1, 4)",
-        Lists.newArrayList("0.9::edge(1, 2)", "0.8::edge(2, 3)", "0.7::edge(3, 5)", "0.2::edge(5, 4)",
-            "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 3, 4)", "fn_is_false(false)",
-            "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Rule answer7 = newRule("path(1, 4)",
-        Lists.newArrayList("0.9::edge(1, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)", "0.2::edge(5, 4)",
-            "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)",
-            "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Rule answer8 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)",
-            "0.7::edge(5, 3)", "0.6::edge(3, 4)", "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)",
-            "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)",
-            "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Rule answer9 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)",
-            "0.7::edge(5, 3)", "0.7::edge(3, 5)", "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
-            "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 5, 4)", "fn_is_false(false)",
-            "fn_eq(false, 6, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)",
-            "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Rule answer10 = newRule("path(1, 4)",
-        Lists.newArrayList("0.9::edge(1, 2)", "0.8::edge(2, 3)", "0.6::edge(3, 4)", "fn_eq(false, 3, 4)",
-            "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)"));
-    Rule answer11 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.5::edge(2, 6)", "0.4::edge(6, 5)",
-            "0.2::edge(5, 4)", "fn_eq(false, 5, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)",
-            "fn_eq(false, 2, 4)", "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Rule answer12 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.5::edge(6, 2)", "0.8::edge(2, 3)", "0.6::edge(3, 4)",
-            "fn_eq(false, 3, 4)", "fn_is_false(false)", "fn_eq(false, 2, 4)", "fn_is_false(false)",
-            "fn_eq(false, 6, 4)", "fn_is_false(false)"));
-    Rule answer13 = newRule("path(1, 4)",
-        Lists.newArrayList("0.7::edge(1, 6)", "0.4::edge(6, 5)", "0.2::edge(5, 4)", "fn_eq(false, 5, 4)",
-            "fn_is_false(false)", "fn_eq(false, 6, 4)", "fn_is_false(false)"));
+    Rule answer1 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.5::edge(6, 2), 0.8::edge(2, 3), 0.7::edge(3, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
+    Rule answer2 = parseRule(
+        "path(1, 4) :- 0.9::edge(1, 2), 0.5::edge(2, 6), 0.4::edge(6, 5), 0.7::edge(5, 3), 0.6::edge(3, 4), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false).");
+    Rule answer3 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.4::edge(6, 5), 0.7::edge(5, 3), 0.7::edge(3, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
+    Rule answer4 = parseRule(
+        "path(1, 4) :- 0.9::edge(1, 2), 0.5::edge(2, 6), 0.4::edge(6, 5), 0.7::edge(5, 3), 0.7::edge(3, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false).");
+    Rule answer5 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.4::edge(6, 5), 0.7::edge(5, 3), 0.6::edge(3, 4), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
+    Rule answer6 = parseRule(
+        "path(1, 4) :- 0.9::edge(1, 2), 0.8::edge(2, 3), 0.7::edge(3, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false).");
+    Rule answer7 = parseRule(
+        "path(1, 4) :- 0.9::edge(1, 2), 0.5::edge(2, 6), 0.4::edge(6, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false).");
+    Rule answer8 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.5::edge(6, 2), 0.5::edge(2, 6), 0.4::edge(6, 5), 0.7::edge(5, 3), 0.6::edge(3, 4), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
+    Rule answer9 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.5::edge(6, 2), 0.5::edge(2, 6), 0.4::edge(6, 5), 0.7::edge(5, 3), 0.7::edge(3, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
+    Rule answer10 = parseRule(
+        "path(1, 4) :- 0.9::edge(1, 2), 0.8::edge(2, 3), 0.6::edge(3, 4), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false).");
+    Rule answer11 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.5::edge(6, 2), 0.5::edge(2, 6), 0.4::edge(6, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
+    Rule answer12 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.5::edge(6, 2), 0.8::edge(2, 3), 0.6::edge(3, 4), fn_eq(false, 3, 4), fn_is_false(false), fn_eq(false, 2, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
+    Rule answer13 = parseRule(
+        "path(1, 4) :- 0.7::edge(1, 6), 0.4::edge(6, 5), 0.2::edge(5, 4), fn_eq(false, 5, 4), fn_is_false(false), fn_eq(false, 6, 4), fn_is_false(false).");
 
     Assert.assertTrue(checkAnswers(answers,
         Sets.newHashSet(answer1, answer2, answer3, answer4, answer5, answer6, answer7, answer8, answer9, answer10,

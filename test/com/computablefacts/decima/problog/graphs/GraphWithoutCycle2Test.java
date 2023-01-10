@@ -4,7 +4,6 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
@@ -13,7 +12,6 @@ import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
@@ -59,11 +57,10 @@ public class GraphWithoutCycle2Test {
     Assert.assertEquals(4, proofs1.size());
     Assert.assertEquals(1, answers1.size());
 
-    Rule answer1 = newRule("path(a, d)", Lists.newArrayList("0.8::edge(a, c)", "0.9::edge(c, d)"));
-    Rule answer2 = newRule("path(a, d)", Lists.newArrayList("0.7::edge(a, b)", "0.6::edge(b, c)", "0.9::edge(c, d)"));
-    Rule answer3 = newRule("path(a, d)", Lists.newArrayList("0.8::edge(a, c)", "0.8::edge(c, e)", "0.5::edge(e, d)"));
-    Rule answer4 = newRule("path(a, d)",
-        Lists.newArrayList("0.7::edge(a, b)", "0.6::edge(b, c)", "0.8::edge(c, e)", "0.5::edge(e, d)"));
+    Rule answer1 = parseRule("path(a, d) :- 0.8::edge(a, c), 0.9::edge(c, d).");
+    Rule answer2 = parseRule("path(a, d) :- 0.7::edge(a, b), 0.6::edge(b, c), 0.9::edge(c, d).");
+    Rule answer3 = parseRule("path(a, d) :- 0.8::edge(a, c), 0.8::edge(c, e), 0.5::edge(e, d).");
+    Rule answer4 = parseRule("path(a, d) :- 0.7::edge(a, b), 0.6::edge(b, c), 0.8::edge(c, e), 0.5::edge(e, d).");
 
     Assert.assertTrue(checkAnswers(answers1, Sets.newHashSet(answer1, answer2, answer3, answer4)));
 
@@ -84,8 +81,8 @@ public class GraphWithoutCycle2Test {
     Assert.assertEquals(2, proofs2.size());
     Assert.assertEquals(1, answers2.size());
 
-    Rule answer5 = newRule("path(c, d)", Lists.newArrayList("0.8::edge(c, e)", "0.5::edge(e, d)"));
-    Rule answer6 = newRule("path(c, d)", Lists.newArrayList("0.9::edge(c, d)"));
+    Rule answer5 = parseRule("path(c, d) :- 0.8::edge(c, e), 0.5::edge(e, d).");
+    Rule answer6 = parseRule("path(c, d) :- 0.9::edge(c, d).");
 
     Assert.assertTrue(checkAnswers(answers2, Sets.newHashSet(answer5, answer6)));
 

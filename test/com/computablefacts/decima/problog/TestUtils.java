@@ -1,7 +1,5 @@
 package com.computablefacts.decima.problog;
 
-import static com.computablefacts.decima.problog.Parser.parseClause;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import java.lang.reflect.Array;
@@ -9,21 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 final public class TestUtils {
 
   private TestUtils() {
-  }
-
-  public static Rule newRule(String head, List<String> body) {
-
-    Literal newHead = parseClause(head + ".").head();
-    List<Literal> newBody = body.stream().map(s -> parseClause(s + ".").head()).collect(Collectors.toList());
-
-    Rule rule = new Rule(newHead, newBody);
-    Preconditions.checkState(rule.isGrounded(), "invalid clause : %s", rule);
-    return rule;
   }
 
   public static boolean checkAnswers(Set<? extends AbstractClause> actual, Set<? extends AbstractClause> expected) {

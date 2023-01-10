@@ -4,7 +4,6 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.InMemoryKnowledgeBase;
@@ -13,7 +12,6 @@ import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
@@ -62,8 +60,8 @@ public class GraphWithoutCycle1Test {
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer1 = newRule("path(b, f)", Lists.newArrayList("0.2::edge(b, d)", "0.5::edge(d, f)"));
-    Rule answer2 = newRule("path(b, f)", Lists.newArrayList("0.8::edge(b, e)", "0.3::edge(e, f)"));
+    Rule answer1 = parseRule("path(b, f) :- 0.2::edge(b, d), 0.5::edge(d, f).");
+    Rule answer2 = parseRule("path(b, f) :- 0.8::edge(b, e), 0.3::edge(e, f).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
 

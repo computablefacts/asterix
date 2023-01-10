@@ -4,7 +4,6 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.computablefacts.decima.problog.AbstractClause;
@@ -14,7 +13,6 @@ import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
@@ -44,9 +42,9 @@ public class SocialNetwork1Test {
     Assert.assertEquals(2, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer1 = newRule("smokes(angelika)",
-        Lists.newArrayList("friend(angelika, jonas)", "person(jonas)", "person(angelika)", "person(jonas)"));
-    Rule answer2 = newRule("smokes(angelika)", Lists.newArrayList("person(angelika)"));
+    Rule answer1 = parseRule(
+        "smokes(angelika) :- friend(angelika, jonas), person(jonas), person(angelika), person(jonas).");
+    Rule answer2 = parseRule("smokes(angelika) :- person(angelika).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2)));
 
@@ -97,16 +95,14 @@ public class SocialNetwork1Test {
     Assert.assertEquals(5, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer1 = newRule("smokes(joris)",
-        Lists.newArrayList("friend(joris, dimitar)", "person(dimitar)", "person(joris)", "person(dimitar)"));
-    Rule answer2 = newRule("smokes(joris)", Lists.newArrayList("person(joris)"));
-    Rule answer3 = newRule("smokes(joris)",
-        Lists.newArrayList("friend(joris, angelika)", "person(angelika)", "person(joris)", "person(angelika)"));
-    Rule answer4 = newRule("smokes(joris)",
-        Lists.newArrayList("friend(joris, jonas)", "person(jonas)", "person(joris)", "person(jonas)"));
-    Rule answer5 = newRule("smokes(joris)",
-        Lists.newArrayList("friend(joris, angelika)", "person(angelika)", "person(joris)", "friend(angelika, jonas)",
-            "person(jonas)", "person(angelika)", "person(jonas)"));
+    Rule answer1 = parseRule(
+        "smokes(joris) :- friend(joris, dimitar), person(dimitar), person(joris), person(dimitar).");
+    Rule answer2 = parseRule("smokes(joris) :- person(joris).");
+    Rule answer3 = parseRule(
+        "smokes(joris) :- friend(joris, angelika), person(angelika), person(joris), person(angelika).");
+    Rule answer4 = parseRule("smokes(joris) :- friend(joris, jonas), person(jonas), person(joris), person(jonas).");
+    Rule answer5 = parseRule(
+        "smokes(joris) :- friend(joris, angelika), person(angelika), person(joris), friend(angelika, jonas), person(jonas), person(angelika), person(jonas).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3, answer4, answer5)));
 

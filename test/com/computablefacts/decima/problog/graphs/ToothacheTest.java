@@ -4,7 +4,6 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 import static com.computablefacts.decima.problog.TestUtils.checkAnswers;
-import static com.computablefacts.decima.problog.TestUtils.newRule;
 
 import com.computablefacts.asterix.nlp.WildcardMatcher;
 import com.computablefacts.decima.problog.AbstractClause;
@@ -14,7 +13,6 @@ import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.decima.problog.Rule;
 import com.computablefacts.decima.problog.Solver;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,10 +52,10 @@ public class ToothacheTest {
     Assert.assertEquals(4, proofs.size());
     Assert.assertEquals(1, answers.size());
 
-    Rule answer1 = newRule("toothache(a)", Lists.newArrayList("0.9::~cavity(a)", "0.95::~gum_disease(a)"));
-    Rule answer2 = newRule("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.05::gum_disease(a)"));
-    Rule answer3 = newRule("toothache(a)", Lists.newArrayList("0.9::~cavity(a)", "0.05::gum_disease(a)"));
-    Rule answer4 = newRule("toothache(a)", Lists.newArrayList("0.1::cavity(a)", "0.95::~gum_disease(a)"));
+    Rule answer1 = parseRule("toothache(a) :- 0.9::~cavity(a), 0.95::~gum_disease(a).");
+    Rule answer2 = parseRule("toothache(a) :- 0.1::cavity(a), 0.05::gum_disease(a).");
+    Rule answer3 = parseRule("toothache(a) :- 0.9::~cavity(a), 0.05::gum_disease(a).");
+    Rule answer4 = parseRule("toothache(a) :- 0.1::cavity(a), 0.95::~gum_disease(a).");
 
     Assert.assertTrue(checkAnswers(answers, Sets.newHashSet(answer1, answer2, answer3, answer4)));
 

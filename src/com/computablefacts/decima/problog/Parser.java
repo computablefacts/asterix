@@ -4,6 +4,7 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.AbstractTerm.newVar;
 
 import com.computablefacts.asterix.RandomString;
+import com.computablefacts.asterix.codecs.StringCodec;
 import com.computablefacts.nona.Function;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
@@ -312,7 +313,18 @@ public final class Parser {
       return parseBuiltInPredicate(scan, map, lhs);
     }
 
-    Preconditions.checkState(!builtInExpected, "[line " + scan.lineno() + "] Unexpected built-in predicate");
+    if (!StringCodec.isNumber(lhs) || scan.ttype != ':') {
+      Preconditions.checkState(!builtInExpected, "[line " + scan.lineno() + "] Unexpected built-in predicate");
+    } else {
+      scan.nextToken();
+      if (scan.ttype != ':') {
+        scan.pushBack();
+        Preconditions.checkState(!builtInExpected, "[line " + scan.lineno() + "] Unexpected built-in predicate");
+      } else { // body literal prefixed with a probability
+        return parseLiteral(new BigDecimal(lhs), scan, map);
+      }
+    }
+
     Preconditions.checkState(scan.ttype == '(',
         "[line " + scan.lineno() + "] Expected '(' after predicate or an operator");
 
