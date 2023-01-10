@@ -57,6 +57,8 @@ public abstract class AbstractKnowledgeBase {
 
   private final RandomString randomString_ = new RandomString(7);
   private final Map<String, Function> definitions_ = new ConcurrentHashMap<>();
+  private final Map<Predicate, Set<Fact>> facts_ = new ConcurrentHashMap<>();
+  private final Map<Predicate, Set<Rule>> rules_ = new ConcurrentHashMap<>();
 
   public AbstractKnowledgeBase() {
     setDefinitions();

@@ -3,8 +3,8 @@ package com.computablefacts.decima.problog;
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 
 import com.computablefacts.Generated;
-import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.asterix.View;
+import com.computablefacts.decima.problog.AbstractSubgoal.Waiter;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -43,28 +43,20 @@ import org.slf4j.LoggerFactory;
 @CheckReturnValue
 final public class Solver {
 
-  private static final double FALSE_POSITIVE_PROBABILITY = 0.05;
-  private static final int EXPECTED_NUMBER_OF_ELEMENTS = 10000000;
   private static final Logger logger_ = LoggerFactory.getLogger(Solver.class);
 
   private final AbstractKnowledgeBase kb_;
-  private final Map<String, Subgoal> subgoals_;
-  private final Function<Literal, Subgoal> newSubgoal_;
-  private final BloomFilter<String> bf_;
+  private final Map<String, AbstractSubgoal> subgoals_;
+  private final Function<Literal, AbstractSubgoal> newSubgoal_;
 
-  private Subgoal root_ = null;
+  private AbstractSubgoal root_ = null;
   private int maxSampleSize_ = -1;
 
   public Solver(AbstractKnowledgeBase kb) {
-    this(kb, literal -> new Subgoal(literal, new InMemorySubgoalFacts()));
+    this(kb, SubgoalMemoryBacked::new);
   }
 
-  public Solver(AbstractKnowledgeBase kb, Function<Literal, Subgoal> newSubgoal) {
-    this(kb, newSubgoal, FALSE_POSITIVE_PROBABILITY, EXPECTED_NUMBER_OF_ELEMENTS); // BF : ~72MB
-  }
-
-  public Solver(AbstractKnowledgeBase kb, Function<Literal, Subgoal> newSubgoal, double falsePositiveProbability,
-      int expectedNumberOfElements) {
+  public Solver(AbstractKnowledgeBase kb, Function<Literal, AbstractSubgoal> newSubgoal) {
 
     Preconditions.checkNotNull(kb, "kb should not be null");
     Preconditions.checkNotNull(newSubgoal, "newSubgoal should not be null");
@@ -72,7 +64,6 @@ final public class Solver {
     kb_ = kb;
     subgoals_ = new ConcurrentHashMap<>();
     newSubgoal_ = newSubgoal;
-    bf_ = new BloomFilter<>(falsePositiveProbability, expectedNumberOfElements);
   }
 
   /**
@@ -164,7 +155,7 @@ final public class Solver {
    *
    * @param subgoal subgoal.
    */
-  private void search(Subgoal subgoal, int idx) {
+  private void search(AbstractSubgoal subgoal, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
 
@@ -179,7 +170,7 @@ final public class Solver {
 
       // Evaluate the positive version of the rule (i.e. negation as failure)
       Literal base = new Literal(predicate.baseName(), literal.terms());
-      Subgoal sub = newSubgoal_.apply(base);
+      AbstractSubgoal sub = newSubgoal_.apply(base);
 
       subgoals_.put(sub.literal().tag(), sub);
 
@@ -204,7 +195,7 @@ final public class Solver {
           Fact fact = facts.next();
 
           if (fact.head().isRelevant(base)) {
-            if (sub.proofs().isEmpty()) {
+            if (sub.nbProofs() == 0) {
 
               // Negate a probabilistic fact
               Fact negatedFact = new Fact(
@@ -217,7 +208,7 @@ final public class Solver {
 
               // Negate a probabilistic rule
               // i.e. if (q :- a, b) then ~q is rewritten as (~q :- ~a) or (~q :- ~b)
-              List<Rule> rules = sub.proofs().stream().filter(Rule::isGrounded).collect(Collectors.toList());
+              List<Rule> rules = View.of(sub.proofs()).filter(Rule::isGrounded).toList();
 
               for (Rule rule : rules) {
                 for (Literal lit : rule.body()) {
@@ -276,26 +267,20 @@ final public class Solver {
    * @param subgoal subgoal.
    * @param fact    the fact to add to the subgoal.
    */
-  private void fact(Subgoal subgoal, Fact fact) {
+  private void fact(AbstractSubgoal subgoal, Fact fact) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(fact, "fact should not be null");
 
-    String hash = subgoal.literal().id() + fact.head().id();
-
-    if (!bf_.contains(hash)) {
-      bf_.add(hash);
-    } else {
-      if (subgoal.contains(fact)) { // Potentially expensive call...
-        return;
-      }
+    if (subgoal.contains(fact)) { // Potentially expensive call...
+      return;
     }
 
     subgoal.fact(fact);
 
-    for (Map.Entry<Subgoal, Map.Entry<Rule, Integer>> entry : subgoal.waiters()) {
+    for (Waiter waiter : subgoal.waiters()) {
 
-      ground(entry.getKey(), entry.getValue().getKey(), fact, entry.getValue().getValue());
+      ground(waiter.subgoal_, waiter.rule_, fact, waiter.idx_);
 
       if (maxSampleSizeReached()) {
         return;
@@ -310,7 +295,7 @@ final public class Solver {
    * @param rule    the rule to add to the subgoal.
    * @param idx     the next rule body literal to evaluate.
    */
-  private void rule(Subgoal subgoal, Rule rule, int idx) {
+  private void rule(AbstractSubgoal subgoal, Rule rule, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");
@@ -335,7 +320,7 @@ final public class Solver {
       return;
     }
 
-    @Var Subgoal sub = subgoals_.get(first.tag());
+    @Var AbstractSubgoal sub = subgoals_.get(first.tag());
 
     if (sub != null) {
       sub.waiter(subgoal, rule, idx);
@@ -368,7 +353,7 @@ final public class Solver {
    * @param rule    the rule to ground.
    * @param fact    the fact associated with the rule's first body literal.
    */
-  private void ground(Subgoal subgoal, Rule rule, Fact fact, int idx) {
+  private void ground(AbstractSubgoal subgoal, Rule rule, Fact fact, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");

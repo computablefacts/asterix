@@ -1,5 +1,6 @@
 package com.computablefacts.decima.problog;
 
+import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.trie.Trie;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -34,23 +35,20 @@ final public class ProofAssistant {
   private final Set<Map.Entry<Integer, Set<Fact>>> factsInProofs_ = new HashSet<>();
   private final Set<Map.Entry<Integer, Set<Rule>>> rulesInProofs_ = new HashSet<>();
 
-  public ProofAssistant(Collection<Subgoal> subgoals) {
+  public ProofAssistant(Collection<AbstractSubgoal> subgoals) {
 
     Preconditions.checkNotNull(subgoals, "subgoals should not be null");
 
-    facts_ = subgoals.stream().filter(subgoal -> subgoal.proofs().isEmpty())
-        .flatMap(subgoal -> Sets.newHashSet(subgoal.facts()).stream()).map(AbstractClause::head)
-        .collect(Collectors.toSet());
+    facts_ = View.of(subgoals).filter(sub -> sub.nbProofs() == 0).flatten(subgoal -> View.of(subgoal.facts()))
+        .map(AbstractClause::head).toSet();
 
-    rulesWithoutSubRules_ = subgoals.stream().flatMap(subgoal -> subgoal.proofs().stream()).filter(Rule::isGrounded)
-        .filter(rule -> rule.body().stream()
-            .allMatch(literal -> literal.predicate().isPrimitive() || facts_.contains(literal)))
-        .collect(Collectors.toSet());
+    rulesWithoutSubRules_ = View.of(subgoals).flatten(sub -> View.of(sub.proofs())).filter(Rule::isGrounded).filter(
+            rule -> View.of(rule.body()).allMatch(literal -> literal.predicate().isPrimitive() || facts_.contains(literal)))
+        .toSet();
 
-    rulesWithSubRules_ = subgoals.stream().flatMap(subgoal -> subgoal.proofs().stream()).filter(Rule::isGrounded)
-        .filter(rule -> rule.body().stream()
-            .anyMatch(literal -> !literal.predicate().isPrimitive() && !facts_.contains(literal)))
-        .collect(Collectors.toSet());
+    rulesWithSubRules_ = View.of(subgoals).flatten(sub -> View.of(sub.proofs())).filter(Rule::isGrounded).filter(
+        rule -> View.of(rule.body())
+            .anyMatch(literal -> !literal.predicate().isPrimitive() && !facts_.contains(literal))).toSet();
   }
 
   public List<String> tableOfProofs() {

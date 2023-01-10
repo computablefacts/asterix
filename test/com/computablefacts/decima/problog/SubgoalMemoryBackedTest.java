@@ -4,24 +4,22 @@ import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 import static com.computablefacts.decima.problog.Parser.parseFact;
 import static com.computablefacts.decima.problog.Parser.parseRule;
 
-import com.computablefacts.asterix.RandomString;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class BPlusTreeSubgoalFactsTest {
+public class SubgoalMemoryBackedTest {
 
   /**
    * See https://github.com/ML-KULeuven/problog/blob/master/test/swap.pl
    */
   @Test
-  public void testLiteralsSwapping1() {
+  public void testLiteralsSwapping1() throws Exception {
 
     // Create kb
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
@@ -43,10 +41,7 @@ public class BPlusTreeSubgoalFactsTest {
 
     // Query kb
     // s1(1)?
-    AtomicInteger id = new AtomicInteger(0);
-    String tblName = "solver_subgoals_" + new RandomString().nextString();
-    Solver solver = new Solver(kb, literal -> new Subgoal(literal,
-        new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement())));
+    Solver solver = new Solver(kb, SubgoalMemoryBacked::new);
     Literal query = new Literal("s1", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
@@ -62,7 +57,7 @@ public class BPlusTreeSubgoalFactsTest {
    * See https://github.com/ML-KULeuven/problog/blob/master/test/swap.pl
    */
   @Test
-  public void testLiteralsSwapping2() {
+  public void testLiteralsSwapping2() throws Exception {
 
     // Create kb
     InMemoryKnowledgeBase kb = new InMemoryKnowledgeBase();
@@ -84,27 +79,24 @@ public class BPlusTreeSubgoalFactsTest {
 
     // Query kb
     // s2(1)?
-    Multiset<Literal> facts = HashMultiset.create();
-    AtomicInteger id = new AtomicInteger(0);
-    String tblName = "solver_subgoals_" + new RandomString().nextString();
-    Solver solver = new Solver(kb, literal -> new Subgoal(literal,
-        new BPlusTreeSubgoalFacts(System.getProperty("java.io.tmpdir"), tblName, id.getAndIncrement(), facts::add)));
+    Multiset<Fact> facts = HashMultiset.create();
+    Solver solver = new Solver(kb, fact -> new SubgoalMemoryBacked(fact, facts::add));
     Literal query = new Literal("s2", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
     // Verify subgoals' facts
     Assert.assertEquals(10, facts.size());
 
-    Assert.assertTrue(facts.contains(new Literal(BigDecimal.valueOf(0.5), "b", newConst(1))));
-    Assert.assertTrue(facts.contains(new Literal(BigDecimal.valueOf(0.5), "b", newConst(2))));
-    Assert.assertTrue(facts.contains(new Literal(BigDecimal.valueOf(0.5), "b", newConst(3))));
-    Assert.assertTrue(facts.contains(new Literal(BigDecimal.valueOf(0.5), "f", newConst(1), newConst(3))));
-    Assert.assertTrue(facts.contains(new Literal(BigDecimal.valueOf(0.5), "f", newConst(1), newConst(2))));
-    Assert.assertTrue(facts.contains(new Literal(BigDecimal.valueOf(0.5), "f", newConst(2), newConst(3))));
-    Assert.assertTrue(facts.contains(new Literal(BigDecimal.valueOf(0.5), "f", newConst(2), newConst(1))));
-    Assert.assertTrue(facts.contains(new Literal("s2", newConst(3))));
-    Assert.assertTrue(facts.contains(new Literal("s2", newConst(2))));
-    Assert.assertTrue(facts.contains(new Literal("s2", newConst(1))));
+    Assert.assertTrue(facts.contains(parseFact("0.5::b(1).")));
+    Assert.assertTrue(facts.contains(parseFact("0.5::b(2).")));
+    Assert.assertTrue(facts.contains(parseFact("0.5::b(3).")));
+    Assert.assertTrue(facts.contains(parseFact("0.5::f(1, 3).")));
+    Assert.assertTrue(facts.contains(parseFact("0.5::f(1, 2).")));
+    Assert.assertTrue(facts.contains(parseFact("0.5::f(2, 3).")));
+    Assert.assertTrue(facts.contains(parseFact("0.5::f(2, 1).")));
+    Assert.assertTrue(facts.contains(parseFact("s2(3).")));
+    Assert.assertTrue(facts.contains(parseFact("s2(2).")));
+    Assert.assertTrue(facts.contains(parseFact("s2(1).")));
 
     // Verify BDD answer
     // 0.734375::s2(1).
