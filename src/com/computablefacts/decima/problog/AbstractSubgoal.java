@@ -123,5 +123,12 @@ public abstract class AbstractSubgoal {
     public int hashCode() {
       return Objects.hash(subgoal_, rule_, idx_);
     }
+
+    @Generated
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("literal", subgoal_.literal_).add("rule", rule_).add("idx", idx_)
+          .toString();
+    }
   }
 }
