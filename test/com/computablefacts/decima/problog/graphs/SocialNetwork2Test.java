@@ -12,13 +12,11 @@ import com.computablefacts.decima.problog.Solver;
 import java.math.BigDecimal;
 import java.util.Set;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * See https://dtai.cs.kuleuven.be/problog/tutorial/basic/10_inhibitioneffects.html
  */
-@Ignore
 public class SocialNetwork2Test {
 
   @Test
@@ -40,7 +38,7 @@ public class SocialNetwork2Test {
     // Query kb
     // inf(_)?
     Solver solver = new Solver(kb);
-    Literal query = parseQuery("inf(angelika)?");
+    Literal query = parseQuery("inf(_)?");
     Set<AbstractClause> proofs = solver.proofs(query);
 
     // Verify BDD answer

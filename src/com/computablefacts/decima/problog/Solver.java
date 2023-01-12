@@ -3,18 +3,23 @@ package com.computablefacts.decima.problog;
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 
 import com.computablefacts.Generated;
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.View;
 import com.computablefacts.decima.problog.AbstractSubgoal.Waiter;
-import com.google.common.annotations.Beta;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -48,6 +53,7 @@ final public class Solver {
   private final AbstractKnowledgeBase kb_;
   private final Map<String, AbstractSubgoal> subgoals_;
   private final Function<Literal, AbstractSubgoal> newSubgoal_;
+  private final List<Node> trees_ = new ArrayList<>(); // proofs
 
   private AbstractSubgoal root_ = null;
   private int maxSampleSize_ = -1;
@@ -66,12 +72,67 @@ final public class Solver {
     newSubgoal_ = newSubgoal;
   }
 
+  private static List<List<Literal>> unfold(Node tree) {
+
+    List<List<Literal>> unfolded = new ArrayList<>();
+    List<Proof> unfolding = View.of(tree.bodies_).map(body -> new Proof(body, Sets.newHashSet(tree)))
+        .toList(); // (proof, visited trees)
+
+    while (!unfolding.isEmpty()) {
+
+      List<Proof> copyOfUnfolding = new ArrayList<>(unfolding);
+      unfolding.clear();
+
+      for (Proof proof : copyOfUnfolding) {
+
+        List<Proof> expanded = new ArrayList<>();
+        expanded.add(proof);
+        // System.out.println(proof.proof_);
+
+        for (int i = proof.proof_.size() - 1; i >= 0; i--) {
+
+          Object obj = proof.proof_.get(i);
+
+          if (obj instanceof Node) {
+
+            List<Proof> copyOfExpanded = new ArrayList<>(expanded);
+            expanded.clear();
+
+            for (int k = 0; k < copyOfExpanded.size(); k++) { // TODO : foreach
+
+              Proof p = copyOfExpanded.get(k);
+              List<Proof> tmp = p.expand(i, (Node) obj);
+
+              expanded.addAll(tmp);
+            }
+          }
+        }
+
+        View.of(expanded).forEachRemaining(p -> {
+          if (p.isUnfolded()) {
+            unfolded.add(p.unfoldedProof());
+          } else {
+            unfolding.add(p);
+          }
+        });
+      }
+    }
+    return unfolded;
+  }
+
+  private static Rule newRule(Literal head, List<Object> body) {
+
+    Preconditions.checkNotNull(head, "head should not be null");
+    Preconditions.checkNotNull(body, "body should not be null");
+
+    return new Rule(head, View.of(body).map(l -> l instanceof Node ? ((Node) l).head_ : (Literal) l).toList());
+  }
+
   /**
    * Return the number of subgoals.
    *
    * @return the number of subgoals.
    */
-  @Generated
   public int nbSubgoals() {
     return subgoals_.size();
   }
@@ -92,23 +153,9 @@ final public class Solver {
 
     search(root_, 0);
 
-    ProofAssistant assistant = new ProofAssistant(subgoals_.values());
-    return assistant.proofs(root_.literal());
-  }
-
-  @Beta
-  public List<String> tableOfProofs(Literal query) {
-
-    Preconditions.checkNotNull(query, "query should not be null");
-
-    root_ = newSubgoal_.apply(query);
-    subgoals_.put(query.tag(), root_);
-
-    search(root_, 0);
-
-    ProofAssistant assistant = new ProofAssistant(subgoals_.values());
-    Set<AbstractClause> proofs = assistant.proofs(root_.literal());
-    return assistant.tableOfProofs();
+    return trees_.isEmpty() ? View.of(root_.facts()).map(fact -> (AbstractClause) fact).toSet()
+        : View.of(trees_).filter(t -> t.head_.isRelevant(root_.literal()))
+            .flatten(tree -> View.of(unfold(tree)).map(proof -> (AbstractClause) new Rule(tree.head_, proof))).toSet();
   }
 
   /**
@@ -368,10 +415,136 @@ final public class Solver {
     Rule newRule = new Rule(ruleTmp.head(), View.of(rule.body().subList(0, idx)).concat(ruleTmp.body()).toList());
 
     if (ruleTmp.body().size() == 1) {
+
+      Literal head = newRule.head();
+      List<Object> body = View.of(newRule.body()).map(literal -> {
+        Result<Node> fold = View.of(trees_).findFirst(f -> f.head_.isRelevant(literal));
+        return fold.mapIfSuccess(f -> (Object) f).mapIfEmpty(() -> literal).getOrThrow();
+      }).toList();
+
+      List<Node> nodes = View.of(trees_).filter(node -> node.head_.isRelevant(newRule.head())).toList();
+
+      Preconditions.checkState(nodes.size() == 0 || nodes.size() == 1);
+
+      if (nodes.isEmpty()) {
+        trees_.add(new Node(head, body));
+      } else {
+        for (Node node : nodes) {
+          node.bodies_.add(body);
+        }
+      }
+
       subgoal.proof(newRule);
       fact(subgoal, new Fact(newRule.head()));
     } else {
       rule(subgoal, newRule, idx + 1);
+    }
+  }
+
+  final static class Node {
+
+    public final Literal head_;
+    public final Set<List<Object>> bodies_ = new HashSet<>();
+
+    public Node(Literal head, List<Object> body) {
+
+      Preconditions.checkNotNull(head, "head should not be null");
+      Preconditions.checkNotNull(body, "body should not be null");
+
+      head_ = head;
+      bodies_.add(body);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof Node)) {
+        return false;
+      }
+      Node node = (Node) obj;
+      return Objects.equals(head_, node.head_) /* && Objects.equals(bodies_, node.bodies_) */;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(head_ /* , bodies_ */);
+    }
+
+    @Generated
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("head", head_)/* .add("bodies", bodies_) */.toString();
+    }
+  }
+
+  final static class Proof {
+
+    public final List<Object> proof_ = new ArrayList<>();
+    public final Set<Node> visited_ = new HashSet<>();
+
+    public Proof(List<Object> proof, Set<Node> visited) {
+
+      Preconditions.checkNotNull(proof, "proof should not be null");
+      Preconditions.checkNotNull(visited, "visited should not be null");
+
+      proof_.addAll(proof);
+      visited_.addAll(visited);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof Proof)) {
+        return false;
+      }
+      Proof proof = (Proof) obj;
+      return Objects.equals(proof_, proof.proof_) && Objects.equals(visited_, proof.visited_);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(proof_, visited_);
+    }
+
+    @Generated
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("proof", proof_).add("visited2", visited_).toString();
+    }
+
+    public boolean isUnfolded() {
+      return View.of(proof_).allMatch(l -> l instanceof Literal);
+    }
+
+    public List<Literal> unfoldedProof() {
+
+      Preconditions.checkState(isUnfolded());
+
+      return View.of(proof_).map(l -> (Literal) l).toList();
+    }
+
+    // Replace tree at position pos by its subtrees
+    public List<Proof> expand(int pos, Node tree) {
+
+      Preconditions.checkNotNull(tree, "tree should not be null");
+      Preconditions.checkArgument(0 <= pos && pos < proof_.size(), "pos must be such as 0 <= pos <= %s", proof_.size());
+      Preconditions.checkArgument(proof_.get(pos) instanceof Node, "proof.get(pos) must be a Node");
+
+      return View.of(tree.bodies_)
+          .filter(proof -> !visited_.contains(tree) || View.of(proof).allMatch(l -> l instanceof Literal))
+          .map(proof -> {
+
+            List<Object> prefix = proof_.subList(0, pos);
+            List<Object> suffix = proof_.subList(pos + 1, proof_.size());
+            List<Object> newProof = View.of(prefix).concat(proof).concat(suffix).toList();
+            Set<Node> newVisited = View.of(visited_).append(tree).toSet();
+
+            return new Proof(newProof, newVisited);
+          }).toList();
     }
   }
 }

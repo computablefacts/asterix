@@ -1,6 +1,7 @@
 package com.computablefacts.decima.problog;
 
 import com.computablefacts.asterix.RandomString;
+import com.computablefacts.asterix.View;
 import com.computablefacts.decima.robdd.BddManager;
 import com.computablefacts.decima.robdd.BddNode;
 import com.google.common.annotations.Beta;
@@ -16,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -116,9 +116,9 @@ final public class ProbabilityEstimator {
     BddManager mgr = new BddManager(10);
     BiMap<BddNode, Literal> bddVars = HashBiMap.create();
 
-    Set<AbstractClause> newProofs = proofs_.stream().map(this::rewriteRuleBody).collect(Collectors.toSet());
+    Set<AbstractClause> proofs = proofs_.stream().map(this::rewriteRuleBody).collect(Collectors.toSet());
 
-    newProofs.stream().flatMap(p -> p.isFact() ? ImmutableList.of(p.head()).stream() : ((Rule) p).body().stream())
+    proofs.stream().flatMap(p -> p.isFact() ? ImmutableList.of(p.head()).stream() : ((Rule) p).body().stream())
         .distinct().forEach(literal -> {
 
           // Literals with probability of 1 do not contribute to the final score
@@ -129,7 +129,7 @@ final public class ProbabilityEstimator {
 
     List<BddNode> trees = new ArrayList<>();
 
-    for (AbstractClause proof : newProofs) {
+    for (AbstractClause proof : proofs) {
 
       List<Literal> body = proof.isFact() ? ImmutableList.of(proof.head()) : ((Rule) proof).body();
       BddNode bddNode = and(mgr, bddVars.inverse(), body);
@@ -142,10 +142,14 @@ final public class ProbabilityEstimator {
     if (trees.isEmpty()) {
       return BigDecimal.ONE;
     }
-    return probability(bddVars, or(mgr, trees));
+
+    BiMap<Integer, Literal> newBddVars = HashBiMap.create();
+    View.of(bddVars).forEachRemaining(var -> newBddVars.put(var.getKey().index(), var.getValue()));
+
+    return probability(newBddVars, or(mgr, trees));
   }
 
-  private BigDecimal probability(BiMap<BddNode, Literal> bddVars, BddNode node) {
+  private BigDecimal probability(BiMap<Integer, Literal> bddVars, BddNode node) {
 
     Preconditions.checkNotNull(bddVars, "bddVars should not be null");
     Preconditions.checkNotNull(node, "node should not be null");
@@ -160,11 +164,7 @@ final public class ProbabilityEstimator {
     BigDecimal probH = probability(bddVars, node.high());
     BigDecimal probL = probability(bddVars, node.low());
 
-    Optional<Literal> fact = bddVars.entrySet().stream().filter(e -> e.getKey().index() == node.index())
-        .map(Map.Entry::getValue).findFirst();
-
-    BigDecimal probability = fact.get().probability();
-
+    BigDecimal probability = bddVars.get(node.index()).probability();
     return probability.multiply(probH).add(BigDecimal.ONE.subtract(probability).multiply(probL));
   }
 

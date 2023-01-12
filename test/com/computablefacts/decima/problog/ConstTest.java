@@ -32,4 +32,14 @@ public class ConstTest {
     Const b = newConst("1");
     Assert.assertEquals("1", b.toString());
   }
+
+  @Test
+  public void testIsNotWildcard() {
+
+    Const a = newConst(1);
+    Assert.assertFalse(a.isWildcard());
+
+    Const b = newConst("1");
+    Assert.assertFalse(b.isWildcard());
+  }
 }
