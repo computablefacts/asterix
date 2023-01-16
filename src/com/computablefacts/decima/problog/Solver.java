@@ -54,6 +54,7 @@ final public class Solver {
   private final Map<String, AbstractSubgoal> subgoals_;
   private final Function<Literal, AbstractSubgoal> newSubgoal_;
   private final AbstractFunctions functions_;
+  private final boolean trackProofs_;
   private final List<Node> trees_ = new ArrayList<>(); // proofs
 
   private AbstractSubgoal root_ = null;
@@ -61,14 +62,15 @@ final public class Solver {
 
   @Deprecated
   public Solver(AbstractKnowledgeBase kb) {
-    this(kb, new Functions(kb), SubgoalMemoryBacked::new);
+    this(kb, new Functions(kb), true, SubgoalMemoryBacked::new);
   }
 
   public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions) {
-    this(kb, functions, SubgoalMemoryBacked::new);
+    this(kb, functions, true, SubgoalMemoryBacked::new);
   }
 
-  public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions, Function<Literal, AbstractSubgoal> newSubgoal) {
+  public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions, boolean trackProofs,
+      Function<Literal, AbstractSubgoal> newSubgoal) {
 
     Preconditions.checkNotNull(kb, "kb should not be null");
     Preconditions.checkNotNull(functions, "functions should not be null");
@@ -76,6 +78,7 @@ final public class Solver {
 
     kb_ = kb;
     functions_ = functions;
+    trackProofs_ = trackProofs;
     subgoals_ = new ConcurrentHashMap<>();
     newSubgoal_ = newSubgoal;
   }
@@ -155,6 +158,7 @@ final public class Solver {
   public Set<AbstractClause> proofs(Literal query) {
 
     Preconditions.checkNotNull(query, "query should not be null");
+    Preconditions.checkState(trackProofs_, "trackProofs must be true on probabilistic settings");
 
     root_ = newSubgoal_.apply(query);
     subgoals_.put(query.tag(), root_);
@@ -250,6 +254,9 @@ final public class Solver {
           Fact fact = facts.next();
 
           if (fact.head().isRelevant(base)) {
+
+            Preconditions.checkState(trackProofs_, "trackProofs must be true on probabilistic settings");
+
             if (sub.nbProofs() == 0) {
 
               // Negate a probabilistic fact
@@ -423,26 +430,29 @@ final public class Solver {
     Rule newRule = new Rule(ruleTmp.head(), View.of(rule.body().subList(0, idx)).concat(ruleTmp.body()).toList());
 
     if (ruleTmp.body().size() == 1) {
+      if (trackProofs_) {
 
-      Literal head = newRule.head();
-      List<Object> body = View.of(newRule.body()).map(literal -> {
-        Result<Node> fold = View.of(trees_).findFirst(f -> f.head_.isRelevant(literal));
-        return fold.mapIfSuccess(f -> (Object) f).mapIfEmpty(() -> literal).getOrThrow();
-      }).toList();
+        Literal head = newRule.head();
+        List<Object> body = View.of(newRule.body()).map(literal -> {
+          Result<Node> fold = View.of(trees_).findFirst(f -> f.head_.isRelevant(literal));
+          return fold.mapIfSuccess(f -> (Object) f).mapIfEmpty(() -> literal).getOrThrow();
+        }).toList();
 
-      List<Node> nodes = View.of(trees_).filter(node -> node.head_.isRelevant(newRule.head())).toList();
+        List<Node> nodes = View.of(trees_).filter(node -> node.head_.isRelevant(newRule.head())).toList();
 
-      Preconditions.checkState(nodes.size() == 0 || nodes.size() == 1);
+        Preconditions.checkState(nodes.size() == 0 || nodes.size() == 1);
 
-      if (nodes.isEmpty()) {
-        trees_.add(new Node(head, body));
-      } else {
-        for (Node node : nodes) {
-          node.bodies_.add(body);
+        if (nodes.isEmpty()) {
+          trees_.add(new Node(head, body));
+        } else {
+          for (Node node : nodes) {
+            node.bodies_.add(body);
+          }
         }
-      }
 
-      subgoal.proof(newRule);
+        subgoal.proof(newRule);
+      }
+      
       fact(subgoal, new Fact(newRule.head()));
     } else {
       rule(subgoal, newRule, idx + 1);

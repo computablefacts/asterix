@@ -44,7 +44,7 @@ public class SubgoalDiskBackedTest {
     // Query kb
     // s1(1)?
     Path dir = Files.createTempDirectory("solver");
-    Solver solver = new Solver(kb, new Functions(kb),
+    Solver solver = new Solver(kb, new Functions(kb), true,
         fact -> new SubgoalDiskBacked(fact, dir.toFile().getAbsolutePath()));
     Literal query = parseQuery("s1(1)?");
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
@@ -85,7 +85,7 @@ public class SubgoalDiskBackedTest {
     // s2(1)?
     Multiset<Fact> facts = HashMultiset.create();
     Path dir = Files.createTempDirectory("solver");
-    Solver solver = new Solver(kb, new Functions(kb),
+    Solver solver = new Solver(kb, new Functions(kb), true,
         fact -> new SubgoalDiskBacked(fact, dir.toFile().getAbsolutePath(), facts::add));
     Literal query = parseQuery("s2(1)?");
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
