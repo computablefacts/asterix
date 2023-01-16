@@ -29,27 +29,27 @@ public class AbstractKnowledgeBaseTest {
 
   @Test(expected = NullPointerException.class)
   public void testAssertNullClause() {
-    kb().azzert((Rule) null);
+    new KnowledgeBaseMemoryBacked().azzert((Rule) null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testAssertNullClauses() {
-    kb().azzert((Set<Rule>) null);
+    new KnowledgeBaseMemoryBacked().azzert((Set<Rule>) null);
   }
 
   @Test(expected = IllegalStateException.class)
   public void testAssertFactWithZeroProbability() {
-    kb().azzert(parseFact("0.0:edge(a, b)."));
+    new KnowledgeBaseMemoryBacked().azzert(parseFact("0.0:edge(a, b)."));
   }
 
   @Test(expected = IllegalStateException.class)
   public void testAssertRuleWithZeroProbability() {
-    kb().azzert(parseRule("0.0:is_true(X) :- fn_is_true(X)."));
+    new KnowledgeBaseMemoryBacked().azzert(parseRule("0.0:is_true(X) :- fn_is_true(X)."));
   }
 
   @Test(expected = IllegalStateException.class)
   public void testAssertRuleWithProbabilityInBody() {
-    kb().azzert(parseRule("node(X) :- 0.3::edge(X, b)."));
+    new KnowledgeBaseMemoryBacked().azzert(parseRule("node(X) :- 0.3::edge(X, b)."));
   }
 
   @Test
@@ -58,7 +58,7 @@ public class AbstractKnowledgeBaseTest {
     Fact fact1 = parseFact("0.3::edge(a, b).");
     Fact fact2 = parseFact("0.5::edge(b, c).");
 
-    KnowledgeBaseMemoryBacked kb = kb();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(fact1);
     kb.azzert(fact2);
 
@@ -72,7 +72,7 @@ public class AbstractKnowledgeBaseTest {
     Rule rule1 = parseRule("0.2::path(A, B) :- edge(A, B).");
     Rule rule2 = parseRule("0.2::path(A, B) :- path(A, X), edge(X, B).");
 
-    KnowledgeBaseMemoryBacked kb = kb();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(rule1);
     kb.azzert(rule2);
 
@@ -111,7 +111,7 @@ public class AbstractKnowledgeBaseTest {
     Rule rule1 = parseRule("0.2::path(A, B) :- edge(A, B).");
     Rule rule2 = parseRule("0.2::path(A, B) :- path(A, X), edge(X, B).");
 
-    KnowledgeBaseMemoryBacked kb = kb();
+    KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(Sets.newHashSet(fact1, fact2, rule1, rule2));
 
     Assert.assertEquals(4, kb.nbFacts());
@@ -126,7 +126,7 @@ public class AbstractKnowledgeBaseTest {
     Assert.assertEquals(BigDecimal.valueOf(0.3), rule.head().probability());
     Assert.assertEquals(2, rule.body().size());
 
-    Pair<Rule, Fact> pair = kb().rewriteRuleHead(rule);
+    Pair<Rule, Fact> pair = new KnowledgeBaseMemoryBacked().rewriteRuleHead(rule);
     Rule newRule = pair.t;
     Fact newFact = pair.u;
 
@@ -150,7 +150,7 @@ public class AbstractKnowledgeBaseTest {
     Rule rule = parseRule(
         "assert(X) :- json_path(X, _, _, _, RawOutput), fn_assert_json(IsOk, fn_concat(X, \"-cRz86jrY\"), fn_to_json(RawOutput)), fn_is_true(IsOk).");
 
-    AbstractKnowledgeBase kb = kb();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(fact);
     kb.azzert(rule);
 
@@ -188,7 +188,7 @@ public class AbstractKnowledgeBaseTest {
     Rule rule = parseRule(
         "assert(X) :- json_path(X, _, _, _, RawOutput), fn_assert_csv(IsOk, fn_concat(X, \"-cRz86jrY\"), fn_to_csv(RawOutput)), fn_is_true(IsOk).");
 
-    AbstractKnowledgeBase kb = kb();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(fact);
     kb.azzert(rule);
 
@@ -223,7 +223,7 @@ public class AbstractKnowledgeBaseTest {
     Rule rule2 = parseRule(
         "exist_in_kb(X) :- fn_exist_in_kb(IsOk, \"json_path\", \"_\", \"_\", \"id\", X), fn_is_true(IsOk).");
 
-    AbstractKnowledgeBase kb = kb();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(fact);
     kb.azzert(rule1);
     kb.azzert(rule2);
@@ -266,11 +266,14 @@ public class AbstractKnowledgeBaseTest {
     // Dataset CRM2 -> 3 clients + 1 duplicate of CRM1
     String rule2 = "clients(FirstName, LastName, Email) :- fn_mock_materialize_facts(\"http://localhost:3000/crm2\", \"first_name\", FirstName, \"last_name\", LastName, \"email\", Email).";
 
-    AbstractKnowledgeBase kb = addMockMaterializeFactsQueryDefinition1(kb());
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
+    Functions functions = new Functions(kb);
+    functions.register("MOCK_MATERIALIZE_FACTS", mockMaterializeFacts1());
+
     kb.azzert(parseRule(rule1));
     kb.azzert(parseRule(rule2));
 
-    Solver solver = new Solver(kb);
+    Solver solver = new Solver(kb, functions);
     Set<AbstractClause> clauses = Sets.newHashSet(solver.solve(parseQuery("clients(FirstName, LastName, Email)?")));
 
     Assert.assertEquals(1, solver.nbSubgoals());
@@ -291,11 +294,14 @@ public class AbstractKnowledgeBaseTest {
     // Dataset CRM2 -> 3 clients + 1 duplicate of CRM1
     String rule2 = "clients(FirstName, LastName, Email) :- fn_mock_materialize_facts(\"http://localhost:3000/crm2\", \"first_name\", FirstName, \"last_name\", LastName, \"email\", Email).";
 
-    AbstractKnowledgeBase kb = addMockMaterializeFactsQueryDefinition1(kb());
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
+    Functions functions = new Functions(kb);
+    functions.register("MOCK_MATERIALIZE_FACTS", mockMaterializeFacts1());
+
     kb.azzert(parseRule(rule1));
     kb.azzert(parseRule(rule2));
 
-    Solver solver = new Solver(kb);
+    Solver solver = new Solver(kb, functions);
     Set<AbstractClause> clauses = Sets.newHashSet(solver.solve(parseQuery("clients(\"Robert\", LastName, Email)?")));
 
     Assert.assertEquals(1, solver.nbSubgoals());
@@ -309,10 +315,13 @@ public class AbstractKnowledgeBaseTest {
 
     String rule = "mes_fichiers_favoris(PATH, MD5) :- fn_mock_materialize_facts(\"https://localhost/facts/dab/fichier\", \"metadata.path\", _, PATH, \"metadata.md5_after\", \"824a*\", MD5).";
 
-    AbstractKnowledgeBase kb = addMockMaterializeFactsQueryDefinition2(kb());
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
+    Functions functions = new Functions(kb);
+    functions.register("MOCK_MATERIALIZE_FACTS", mockMaterializeFacts2());
+
     kb.azzert(parseRule(rule));
 
-    Solver solver = new Solver(kb);
+    Solver solver = new Solver(kb, functions);
     Literal query = parseQuery("mes_fichiers_favoris(PATH, MD5)?");
     Set<AbstractClause> clauses = Sets.newHashSet(solver.solve(query));
 
@@ -335,12 +344,15 @@ public class AbstractKnowledgeBaseTest {
     String rule2 = "fichier_vam(PATH, TEXT) :- fn_mock_materialize_facts(\"https://localhost/facts/vam/fichier\", \"metadata.path\", _, PATH, \"content.text\", _, TEXT).";
     String rule3 = "fichier_duplique(PATH, TEXT) :- fichier_dab(PATH, TEXT), fichier_vam(PATH, TEXT).";
 
-    AbstractKnowledgeBase kb = addMockMaterializeFactsQueryDefinition3(kb());
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
+    Functions functions = new Functions(kb);
+    functions.register("MOCK_MATERIALIZE_FACTS", mockMaterializeFacts3());
+
     kb.azzert(parseRule(rule1));
     kb.azzert(parseRule(rule2));
     kb.azzert(parseRule(rule3));
 
-    Solver solver = new Solver(kb);
+    Solver solver = new Solver(kb, functions);
     Literal query = parseQuery("fichier_duplique(PATH, TEXT)?");
     Iterator<Fact> iterator = solver.solve(query);
     List<Fact> facts = Lists.newArrayList(iterator);
@@ -359,10 +371,13 @@ public class AbstractKnowledgeBaseTest {
 
     String rule = "mes_fichiers_favoris(PATH, CONTENT) :- fn_mock_materialize_facts(\"https://localhost/facts/dab/fichier\", \"metadata.path\", _, PATH, \"content.text\", _, CONTENT).";
 
-    AbstractKnowledgeBase kb = addMockMaterializeFactsQueryDefinition4(kb());
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
+    Functions functions = new Functions(kb);
+    functions.register("MOCK_MATERIALIZE_FACTS", mockMaterializeFacts4());
+
     kb.azzert(parseRule(rule));
 
-    Solver solver = new Solver(kb);
+    Solver solver = new Solver(kb, functions);
     Literal query = parseQuery("mes_fichiers_favoris(PATH, CONTENT)?");
     Set<Fact> facts = Sets.newHashSet(solver.solve(query));
 
@@ -381,7 +396,7 @@ public class AbstractKnowledgeBaseTest {
   @Test
   public void testCompactSimpleRule() {
 
-    AbstractKnowledgeBase kb = kb();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(parseRule("first(X) :- second(X), third(X)."));
     kb.azzert(parseRule("second(X) :- fourth(X)."));
     kb.azzert(parseRule("third(X) :- fifth(X)."));
@@ -397,7 +412,7 @@ public class AbstractKnowledgeBaseTest {
   @Test
   public void testCompactComplexRule() {
 
-    AbstractKnowledgeBase kb = kb();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(parseRule("first(X) :- second(X), third(X)."));
     kb.azzert(parseRule("second(X) :- fourth(X)."));
     kb.azzert(parseRule("third(X) :- fifth(X)."));
@@ -415,7 +430,7 @@ public class AbstractKnowledgeBaseTest {
   @Test
   public void testCompactSimpleRuleWithTwoBodies() {
 
-    AbstractKnowledgeBase kb = kb();
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     kb.azzert(parseRule("first(X) :- second(X), third(X)."));
     kb.azzert(parseRule("second(X) :- fourth(X)."));
     kb.azzert(parseRule("third(X) :- fifth(X)."));
@@ -434,7 +449,10 @@ public class AbstractKnowledgeBaseTest {
   @Test
   public void testStreamAndMaterializeFacts1() {
 
-    AbstractKnowledgeBase kb = addMockCreateJsonDefinition(kb());
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
+    Functions functions = new Functions(kb);
+    functions.register("MOCK_JSON_MATERIALIZE_FACTS", mockCreateJson());
+
     kb.azzert(parseRule(
         "load_json(JsonObject) :- fn_mock_json_materialize_facts(dummy, JsonString), fn_to_json(JsonObject, JsonString)."));
     kb.azzert(parseRule(
@@ -444,7 +462,7 @@ public class AbstractKnowledgeBaseTest {
 
     Assert.assertEquals(2, rules.size());
 
-    Solver solver = new Solver(kb);
+    Solver solver = new Solver(kb, functions);
     Literal query = parseQuery("stream_array_elements(Object)?");
     List<AbstractClause> clauses = Lists.newArrayList(solver.solve(query));
 
@@ -457,7 +475,10 @@ public class AbstractKnowledgeBaseTest {
   @Test
   public void testStreamAndMaterializeFacts2() {
 
-    AbstractKnowledgeBase kb = addMockCreateJsonDefinition(kb());
+    AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
+    Functions functions = new Functions(kb);
+    functions.register("MOCK_JSON_MATERIALIZE_FACTS", mockCreateJson());
+
     kb.azzert(parseRule(
         "load_json(JsonObject) :- fn_mock_json_materialize_facts(dummy, JsonString), fn_to_json(JsonObject, JsonString)."));
     kb.azzert(parseRule("stream_array_elements(Object) :- load_json(Json), fn_materialize_facts(Json, Object)."));
@@ -466,7 +487,7 @@ public class AbstractKnowledgeBaseTest {
 
     Assert.assertEquals(2, rules.size());
 
-    Solver solver = new Solver(kb);
+    Solver solver = new Solver(kb, functions);
     Literal query = parseQuery("stream_array_elements(Object)?");
     List<AbstractClause> clauses = Lists.newArrayList(solver.solve(query));
 
@@ -479,12 +500,8 @@ public class AbstractKnowledgeBaseTest {
             1).equals(fact1)));
   }
 
-  private KnowledgeBaseMemoryBacked kb() {
-    return new KnowledgeBaseMemoryBacked();
-  }
-
-  private AbstractKnowledgeBase addMockMaterializeFactsQueryDefinition1(AbstractKnowledgeBase kb) {
-    kb.definitions().put("FN_MOCK_MATERIALIZE_FACTS", new Function("MOCK_MATERIALIZE_FACTS") {
+  private Function mockMaterializeFacts1() {
+    return new Function("MOCK_MATERIALIZE_FACTS") {
 
       @Override
       protected boolean isCacheable() {
@@ -551,12 +568,11 @@ public class AbstractKnowledgeBaseTest {
         }
         return BoxedType.create(facts);
       }
-    });
-    return kb;
+    };
   }
 
-  private AbstractKnowledgeBase addMockMaterializeFactsQueryDefinition2(AbstractKnowledgeBase kb) {
-    kb.definitions().put("FN_MOCK_MATERIALIZE_FACTS", new Function("MOCK_MATERIALIZE_FACTS") {
+  private Function mockMaterializeFacts2() {
+    return new Function("MOCK_MATERIALIZE_FACTS") {
 
       @Override
       protected boolean isCacheable() {
@@ -578,12 +594,11 @@ public class AbstractKnowledgeBaseTest {
 
         return BoxedType.create(literals);
       }
-    });
-    return kb;
+    };
   }
 
-  private AbstractKnowledgeBase addMockMaterializeFactsQueryDefinition3(AbstractKnowledgeBase kb) {
-    kb.definitions().put("FN_MOCK_MATERIALIZE_FACTS", new Function("MOCK_MATERIALIZE_FACTS") {
+  private Function mockMaterializeFacts3() {
+    return new Function("MOCK_MATERIALIZE_FACTS") {
 
       @Override
       protected boolean isCacheable() {
@@ -633,12 +648,11 @@ public class AbstractKnowledgeBaseTest {
         }
         return BoxedType.create(literals);
       }
-    });
-    return kb;
+    };
   }
 
-  private AbstractKnowledgeBase addMockMaterializeFactsQueryDefinition4(AbstractKnowledgeBase kb) {
-    kb.definitions().put("FN_MOCK_MATERIALIZE_FACTS", new Function("MOCK_MATERIALIZE_FACTS") {
+  private Function mockMaterializeFacts4() {
+    return new Function("MOCK_MATERIALIZE_FACTS") {
 
       @Override
       protected boolean isCacheable() {
@@ -660,15 +674,12 @@ public class AbstractKnowledgeBaseTest {
 
         return BoxedType.create(literals);
       }
-    });
-    return kb;
+    };
   }
 
-  private AbstractKnowledgeBase addMockCreateJsonDefinition(AbstractKnowledgeBase kb) {
-
+  private Function mockCreateJson() {
     String json = "[{\"col_1\": 11, \"col_2\": 12, \"col_3\": 13} , {\"col_1\": 21, \"col_2\": 22, \"col_3\": 23}]";
-
-    kb.definitions().put("FN_MOCK_JSON_MATERIALIZE_FACTS", new Function("MOCK_JSON_MATERIALIZE_FACTS") {
+    return new Function("MOCK_JSON_MATERIALIZE_FACTS") {
 
       @Override
       protected boolean isCacheable() {
@@ -684,7 +695,6 @@ public class AbstractKnowledgeBaseTest {
 
         return BoxedType.create(Lists.newArrayList(new Literal("fn_" + name().toLowerCase(), terms)));
       }
-    });
-    return kb;
+    };
   }
 }

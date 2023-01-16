@@ -100,7 +100,7 @@ public class LiteralTest {
 
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_eq", newVar(), newConst(2), newConst(2));
-    Literal newLiteral = literal.execute(kb.definitions()).next();
+    Literal newLiteral = literal.execute(new Functions(kb).definitions()).next();
 
     Assert.assertEquals(new Literal("fn_eq", newConst(true), newConst(2), newConst(2)), newLiteral);
   }
@@ -110,7 +110,7 @@ public class LiteralTest {
 
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is", newConst(2), newConst(2));
-    Literal newLiteral = literal.execute(kb.definitions()).next();
+    Literal newLiteral = literal.execute(new Functions(kb).definitions()).next();
 
     Assert.assertEquals(new Literal("fn_is", newConst(2), newConst(2)), newLiteral);
   }
@@ -120,7 +120,7 @@ public class LiteralTest {
 
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is", newVar(), newConst(2));
-    Literal newLiteral = literal.execute(kb.definitions()).next();
+    Literal newLiteral = literal.execute(new Functions(kb).definitions()).next();
 
     Assert.assertEquals(new Literal("fn_is", newConst(2), newConst(2)), newLiteral);
   }
@@ -131,7 +131,7 @@ public class LiteralTest {
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is", newConst(3), newConst(2));
 
-    Assert.assertNull(literal.execute(kb.definitions()));
+    Assert.assertNull(literal.execute(new Functions(kb).definitions()));
   }
 
   @Test
@@ -139,7 +139,7 @@ public class LiteralTest {
 
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_true", newConst(true));
-    Literal newLiteral = literal.execute(kb.definitions()).next();
+    Literal newLiteral = literal.execute(new Functions(kb).definitions()).next();
 
     Assert.assertEquals(new Literal("fn_is_true", newConst(true)), newLiteral);
   }
@@ -150,7 +150,7 @@ public class LiteralTest {
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_true", newConst(false));
 
-    Assert.assertNull(literal.execute(kb.definitions()));
+    Assert.assertNull(literal.execute(new Functions(kb).definitions()));
   }
 
   @Test
@@ -158,7 +158,7 @@ public class LiteralTest {
 
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_false", newConst(false));
-    Literal newLiteral = literal.execute(kb.definitions()).next();
+    Literal newLiteral = literal.execute(new Functions(kb).definitions()).next();
 
     Assert.assertEquals(new Literal("fn_is_false", newConst(false)), newLiteral);
   }
@@ -169,7 +169,7 @@ public class LiteralTest {
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Literal literal = new Literal("fn_is_false", newConst(true));
 
-    Assert.assertNull(literal.execute(kb.definitions()));
+    Assert.assertNull(literal.execute(new Functions(kb).definitions()));
   }
 
   @Test
@@ -178,7 +178,7 @@ public class LiteralTest {
     KnowledgeBaseMemoryBacked kb = new KnowledgeBaseMemoryBacked();
     Rule rule = parseRule("is_ok(X) :- fn_eq(X, fn_add(1, 1), 2).");
     Literal literal = rule.body().get(0);
-    Literal newLiteral = literal.execute(kb.definitions()).next();
+    Literal newLiteral = literal.execute(new Functions(kb).definitions()).next();
 
     Assert.assertEquals(1, newLiteral.terms().size());
     Assert.assertEquals(newConst(true), newLiteral.terms().get(0));
@@ -194,7 +194,7 @@ public class LiteralTest {
     Map<Var, AbstractTerm> subst = new HashMap<>(); // substitute Y with 1
     subst.put((Var) rule.head().terms().get(1), newConst("1"));
 
-    Literal newLiteral = literal.subst(subst).execute(kb.definitions()).next();
+    Literal newLiteral = literal.subst(subst).execute(new Functions(kb).definitions()).next();
 
     Assert.assertEquals(2, newLiteral.terms().size());
     Assert.assertEquals(newConst(true), newLiteral.terms().get(0));

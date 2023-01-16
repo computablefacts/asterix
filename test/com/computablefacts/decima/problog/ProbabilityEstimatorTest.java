@@ -130,7 +130,7 @@ public class ProbabilityEstimatorTest {
 
     // Query kb
     // a(X)?
-    Solver solver = new Solver(kb, literal -> new SubgoalDiskBacked(literal, tmp));
+    Solver solver = new Solver(kb, new Functions(kb), literal -> new SubgoalDiskBacked(literal, tmp));
     Literal query = parseQuery("a(_)?");
     Set<AbstractClause> proofs = solver.proofs(query);
 

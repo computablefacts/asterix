@@ -53,21 +53,29 @@ final public class Solver {
   private final AbstractKnowledgeBase kb_;
   private final Map<String, AbstractSubgoal> subgoals_;
   private final Function<Literal, AbstractSubgoal> newSubgoal_;
+  private final AbstractFunctions functions_;
   private final List<Node> trees_ = new ArrayList<>(); // proofs
 
   private AbstractSubgoal root_ = null;
   private int maxSampleSize_ = -1;
 
+  @Deprecated
   public Solver(AbstractKnowledgeBase kb) {
-    this(kb, SubgoalMemoryBacked::new);
+    this(kb, new Functions(kb), SubgoalMemoryBacked::new);
   }
 
-  public Solver(AbstractKnowledgeBase kb, Function<Literal, AbstractSubgoal> newSubgoal) {
+  public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions) {
+    this(kb, functions, SubgoalMemoryBacked::new);
+  }
+
+  public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions, Function<Literal, AbstractSubgoal> newSubgoal) {
 
     Preconditions.checkNotNull(kb, "kb should not be null");
+    Preconditions.checkNotNull(functions, "functions should not be null");
     Preconditions.checkNotNull(newSubgoal, "newSubgoal should not be null");
 
     kb_ = kb;
+    functions_ = functions;
     subgoals_ = new ConcurrentHashMap<>();
     newSubgoal_ = newSubgoal;
   }
@@ -351,7 +359,7 @@ final public class Solver {
 
     if (first.predicate().isPrimitive()) {
 
-      Iterator<Literal> facts = first.execute(kb_.definitions());
+      Iterator<Literal> facts = first.execute(functions_.definitions());
 
       if (facts != null) {
         while (facts.hasNext()) {

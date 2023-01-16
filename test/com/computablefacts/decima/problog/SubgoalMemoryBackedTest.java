@@ -41,7 +41,7 @@ public class SubgoalMemoryBackedTest {
 
     // Query kb
     // s1(1)?
-    Solver solver = new Solver(kb, SubgoalMemoryBacked::new);
+    Solver solver = new Solver(kb, new Functions(kb), SubgoalMemoryBacked::new);
     Literal query = new Literal("s1", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
@@ -80,7 +80,7 @@ public class SubgoalMemoryBackedTest {
     // Query kb
     // s2(1)?
     Multiset<Fact> facts = HashMultiset.create();
-    Solver solver = new Solver(kb, fact -> new SubgoalMemoryBacked(fact, facts::add));
+    Solver solver = new Solver(kb, new Functions(kb), fact -> new SubgoalMemoryBacked(fact, facts::add));
     Literal query = new Literal("s2", newConst(1));
     List<AbstractClause> proofs = Lists.newArrayList(solver.proofs(query));
 
