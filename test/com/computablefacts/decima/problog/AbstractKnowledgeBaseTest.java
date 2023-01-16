@@ -126,7 +126,7 @@ public class AbstractKnowledgeBaseTest {
     Assert.assertEquals(BigDecimal.valueOf(0.3), rule.head().probability());
     Assert.assertEquals(2, rule.body().size());
 
-    Pair<Rule, Fact> pair = new KnowledgeBaseMemoryBacked().rewriteRuleHead(rule);
+    Pair<Rule, Fact> pair = new KnowledgeBaseMemoryBacked().rewriteProbabilisticRule(rule);
     Rule newRule = pair.t;
     Fact newFact = pair.u;
 

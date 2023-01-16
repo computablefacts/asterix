@@ -99,9 +99,10 @@ final public class ProbabilityEstimator {
 
     ProbabilityEstimator estimator = new ProbabilityEstimator(
         proofs_.stream().filter(p -> p.head().tag().equals(fact.head().tag())).collect(Collectors.toSet()));
-    int newScale = nbSignificantDigits - estimator.probability().precision() + estimator.probability().scale();
+    BigDecimal probability = estimator.probability();
+    int newScale = nbSignificantDigits - probability.precision() + probability.scale();
 
-    return estimator.probability().setScale(newScale, RoundingMode.HALF_UP);
+    return probability.setScale(newScale, RoundingMode.HALF_UP);
   }
 
   private BigDecimal probability() {
@@ -116,16 +117,13 @@ final public class ProbabilityEstimator {
     BddManager mgr = new BddManager(10);
     BiMap<BddNode, Literal> bddVars = HashBiMap.create();
 
-    Set<AbstractClause> proofs = proofs_.stream().map(this::rewriteRuleBody).collect(Collectors.toSet());
+    Set<AbstractClause> proofs = proofs_.stream().map(this::rewriteRuleBody)
+        .filter(proof -> proof.isFact() || !((Rule) proof).body().isEmpty()).collect(Collectors.toSet());
 
-    proofs.stream().flatMap(p -> p.isFact() ? ImmutableList.of(p.head()).stream() : ((Rule) p).body().stream())
-        .distinct().forEach(literal -> {
-
-          // Literals with probability of 1 do not contribute to the final score
-          if (BigDecimal.ONE.compareTo(literal.probability()) != 0) {
-            bddVars.put(mgr.create(mgr.createVariable(), mgr.One, mgr.Zero), literal);
-          }
-        });
+    proofs.stream().flatMap(p -> p.isFact() ? ImmutableList.of(p.head()).stream() : ((Rule) p).body().stream()).filter(
+            literal -> BigDecimal.ONE.compareTo(literal.probability())
+                != 0 /* Literals with probability of 1 do not contribute to the final score */).distinct()
+        .forEach(literal -> bddVars.put(mgr.create(mgr.createVariable(), mgr.One, mgr.Zero), literal));
 
     List<BddNode> trees = new ArrayList<>();
 
@@ -146,7 +144,9 @@ final public class ProbabilityEstimator {
     BiMap<Integer, Literal> newBddVars = HashBiMap.create();
     View.of(bddVars).forEachRemaining(var -> newBddVars.put(var.getKey().index(), var.getValue()));
 
-    return probability(newBddVars, or(mgr, trees));
+    BddNode node = or(mgr, trees);
+    // String str = mgr.toDot(node, n -> newBddVars.get(n.index()).toString().replace("\"", ""), true);
+    return probability(newBddVars, node);
   }
 
   private BigDecimal probability(BiMap<Integer, Literal> bddVars, BddNode node) {
@@ -212,8 +212,8 @@ final public class ProbabilityEstimator {
   }
 
   /**
-   * Replace all probabilistic literals created by {@link AbstractKnowledgeBase#rewriteRuleHead(Rule)} with a unique
-   * literal with the same probability.
+   * Replace all probabilistic literals created by {@link AbstractKnowledgeBase#rewriteProbabilisticRule(Rule)} with a
+   * unique literal with the same probability.
    *
    * @param clause a fact or a rule.
    * @return rewritten clause.
@@ -231,12 +231,16 @@ final public class ProbabilityEstimator {
     List<Literal> body = new ArrayList<>(rule.body().size());
 
     for (Literal literal : rule.body()) {
-      if (!literal.predicate().baseName().equals("proba")) {
-        body.add(literal);
-      } else {
-        String predicate = randomString_.nextString().toLowerCase();
+      if (literal.predicate().baseName().equals("proba")) {
+
+        Preconditions.checkState(literal.terms().size() == 1, "'proba' facts must be of arity 1");
+
+        String predicate = ((Const) literal.terms().get(0)).value().toString();
         body.add(new Literal(literal.probability(), (literal.predicate().isNegated() ? "~" : "") + predicate,
             literal.terms()));
+
+      } else if (BigDecimal.ONE.compareTo(literal.probability()) != 0) {
+        body.add(literal);
       }
     }
     return new Rule(head, body);

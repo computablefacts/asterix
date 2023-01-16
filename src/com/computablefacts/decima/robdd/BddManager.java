@@ -707,7 +707,7 @@ final public class BddManager {
 
     for (int i = 0; i < N(); i++) {
 
-      t.append("\tsubgraph cluster_box_" + i + " {{\n");
+      t.append("\tsubgraph cluster_box_" + i + " {\n");
       t.append("\tstyle=invis;\n");
 
       for (BddNode n : uniqueTable_.nodes(i)) {

@@ -141,15 +141,6 @@ final public class SubgoalDiskBacked extends AbstractSubgoal {
   }
 
   @Override
-  public boolean contains(Rule proof) {
-
-    Preconditions.checkNotNull(proof, "proof should not be null");
-
-    String cacheKey = cacheKey(proof);
-    return View.of(proofs_.find(cacheKey.hashCode())).contains(value -> value.startsWith(cacheKey + SEPARATOR));
-  }
-
-  @Override
   public int nbProofs() {
     return nbProofs_;
   }

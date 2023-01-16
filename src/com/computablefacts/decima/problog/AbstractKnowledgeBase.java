@@ -81,7 +81,7 @@ public abstract class AbstractKnowledgeBase {
       Preconditions.checkArgument(rule.isSafe(), "clause should be safe : %s", rule);
 
       // Remove probability from the clause head (otherwise it is a no-op)
-      Pair<Rule, Fact> clauses = rewriteRuleHead(rule);
+      Pair<Rule, Fact> clauses = rewriteProbabilisticRule(rule);
 
       if (clauses.u != null) {
         azzertFact(clauses.u); // Assert created fact (if any)
@@ -203,7 +203,7 @@ public abstract class AbstractKnowledgeBase {
    * @return a {@link Pair} with {@link Pair#t} containing the rewritten clause and {@link Pair#u} the newly created
    * fact.
    */
-  protected Pair<Rule, Fact> rewriteRuleHead(Rule rule) {
+  protected Pair<Rule, Fact> rewriteProbabilisticRule(Rule rule) {
 
     Preconditions.checkNotNull(rule, "clause should not be null");
 

@@ -84,8 +84,6 @@ public abstract class AbstractSubgoal {
 
   public abstract Iterator<Rule> proofs();
 
-  public abstract boolean contains(Rule proof);
-
   public abstract int nbProofs();
 
   static final class Waiter {

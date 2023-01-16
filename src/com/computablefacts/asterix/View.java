@@ -640,6 +640,17 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Returns whether none of the elements of this view match the provided predicate.
+   *
+   * @param predicate the predicate to satisfy.
+   * @return true if every element returned by this view doesn't satisfy the given predicate. If the view is empty, true
+   * is returned.
+   */
+  public boolean noneMatch(Predicate<? super T> predicate) {
+    return !anyMatch(predicate);
+  }
+
+  /**
    * Returns an {@link Result} containing the first element of this view that satisfies the provided predicate.
    *
    * @param predicate the predicate to satisfy.

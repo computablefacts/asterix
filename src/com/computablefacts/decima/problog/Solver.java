@@ -3,6 +3,7 @@ package com.computablefacts.decima.problog;
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 
 import com.computablefacts.Generated;
+import com.computablefacts.asterix.RandomString;
 import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.View;
 import com.computablefacts.decima.problog.AbstractSubgoal.Waiter;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -49,6 +51,19 @@ import org.slf4j.LoggerFactory;
 final public class Solver {
 
   private static final Logger logger_ = LoggerFactory.getLogger(Solver.class);
+  private static final BiFunction<String, Object, Object> rewriteProbabilisticFact_ = (idx, l) -> {
+
+    if (l instanceof Node || !((Literal) l).predicate().name().equals("proba")) {
+      return l;
+    }
+
+    Literal fact = (Literal) l;
+
+    Preconditions.checkState(fact.terms().size() == 1, "'proba' facts must be of arity 1");
+
+    return new Literal(fact.probability(), fact.predicate().name(),
+        newConst(((Const) fact.terms().get(0)).value() + "_" + idx));
+  };
 
   private final AbstractKnowledgeBase kb_;
   private final Map<String, AbstractSubgoal> subgoals_;
@@ -85,9 +100,11 @@ final public class Solver {
 
   private static List<List<Literal>> unfold(Node tree) {
 
+    RandomString randomString = new RandomString(5);
     List<List<Literal>> unfolded = new ArrayList<>();
-    List<Proof> unfolding = View.of(tree.bodies_).map(body -> new Proof(body, Sets.newHashSet(tree)))
-        .toList(); // (proof, visited trees)
+    List<Proof> unfolding = View.of(tree.bodies_).map(body -> new Proof(View.of(body)
+        .map(l -> tree.rules_.size() == 1 ? l : rewriteProbabilisticFact_.apply(randomString.nextString(), l)).toList(),
+        Sets.newHashSet(tree))).toList(); // (proof, visited trees)
 
     while (!unfolding.isEmpty()) {
 
@@ -98,7 +115,8 @@ final public class Solver {
 
         List<Proof> expanded = new ArrayList<>();
         expanded.add(proof);
-        // System.out.println(proof.proof_);
+
+        @Var Set<Rule> visited = null;
 
         for (int i = proof.proof_.size() - 1; i >= 0; i--) {
 
@@ -109,10 +127,16 @@ final public class Solver {
             List<Proof> copyOfExpanded = new ArrayList<>(expanded);
             expanded.clear();
 
+            if (visited == null) {
+              visited = new HashSet<>(((Node) obj).rules_);
+            } else {
+              visited = Sets.intersection(visited, ((Node) obj).rules_);
+            }
+
             for (int k = 0; k < copyOfExpanded.size(); k++) { // TODO : foreach
 
               Proof p = copyOfExpanded.get(k);
-              List<Proof> tmp = p.expand(i, (Node) obj);
+              List<Proof> tmp = p.expand(i, (Node) obj, visited.isEmpty() ? null : randomString.nextString());
 
               expanded.addAll(tmp);
             }
@@ -129,14 +153,6 @@ final public class Solver {
       }
     }
     return unfolded;
-  }
-
-  private static Rule newRule(Literal head, List<Object> body) {
-
-    Preconditions.checkNotNull(head, "head should not be null");
-    Preconditions.checkNotNull(body, "body should not be null");
-
-    return new Rule(head, View.of(body).map(l -> l instanceof Node ? ((Node) l).head_ : (Literal) l).toList());
   }
 
   /**
@@ -165,9 +181,9 @@ final public class Solver {
 
     search(root_, 0);
 
-    return trees_.isEmpty() ? View.of(root_.facts()).map(fact -> (AbstractClause) fact).toSet()
-        : View.of(trees_).filter(t -> t.head_.isRelevant(root_.literal()))
-            .flatten(tree -> View.of(unfold(tree)).map(proof -> (AbstractClause) new Rule(tree.head_, proof))).toSet();
+    return View.of(trees_).filter(t -> t.head_.isRelevant(root_.literal()))
+        .flatten(tree -> View.of(unfold(tree)).map(proof -> (AbstractClause) new Rule(tree.head_, proof)))
+        .concat(View.of(root_.facts()).map(fact -> (AbstractClause) fact)).toSet();
   }
 
   /**
@@ -438,15 +454,20 @@ final public class Solver {
           return fold.mapIfSuccess(f -> (Object) f).mapIfEmpty(() -> literal).getOrThrow();
         }).toList();
 
-        List<Node> nodes = View.of(trees_).filter(node -> node.head_.isRelevant(newRule.head())).toList();
+        List<Node> nodes = View.of(trees_).filter(node -> node.head_.isRelevant(head)).toList();
+        List<Rule> rules = View.of(kb_.rules(head)).filter(r -> r.isRelevant(newRule)).toList();
 
         Preconditions.checkState(nodes.size() == 0 || nodes.size() == 1);
+        Preconditions.checkState(rules.size() == 0 || rules.size() == 1);
 
         if (nodes.isEmpty()) {
-          trees_.add(new Node(head, body));
+          trees_.add(new Node(rules.isEmpty() ? null : rules.get(0), head, body));
         } else {
-          for (Node node : nodes) {
-            node.bodies_.add(body);
+
+          nodes.get(0).bodies_.add(body);
+
+          if (!rules.isEmpty()) {
+            nodes.get(0).rules_.add(rules.get(0));
           }
         }
 
@@ -463,14 +484,19 @@ final public class Solver {
 
     public final Literal head_;
     public final Set<List<Object>> bodies_ = new HashSet<>();
+    public final Set<Rule> rules_ = new HashSet<>();
 
-    public Node(Literal head, List<Object> body) {
+    public Node(Rule rule, Literal head, List<Object> body) {
 
       Preconditions.checkNotNull(head, "head should not be null");
       Preconditions.checkNotNull(body, "body should not be null");
 
       head_ = head;
       bodies_.add(body);
+
+      if (rule != null) {
+        rules_.add(rule);
+      }
     }
 
     @Override
@@ -546,11 +572,12 @@ final public class Solver {
     }
 
     // Replace tree at position pos by its subtrees
-    public List<Proof> expand(int pos, Node tree) {
+    public List<Proof> expand(int pos, Node tree, String uuid) {
 
       Preconditions.checkNotNull(tree, "tree should not be null");
       Preconditions.checkArgument(0 <= pos && pos < proof_.size(), "pos must be such as 0 <= pos <= %s", proof_.size());
       Preconditions.checkArgument(proof_.get(pos) instanceof Node, "proof.get(pos) must be a Node");
+      Preconditions.checkNotNull(rewriteProbabilisticFact_, "rewriteProbabilisticFact should not be null");
 
       return View.of(tree.bodies_)
           .filter(proof -> !visited_.contains(tree) || View.of(proof).allMatch(l -> l instanceof Literal))
@@ -558,7 +585,9 @@ final public class Solver {
 
             List<Object> prefix = proof_.subList(0, pos);
             List<Object> suffix = proof_.subList(pos + 1, proof_.size());
-            List<Object> newProof = View.of(prefix).concat(proof).concat(suffix).toList();
+            List<Object> newProof = View.of(prefix)
+                .concat(View.of(proof).map(l -> rewriteProbabilisticFact_.apply((uuid == null ? "" : uuid), l)))
+                .concat(suffix).toList();
             Set<Node> newVisited = View.of(visited_).append(tree).toSet();
 
             return new Proof(newProof, newVisited);

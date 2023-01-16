@@ -69,14 +69,6 @@ final public class SubgoalMemoryBacked extends AbstractSubgoal {
   }
 
   @Override
-  public boolean contains(Rule proof) {
-
-    Preconditions.checkNotNull(proof, "proof should not be null");
-
-    return proofs_.contains(proof);
-  }
-
-  @Override
   public int nbProofs() {
     return proofs_.size();
   }
