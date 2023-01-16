@@ -150,7 +150,7 @@ final public class Solver {
 
   /**
    * First, sets up and calls the subgoal search procedure. Then, extracts the answers and unfold the proofs. In order
-   * to work, subgoals must track rules i.e. {@code computeProofs = true}.
+   * to work, subgoals must track proofs i.e. {@code trackProofs_ = true}.
    *
    * @param query goal.
    * @return proofs.
@@ -452,7 +452,7 @@ final public class Solver {
 
         subgoal.proof(newRule);
       }
-      
+
       fact(subgoal, new Fact(newRule.head()));
     } else {
       rule(subgoal, newRule, idx + 1);
