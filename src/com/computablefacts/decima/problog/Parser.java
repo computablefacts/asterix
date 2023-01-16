@@ -554,7 +554,7 @@ public final class Parser {
     if (op.equals("fn_is")) {
 
       AbstractTerm dest = stringToVarOrConst(map, lhs);
-      AbstractTerm src = stringToVarOrConst(map, rhs);
+      AbstractTerm src = newConst(rhs);
 
       Preconditions.checkState(!dest.isConst(), "[line " + scan.lineno() + "] It is forbidden to assign to a constant");
 
