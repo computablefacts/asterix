@@ -560,12 +560,12 @@ public class SolverTest {
     Literal red = new Literal("blue", newConst(123));
     EqualsVerifier.forClass(Proof.class).withPrefabValues(Literal.class, red, blue).verify();
   }
-  
+
   @Test
   public void testNodeHashcodeAndEquals() {
     Literal blue = new Literal("red", newConst("abc"));
     Literal red = new Literal("blue", newConst(123));
-    EqualsVerifier.forClass(Node.class).withIgnoredFields("bodies_").withPrefabValues(Literal.class, red, blue)
-        .verify();
+    EqualsVerifier.forClass(Node.class).withIgnoredFields("bodies_").withIgnoredFields("rules_")
+        .withPrefabValues(Literal.class, red, blue).verify();
   }
 }
