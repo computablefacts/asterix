@@ -1,8 +1,6 @@
 package com.computablefacts.decima.yaml;
 
 import com.computablefacts.Generated;
-import com.computablefacts.decima.problog.AbstractClause;
-import com.computablefacts.decima.problog.Parser;
 import com.computablefacts.logfmt.LogFormatter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,7 +10,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,10 +68,6 @@ final public class Rules {
   }
 
   public static Rules load(File file) {
-    return load(file, false);
-  }
-
-  public static Rules load(File file, boolean test) {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
@@ -83,12 +76,7 @@ final public class Rules {
       YAMLFactory yamlFactory = new YAMLFactory();
       YAMLMapper yamlMapper = new YAMLMapper(yamlFactory);
       yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-      Rules rules = yamlMapper.readValue(file, Rules.class);
-
-      if (rules != null && test) {
-        return rules.isValid() ? rules : null;
-      }
-      return rules;
+      return yamlMapper.readValue(file, Rules.class);
     } catch (JsonProcessingException e) {
       logger_.error(LogFormatter.create(true).message(e).formatError());
     } catch (IOException e) {
@@ -111,28 +99,5 @@ final public class Rules {
 
   public int nbRules() {
     return rules_ == null ? 0 : rules_.length;
-  }
-
-  private boolean isValid() {
-
-    Set<AbstractClause> clauses = Parser.parseClauses(toString());
-
-    for (Rule rule : rules_) {
-      if (rule.tests_ != null) {
-        for (Test test : rule.tests_) {
-          if (!test.matchOutput(clauses)) {
-
-            StringBuilder builder = new StringBuilder();
-            builder.append("\nTest failed for :")
-                .append("\n===[ RULE ]=============================================================================\n")
-                .append(rule).append(test);
-
-            logger_.error(LogFormatter.create(true).message(builder.toString()).formatError());
-            return false;
-          }
-        }
-      }
-    }
-    return true;
   }
 }

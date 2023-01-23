@@ -21,7 +21,7 @@ final public class Compiler extends ConsoleApp {
     boolean showLogs = getBooleanCommand(args, "show_logs", false);
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    Rules rules = Rules.load(input, true);
+    Rules rules = Rules.load(input);
 
     if (output == null) {
       System.out.println(rules.toString());

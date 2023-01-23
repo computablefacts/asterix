@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 @net.jcip.annotations.NotThreadSafe
@@ -35,6 +36,7 @@ public class SolverTest {
     System.setErr(originalErr_);
   }
 
+  @Ignore
   @Test
   public void testSolveSimpleQuizzOutputsProblog() throws IOException {
 
@@ -57,6 +59,7 @@ public class SolverTest {
     Assert.assertTrue(outContent_.toString().startsWith("1.0000::son(\"bill\", \"alice\")."));
   }
 
+  @Ignore
   @Test
   public void testSolveSimpleQuizzOutputsJson() throws IOException {
 

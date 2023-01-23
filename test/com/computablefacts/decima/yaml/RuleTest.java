@@ -10,7 +10,7 @@ public class RuleTest {
 
   @Test
   public void testHashcodeAndEquals() {
-    EqualsVerifier.forClass(Rule.class).withIgnoredFields("tests_").suppress(Warning.NONFINAL_FIELDS).verify();
+    EqualsVerifier.forClass(Rule.class).suppress(Warning.NONFINAL_FIELDS).verify();
   }
 
   @Test

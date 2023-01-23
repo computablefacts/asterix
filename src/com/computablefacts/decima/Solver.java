@@ -1,6 +1,7 @@
 package com.computablefacts.decima;
 
 import com.computablefacts.asterix.IO;
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.JsonCodec;
 import com.computablefacts.asterix.console.ConsoleApp;
@@ -10,7 +11,6 @@ import com.computablefacts.decima.problog.AbstractTerm;
 import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.Parser;
-import com.computablefacts.decima.problog.ProbabilityEstimator;
 import com.computablefacts.junon.Fact;
 import com.computablefacts.junon.Metadata;
 import com.computablefacts.junon.Provenance;
@@ -135,14 +135,15 @@ final public class Solver extends ConsoleApp {
     AbstractKnowledgeBase kb = new KnowledgeBaseMemoryBacked();
     rules.forEach(kb::azzert);
 
-    com.computablefacts.decima.problog.Solver solver = new com.computablefacts.decima.problog.Solver(kb);
+    com.computablefacts.decima.problog.Proofer solver = new com.computablefacts.decima.problog.Proofer(kb);
 
     for (Literal question : questions) {
 
-      ProbabilityEstimator estimator = new ProbabilityEstimator(solver.proofs(question));
-      Map<com.computablefacts.decima.problog.Fact, BigDecimal> probabilities = estimator.probabilities();
+      Result<BigDecimal> probability = solver.probability(question, 5);
 
-      probabilities.forEach((head, probability) -> answers.put(head.head(), probability));
+      if (probability.isSuccess()) {
+        answers.put(question, probability.getOrThrow());
+      }
     }
     return answers;
   }

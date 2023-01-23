@@ -2,32 +2,20 @@ package com.computablefacts.decima.problog;
 
 import static com.computablefacts.decima.problog.AbstractTerm.newConst;
 
-import com.computablefacts.Generated;
-import com.computablefacts.asterix.RandomString;
-import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.View;
 import com.computablefacts.decima.problog.AbstractSubgoal.Waiter;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tabling algorithm in a non probabilistic setting :
@@ -48,44 +36,26 @@ import org.slf4j.LoggerFactory;
  * </ul>
  */
 @CheckReturnValue
-final public class Solver {
+public class Solver {
 
-  private static final Logger logger_ = LoggerFactory.getLogger(Solver.class);
-  private static final BiFunction<String, Object, Object> rewriteProbabilisticFact_ = (idx, l) -> {
+  protected final AbstractKnowledgeBase kb_;
+  protected final Map<String, AbstractSubgoal> subgoals_;
+  protected final Function<Literal, AbstractSubgoal> newSubgoal_;
+  protected final AbstractFunctions functions_;
 
-    if (l instanceof Node || !((Literal) l).predicate().name().equals("proba")) {
-      return l;
-    }
-
-    Literal fact = (Literal) l;
-
-    Preconditions.checkState(fact.terms().size() == 1, "'proba' facts must be of arity 1");
-
-    return new Literal(fact.probability(), fact.predicate().name(),
-        newConst(((Const) fact.terms().get(0)).value() + "_" + idx));
-  };
-
-  private final AbstractKnowledgeBase kb_;
-  private final Map<String, AbstractSubgoal> subgoals_;
-  private final Function<Literal, AbstractSubgoal> newSubgoal_;
-  private final AbstractFunctions functions_;
-  private final boolean trackProofs_;
-  private final List<Node> trees_ = new ArrayList<>(); // proofs
-
-  private AbstractSubgoal root_ = null;
-  private int maxSampleSize_ = -1;
+  protected AbstractSubgoal root_ = null;
+  protected int maxSampleSize_ = -1;
 
   @Deprecated
   public Solver(AbstractKnowledgeBase kb) {
-    this(kb, new Functions(kb), true, SubgoalMemoryBacked::new);
+    this(kb, new Functions(kb), SubgoalMemoryBacked::new);
   }
 
   public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions) {
-    this(kb, functions, true, SubgoalMemoryBacked::new);
+    this(kb, functions, SubgoalMemoryBacked::new);
   }
 
-  public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions, boolean trackProofs,
-      Function<Literal, AbstractSubgoal> newSubgoal) {
+  public Solver(AbstractKnowledgeBase kb, AbstractFunctions functions, Function<Literal, AbstractSubgoal> newSubgoal) {
 
     Preconditions.checkNotNull(kb, "kb should not be null");
     Preconditions.checkNotNull(functions, "functions should not be null");
@@ -93,97 +63,8 @@ final public class Solver {
 
     kb_ = kb;
     functions_ = functions;
-    trackProofs_ = trackProofs;
     subgoals_ = new ConcurrentHashMap<>();
     newSubgoal_ = newSubgoal;
-  }
-
-  private static List<List<Literal>> unfold(Node tree) {
-
-    RandomString randomString = new RandomString(5);
-    List<List<Literal>> unfolded = new ArrayList<>();
-    List<Proof> unfolding = View.of(tree.bodies_).map(body -> new Proof(View.of(body)
-        .map(l -> tree.rules_.size() == 1 ? l : rewriteProbabilisticFact_.apply(randomString.nextString(), l)).toList(),
-        Sets.newHashSet(tree))).toList(); // (proof, visited trees)
-
-    while (!unfolding.isEmpty()) {
-
-      List<Proof> copyOfUnfolding = new ArrayList<>(unfolding);
-      unfolding.clear();
-
-      for (Proof proof : copyOfUnfolding) {
-
-        List<Proof> expanded = new ArrayList<>();
-        expanded.add(proof);
-
-        @Var Set<Rule> visited = null;
-
-        for (int i = proof.proof_.size() - 1; i >= 0; i--) {
-
-          Object obj = proof.proof_.get(i);
-
-          if (obj instanceof Node) {
-
-            List<Proof> copyOfExpanded = new ArrayList<>(expanded);
-            expanded.clear();
-
-            if (visited == null) {
-              visited = new HashSet<>(((Node) obj).rules_);
-            } else {
-              visited = Sets.intersection(visited, ((Node) obj).rules_);
-            }
-
-            for (int k = 0; k < copyOfExpanded.size(); k++) { // TODO : foreach
-
-              Proof p = copyOfExpanded.get(k);
-              List<Proof> tmp = p.expand(i, (Node) obj, visited.isEmpty() ? null : randomString.nextString());
-
-              expanded.addAll(tmp);
-            }
-          }
-        }
-
-        View.of(expanded).forEachRemaining(p -> {
-          if (p.isUnfolded()) {
-            unfolded.add(p.unfoldedProof());
-          } else {
-            unfolding.add(p);
-          }
-        });
-      }
-    }
-    return unfolded;
-  }
-
-  /**
-   * Return the number of subgoals.
-   *
-   * @return the number of subgoals.
-   */
-  public int nbSubgoals() {
-    return subgoals_.size();
-  }
-
-  /**
-   * First, sets up and calls the subgoal search procedure. Then, extracts the answers and unfold the proofs. In order
-   * to work, subgoals must track proofs i.e. {@code trackProofs_ = true}.
-   *
-   * @param query goal.
-   * @return proofs.
-   */
-  public Set<AbstractClause> proofs(Literal query) {
-
-    Preconditions.checkNotNull(query, "query should not be null");
-    Preconditions.checkState(trackProofs_, "trackProofs must be true on probabilistic settings");
-
-    root_ = newSubgoal_.apply(query);
-    subgoals_.put(query.tag(), root_);
-
-    search(root_, 0);
-
-    return View.of(trees_).filter(t -> t.head_.isRelevant(root_.literal()))
-        .flatten(tree -> View.of(unfold(tree)).map(proof -> (AbstractClause) new Rule(tree.head_, proof)))
-        .concat(View.of(root_.facts()).map(fact -> (AbstractClause) fact)).toSet();
   }
 
   /**
@@ -197,7 +78,7 @@ final public class Solver {
   }
 
   /**
-   * First, sets up and calls the subgoal search procedure. Then, extracts the answers but do not unfold the proofs.
+   * Calls the subgoal search procedure.
    *
    * @param query         goal.
    * @param maxSampleSize stops the solver after the goal reaches this number of solutions or more. If this number is
@@ -217,6 +98,15 @@ final public class Solver {
   }
 
   /**
+   * Called each time a rule has been unfolded.
+   *
+   * @param subgoal the evaluated subgoal.
+   * @param rule    the unfolded rule i.e. all body literals have constants terms.
+   */
+  protected void trackProofs(AbstractSubgoal subgoal, Rule rule) {
+  }
+
+  /**
    * Check if the number of samples asked by the caller has been reached.
    *
    * @return true iif the number of samples has been reached, false otherwise.
@@ -229,10 +119,12 @@ final public class Solver {
    * Search for derivations of the literal associated with {@param subgoal}.
    *
    * @param subgoal subgoal.
+   * @param idx     the next rule body literal to evaluate.
    */
   private void search(AbstractSubgoal subgoal, int idx) {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
+    Preconditions.checkArgument(0 <= idx, "idx must be such as 0 <= idx");
 
     Literal literal = subgoal.literal();
     Predicate predicate = literal.predicate();
@@ -270,9 +162,6 @@ final public class Solver {
           Fact fact = facts.next();
 
           if (fact.head().isRelevant(base)) {
-
-            Preconditions.checkState(trackProofs_, "trackProofs must be true on probabilistic settings");
-
             if (sub.nbProofs() == 0) {
 
               // Negate a probabilistic fact
@@ -377,6 +266,7 @@ final public class Solver {
 
     Preconditions.checkNotNull(subgoal, "subgoal should not be null");
     Preconditions.checkNotNull(rule, "rule should not be null");
+    Preconditions.checkArgument(0 <= idx && idx < rule.body().size(), "idx must be such as 0 <= idx");
 
     Literal first = rule.body().get(idx);
 
@@ -430,6 +320,7 @@ final public class Solver {
    * @param subgoal subgoal.
    * @param rule    the rule to ground.
    * @param fact    the fact associated with the rule's first body literal.
+   * @param idx     the next rule body literal to evaluate.
    */
   private void ground(AbstractSubgoal subgoal, Rule rule, Fact fact, int idx) {
 
@@ -446,152 +337,10 @@ final public class Solver {
     Rule newRule = new Rule(ruleTmp.head(), View.of(rule.body().subList(0, idx)).concat(ruleTmp.body()).toList());
 
     if (ruleTmp.body().size() == 1) {
-      if (trackProofs_) {
-
-        Literal head = newRule.head();
-        List<Object> body = View.of(newRule.body()).map(literal -> {
-          Result<Node> fold = View.of(trees_).findFirst(f -> f.head_.isRelevant(literal));
-          return fold.mapIfSuccess(f -> (Object) f).mapIfEmpty(() -> literal).getOrThrow();
-        }).toList();
-
-        List<Node> nodes = View.of(trees_).filter(node -> node.head_.isRelevant(head)).toList();
-        List<Rule> rules = View.of(kb_.rules(head)).filter(r -> r.isRelevant(newRule)).toList();
-
-        Preconditions.checkState(nodes.size() == 0 || nodes.size() == 1);
-        Preconditions.checkState(rules.size() == 0 || rules.size() == 1);
-
-        if (nodes.isEmpty()) {
-          trees_.add(new Node(rules.isEmpty() ? null : rules.get(0), head, body));
-        } else {
-
-          nodes.get(0).bodies_.add(body);
-
-          if (!rules.isEmpty()) {
-            nodes.get(0).rules_.add(rules.get(0));
-          }
-        }
-
-        subgoal.proof(newRule);
-      }
-
+      trackProofs(subgoal, newRule);
       fact(subgoal, new Fact(newRule.head()));
     } else {
       rule(subgoal, newRule, idx + 1);
-    }
-  }
-
-  final static class Node {
-
-    public final Literal head_;
-    public final Set<List<Object>> bodies_ = new HashSet<>();
-    public final Set<Rule> rules_ = new HashSet<>();
-
-    public Node(Rule rule, Literal head, List<Object> body) {
-
-      Preconditions.checkNotNull(head, "head should not be null");
-      Preconditions.checkNotNull(body, "body should not be null");
-
-      head_ = head;
-      bodies_.add(body);
-
-      if (rule != null) {
-        rules_.add(rule);
-      }
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof Node)) {
-        return false;
-      }
-      Node node = (Node) obj;
-      return Objects.equals(head_, node.head_) /* && Objects.equals(bodies_, node.bodies_) */;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(head_ /* , bodies_ */);
-    }
-
-    @Generated
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this).add("head", head_)/* .add("bodies", bodies_) */.toString();
-    }
-  }
-
-  final static class Proof {
-
-    public final List<Object> proof_ = new ArrayList<>();
-    public final Set<Node> visited_ = new HashSet<>();
-
-    public Proof(List<Object> proof, Set<Node> visited) {
-
-      Preconditions.checkNotNull(proof, "proof should not be null");
-      Preconditions.checkNotNull(visited, "visited should not be null");
-
-      proof_.addAll(proof);
-      visited_.addAll(visited);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof Proof)) {
-        return false;
-      }
-      Proof proof = (Proof) obj;
-      return Objects.equals(proof_, proof.proof_) && Objects.equals(visited_, proof.visited_);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(proof_, visited_);
-    }
-
-    @Generated
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this).add("proof", proof_).add("visited2", visited_).toString();
-    }
-
-    public boolean isUnfolded() {
-      return View.of(proof_).allMatch(l -> l instanceof Literal);
-    }
-
-    public List<Literal> unfoldedProof() {
-
-      Preconditions.checkState(isUnfolded());
-
-      return View.of(proof_).map(l -> (Literal) l).toList();
-    }
-
-    // Replace tree at position pos by its subtrees
-    public List<Proof> expand(int pos, Node tree, String uuid) {
-
-      Preconditions.checkNotNull(tree, "tree should not be null");
-      Preconditions.checkArgument(0 <= pos && pos < proof_.size(), "pos must be such as 0 <= pos <= %s", proof_.size());
-      Preconditions.checkArgument(proof_.get(pos) instanceof Node, "proof.get(pos) must be a Node");
-      Preconditions.checkNotNull(rewriteProbabilisticFact_, "rewriteProbabilisticFact should not be null");
-
-      return View.of(tree.bodies_)
-          .filter(proof -> !visited_.contains(tree) || View.of(proof).allMatch(l -> l instanceof Literal))
-          .map(proof -> {
-
-            List<Object> prefix = proof_.subList(0, pos);
-            List<Object> suffix = proof_.subList(pos + 1, proof_.size());
-            List<Object> newProof = View.of(prefix)
-                .concat(View.of(proof).map(l -> rewriteProbabilisticFact_.apply((uuid == null ? "" : uuid), l)))
-                .concat(suffix).toList();
-            Set<Node> newVisited = View.of(visited_).append(tree).toSet();
-
-            return new Proof(newProof, newVisited);
-          }).toList();
     }
   }
 }

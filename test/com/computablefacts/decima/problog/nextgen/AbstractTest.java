@@ -1,15 +1,13 @@
 package com.computablefacts.decima.problog.nextgen;
 
 import com.computablefacts.asterix.View;
-import com.computablefacts.decima.problog.AbstractClause;
 import com.computablefacts.decima.problog.AbstractFunctions;
 import com.computablefacts.decima.problog.AbstractKnowledgeBase;
 import com.computablefacts.decima.problog.Fact;
 import com.computablefacts.decima.problog.KnowledgeBaseMemoryBacked;
 import com.computablefacts.decima.problog.Literal;
 import com.computablefacts.decima.problog.Parser;
-import com.computablefacts.decima.problog.ProbabilityEstimator;
-import com.computablefacts.decima.problog.Solver;
+import com.computablefacts.decima.problog.Proofer;
 import com.computablefacts.decima.problog.SubgoalDiskBacked;
 import com.computablefacts.decima.problog.SubgoalMemoryBacked;
 import com.computablefacts.nona.Function;
@@ -45,13 +43,12 @@ public abstract class AbstractTest {
     AbstractFunctions functions = new AbstractFunctions();
     functions().forEach(fn -> functions.register(fn.name(), fn));
 
-    for (Solver solver : solvers(kb, functions)) {
+    for (Proofer solver : solvers(kb, functions)) {
       for (Map.Entry<String, String> entry : queries().entrySet()) {
 
         Literal query = Parser.parseQuery(entry.getKey());
         Set<Fact> answers = Sets.newHashSet(solver.solve(query));
-        Set<AbstractClause> proofs = solver.proofs(query);
-        ProbabilityEstimator estimator = new ProbabilityEstimator(proofs);
+        BigDecimal probability = solver.probability(query, 5).getOrThrow();
 
         if (entry.getValue() == null) {
           Assert.assertTrue(String.format("no answer should be returned for query %s", query), answers.isEmpty());
@@ -63,10 +60,9 @@ public abstract class AbstractTest {
           Assert.assertTrue(String.format("missing answer for query %s : %s", query, expected),
               factBelongsToAnswers(fact, answers));
 
-          Assert.assertTrue(String.format(
-                  "mismatch between the fact expected probability (%s) and the fact actual probability (%s) for query %s",
-                  fact.head().probability(), factProbability(fact, estimator), query),
-              factHasRightProbability(fact, estimator));
+          Assert.assertEquals(String.format(
+              "mismatch between the fact expected probability (%s) and the fact actual probability (%s) for query %s",
+              fact.head().probability(), probability, query), 0, probability.compareTo(fact.head().probability()));
         }
       }
     }
@@ -84,13 +80,13 @@ public abstract class AbstractTest {
     return Lists.newArrayList();
   }
 
-  private List<Solver> solvers(AbstractKnowledgeBase kb, AbstractFunctions functions) {
+  private List<Proofer> solvers(AbstractKnowledgeBase kb, AbstractFunctions functions) {
     try {
       String path = Files.createTempDirectory("problog").toFile().getAbsolutePath();
-      return Lists.newArrayList(new Solver(kb, functions, true, SubgoalMemoryBacked::new),
-          new Solver(kb, functions, true, literal -> new SubgoalDiskBacked(literal, path)));
+      return Lists.newArrayList(new Proofer(kb, functions, SubgoalMemoryBacked::new),
+          new Proofer(kb, functions, literal -> new SubgoalDiskBacked(literal, path)));
     } catch (IOException e) {
-      return Lists.newArrayList(new Solver(kb, functions, true, SubgoalMemoryBacked::new));
+      return Lists.newArrayList(new Proofer(kb, functions, SubgoalMemoryBacked::new));
     }
   }
 
@@ -102,15 +98,6 @@ public abstract class AbstractTest {
       Fact actual = new Fact(new Literal(f.head().predicate().name(), f.head().terms()));
       return expected.equals(actual);
     });
-  }
-
-  private BigDecimal factProbability(Fact fact, ProbabilityEstimator estimator) {
-    Fact expected = new Fact(new Literal(fact.head().predicate().name(), fact.head().terms()));
-    return estimator.probability(expected);
-  }
-
-  private boolean factHasRightProbability(Fact fact, ProbabilityEstimator estimator) {
-    return factProbability(fact, estimator).compareTo(fact.head().probability()) == 0;
   }
 
   protected abstract Map<String, String> queries();

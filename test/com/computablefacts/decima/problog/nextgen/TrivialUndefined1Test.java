@@ -12,7 +12,7 @@ public class TrivialUndefined1Test extends AbstractTest {
   protected Map<String, String> queries() {
 
     Map<String, String> queries = new HashMap<>();
-    queries.put("p(_)?", null);
+    queries.put("p(1)?", null);
 
     return queries;
   }

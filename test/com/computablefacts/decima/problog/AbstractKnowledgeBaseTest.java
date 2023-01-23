@@ -158,7 +158,6 @@ public class AbstractKnowledgeBaseTest {
     @com.google.errorprone.annotations.Var Set<Fact> clauses = Sets.newHashSet(
         solver.solve(parseQuery("assert(\"jhWTAETz\")?")));
 
-    Assert.assertEquals(2, solver.nbSubgoals());
     Assert.assertEquals(1, clauses.size());
     Assert.assertEquals(1, kb.nbRules());
     Assert.assertEquals(105, kb.nbFacts());
@@ -196,7 +195,6 @@ public class AbstractKnowledgeBaseTest {
     @com.google.errorprone.annotations.Var Set<Fact> clauses = Sets.newHashSet(
         solver.solve(parseQuery("assert(\"aIMuk3ze\")?")));
 
-    Assert.assertEquals(2, solver.nbSubgoals());
     Assert.assertEquals(1, clauses.size());
     Assert.assertEquals(1, kb.nbRules());
     Assert.assertEquals(11, kb.nbFacts());
@@ -242,7 +240,6 @@ public class AbstractKnowledgeBaseTest {
     @com.google.errorprone.annotations.Var Set<AbstractClause> clauses = Sets.newHashSet(
         solver.solve(parseQuery("assert(\"jhWTAETz\")?")));
 
-    Assert.assertEquals(5, solver.nbSubgoals());
     Assert.assertEquals(1, clauses.size());
     Assert.assertEquals(2, kb.nbRules());
     Assert.assertEquals(105, kb.nbFacts());
@@ -276,7 +273,6 @@ public class AbstractKnowledgeBaseTest {
     Solver solver = new Solver(kb, functions);
     Set<AbstractClause> clauses = Sets.newHashSet(solver.solve(parseQuery("clients(FirstName, LastName, Email)?")));
 
-    Assert.assertEquals(1, solver.nbSubgoals());
     Assert.assertEquals(5, clauses.size());
     Assert.assertTrue(clauses.contains(parseFact("clients(\"Robert\", \"Brown\", \"bobbrown432@yahoo.com\").")));
     Assert.assertTrue(clauses.contains(parseFact("clients(\"Lucy\", \"Ballmer\", \"lucyb56@gmail.com\").")));
@@ -304,7 +300,6 @@ public class AbstractKnowledgeBaseTest {
     Solver solver = new Solver(kb, functions);
     Set<AbstractClause> clauses = Sets.newHashSet(solver.solve(parseQuery("clients(\"Robert\", LastName, Email)?")));
 
-    Assert.assertEquals(1, solver.nbSubgoals());
     Assert.assertEquals(2, clauses.size());
     Assert.assertTrue(clauses.contains(parseFact("clients(\"Robert\", \"Brown\", \"bobbrown432@yahoo.com\").")));
     Assert.assertTrue(clauses.contains(parseFact("clients(\"Robert\", \"Schwartz\", \"rob23@gmail.com\").")));
@@ -325,7 +320,6 @@ public class AbstractKnowledgeBaseTest {
     Literal query = parseQuery("mes_fichiers_favoris(PATH, MD5)?");
     Set<AbstractClause> clauses = Sets.newHashSet(solver.solve(query));
 
-    Assert.assertEquals(1, solver.nbSubgoals());
     Assert.assertEquals(4, clauses.size());
     Assert.assertTrue(clauses.contains(
         parseFact("mes_fichiers_favoris(\"/var/sftp/file1.pdf\", \"824a6d489b13f87d9006fe6842dd424b\").")));
@@ -357,7 +351,6 @@ public class AbstractKnowledgeBaseTest {
     Iterator<Fact> iterator = solver.solve(query);
     List<Fact> facts = Lists.newArrayList(iterator);
 
-    Assert.assertEquals(4, solver.nbSubgoals());
     Assert.assertEquals(1, facts.size());
 
     Literal literal = new Literal("fichier_duplique", Lists.newArrayList(newConst("/var/sftp/file2.pdf"),
@@ -381,7 +374,6 @@ public class AbstractKnowledgeBaseTest {
     Literal query = parseQuery("mes_fichiers_favoris(PATH, CONTENT)?");
     Set<Fact> facts = Sets.newHashSet(solver.solve(query));
 
-    Assert.assertEquals(1, solver.nbSubgoals());
     Assert.assertEquals(4, facts.size());
     Assert.assertTrue(facts.contains(parseFact(
         "mes_fichiers_favoris(\"/var/sftp/file1.pdf\", \"b64_(bGhzIDo9IHJocyDigJQgZnVuY3Rpb24gZXRjLiBkZWZpbml0aW9u)\").")));

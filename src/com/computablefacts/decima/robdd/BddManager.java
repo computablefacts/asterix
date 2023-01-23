@@ -28,8 +28,8 @@ final public class BddManager {
   public BddNode One;
   private int nextId = 0;
   private int n_;
-  private Map<Tuple<Integer, Integer, Integer>, WeakReference> iteCache_;
-  private List<Integer> variableOrder_;
+  private final Map<Tuple<Integer, Integer, Integer>, WeakReference> iteCache_;
+  private final List<Integer> variableOrder_;
   private Function<Integer, String> variableString_;
 
   /**
