@@ -1,5 +1,6 @@
 package com.computablefacts.asterix;
 
+import com.computablefacts.asterix.IO.eCompressionAlgorithm;
 import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public class IOTest {
   }
 
   @Test
-  public void testCompressFileBZip2ThenReadCompressedFileBZip2() throws IOException {
+  public void testCompressFileUsingBZip2ThenReadCompressedFileUsingBZip2() throws IOException {
 
     File input = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
     String text = "a\nb\nc\nd";
@@ -76,7 +77,7 @@ public class IOTest {
     Assert.assertTrue(IO.bzip2(input, output));
     Assert.assertTrue(input.exists());
 
-    try (IO.LineIterator iterator = IO.newCompressedLineIteratorBZip2(output)) {
+    try (IO.LineIterator iterator = IO.newCompressedLineIterator(output, eCompressionAlgorithm.BZIP2)) {
 
       List<String> lines = new ArrayList<>();
       iterator.forEachRemaining(lines::add);
@@ -116,13 +117,13 @@ public class IOTest {
   }
 
   @Test
-  public void testWriteCompressedFileBZip2ThenReadDecompressedFileBZip2() throws IOException {
+  public void testWriteCompressedFileUsingBZip2ThenReadDecompressedFileUsingBZip2() throws IOException {
 
     File input = java.nio.file.Files.createTempFile("test-", ".txt.bz2").toFile();
     String text = "a\nb\nc\nd";
 
     Assert.assertTrue(input.exists());
-    Assert.assertTrue(IO.writeCompressedTextBZip2(input, text, true));
+    Assert.assertTrue(IO.writeCompressedText(input, text, eCompressionAlgorithm.BZIP2, true));
 
     File output = new File(input.getAbsolutePath().substring(0, input.getAbsolutePath().lastIndexOf('.')));
 

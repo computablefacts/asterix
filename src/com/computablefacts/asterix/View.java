@@ -1,6 +1,7 @@
 package com.computablefacts.asterix;
 
 import com.computablefacts.Generated;
+import com.computablefacts.asterix.IO.eCompressionAlgorithm;
 import com.computablefacts.asterix.console.AsciiProgressBar;
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
@@ -324,7 +325,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    *               file.
    */
   public void toFile(Function<T, String> fn, File file, boolean append) {
-    toFile(fn, file, append, false);
+    toFile(fn, file, append, eCompressionAlgorithm.NONE);
   }
 
   /**
@@ -336,25 +337,41 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    *                 existing file.
    * @param compress true iif the output must be compressed (gzip), false otherwise.
    */
+  @Deprecated
   public void toFile(Function<T, String> fn, File file, boolean append, boolean compress) {
+    toFile(fn, file, append, compress ? eCompressionAlgorithm.GZIP : eCompressionAlgorithm.NONE);
+  }
+
+  /**
+   * Write view elements to a file.
+   *
+   * @param fn        transform each view element to a string.
+   * @param file      where the view elements must be written.
+   * @param append    false iif a new file must be created. Otherwise, view elements are appended at the end of an
+   *                  existing file.
+   * @param algorithm the compression algorithm to use.
+   */
+  public void toFile(Function<T, String> fn, File file, boolean append, eCompressionAlgorithm algorithm) {
 
     Preconditions.checkNotNull(fn, "fn should not be null");
     Preconditions.checkNotNull(file, "file should not be null");
 
-    try (BufferedWriter writer = (compress ? IO.newCompressedFileWriter(file, append)
-        : IO.newFileWriter(file, append))) {
+    try (BufferedWriter writer = (eCompressionAlgorithm.GZIP.equals(algorithm) ? IO.newCompressedFileWriter(file,
+        eCompressionAlgorithm.GZIP, append)
+        : eCompressionAlgorithm.BZIP2.equals(algorithm) ? IO.newCompressedFileWriter(file, eCompressionAlgorithm.BZIP2,
+            append) : IO.newFileWriter(file, append))) {
       map(fn).forEachRemaining(el -> {
         try {
           writer.write(el);
           writer.newLine();
         } catch (IOException e) {
           logger_.error(
-              LogFormatter.create().add("file", file).add("append", append).add("compress", compress).message(e)
+              LogFormatter.create().add("file", file).add("append", append).add("algorithm", algorithm).message(e)
                   .formatError());
         }
       });
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file).add("append", append).add("compress", compress).message(e)
+      logger_.error(LogFormatter.create().add("file", file).add("append", append).add("algorithm", algorithm).message(e)
           .formatError());
     }
   }
