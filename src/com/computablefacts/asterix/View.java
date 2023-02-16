@@ -151,10 +151,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   public static View<String> of(File file, eCompressionAlgorithm algorithm) {
 
     Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
     try {
-      return new View<>(
-          NONE.equals(algorithm) ? IO.newLineIterator(file) : IO.newCompressedLineIterator(file, algorithm));
+      return new View<>(IO.newLineIterator(file, algorithm));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -364,23 +364,23 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
     Preconditions.checkNotNull(fn, "fn should not be null");
     Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
-    try (BufferedWriter writer = (GZIP.equals(algorithm) ? IO.newCompressedFileWriter(file, GZIP, append)
-        : eCompressionAlgorithm.BZIP2.equals(algorithm) ? IO.newCompressedFileWriter(file, eCompressionAlgorithm.BZIP2,
-            append) : IO.newFileWriter(file, append))) {
+    try (BufferedWriter writer = IO.newFileWriter(file, append, algorithm)) {
       map(fn).forEachRemaining(el -> {
         try {
           writer.write(el);
           writer.newLine();
         } catch (IOException e) {
           logger_.error(
-              LogFormatter.create().add("file", file).add("append", append).add("algorithm", algorithm).message(e)
-                  .formatError());
+              LogFormatter.create().add("file", file).add("append", append).add("compression_algorithm", algorithm)
+                  .message(e).formatError());
         }
       });
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().add("file", file).add("append", append).add("algorithm", algorithm).message(e)
-          .formatError());
+      logger_.error(
+          LogFormatter.create().add("file", file).add("append", append).add("compression_algorithm", algorithm)
+              .message(e).formatError());
     }
   }
 

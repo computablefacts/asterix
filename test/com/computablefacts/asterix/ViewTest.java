@@ -1,5 +1,7 @@
 package com.computablefacts.asterix;
 
+import static com.computablefacts.asterix.IO.eCompressionAlgorithm.GZIP;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -88,9 +90,9 @@ public class ViewTest {
     String text = "a\nb\nc\nd";
 
     Assert.assertTrue(file.exists());
-    Assert.assertTrue(IO.writeCompressedText(file, text, true));
+    Assert.assertTrue(IO.writeText(file, text, true, GZIP));
 
-    List<String> rows = View.of(file, true).toList();
+    List<String> rows = View.of(file, GZIP).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), rows);
   }

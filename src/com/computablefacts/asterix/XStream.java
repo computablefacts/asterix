@@ -1,5 +1,7 @@
 package com.computablefacts.asterix;
 
+import static com.computablefacts.asterix.IO.eCompressionAlgorithm.GZIP;
+
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.thoughtworks.xstream.security.ArrayTypePermission;
@@ -18,7 +20,7 @@ final public class XStream {
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
     Preconditions.checkNotNull(obj, "obj should not be null");
 
-    Preconditions.checkState(IO.writeCompressedText(file, xStream().toXML(obj), false), "%s cannot be written",
+    Preconditions.checkState(IO.writeText(file, xStream().toXML(obj), false, GZIP), "%s cannot be written",
         file.getAbsolutePath());
   }
 
