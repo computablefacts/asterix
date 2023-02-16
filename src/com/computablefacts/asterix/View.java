@@ -1,5 +1,8 @@
 package com.computablefacts.asterix;
 
+import static com.computablefacts.asterix.IO.eCompressionAlgorithm.GZIP;
+import static com.computablefacts.asterix.IO.eCompressionAlgorithm.NONE;
+
 import com.computablefacts.Generated;
 import com.computablefacts.asterix.IO.eCompressionAlgorithm;
 import com.computablefacts.asterix.console.AsciiProgressBar;
@@ -140,12 +143,18 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return of(file, false);
   }
 
+  @Deprecated
   public static View<String> of(File file, boolean isCompressed) {
+    return of(file, isCompressed ? GZIP : NONE);
+  }
+
+  public static View<String> of(File file, eCompressionAlgorithm algorithm) {
 
     Preconditions.checkNotNull(file, "file should not be null");
 
     try {
-      return new View<>(isCompressed ? IO.newCompressedLineIterator(file) : IO.newLineIterator(file));
+      return new View<>(
+          NONE.equals(algorithm) ? IO.newLineIterator(file) : IO.newCompressedLineIterator(file, algorithm));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
@@ -325,7 +334,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    *               file.
    */
   public void toFile(Function<T, String> fn, File file, boolean append) {
-    toFile(fn, file, append, eCompressionAlgorithm.NONE);
+    toFile(fn, file, append, NONE);
   }
 
   /**
@@ -339,7 +348,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    */
   @Deprecated
   public void toFile(Function<T, String> fn, File file, boolean append, boolean compress) {
-    toFile(fn, file, append, compress ? eCompressionAlgorithm.GZIP : eCompressionAlgorithm.NONE);
+    toFile(fn, file, append, compress ? GZIP : NONE);
   }
 
   /**
@@ -356,8 +365,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     Preconditions.checkNotNull(fn, "fn should not be null");
     Preconditions.checkNotNull(file, "file should not be null");
 
-    try (BufferedWriter writer = (eCompressionAlgorithm.GZIP.equals(algorithm) ? IO.newCompressedFileWriter(file,
-        eCompressionAlgorithm.GZIP, append)
+    try (BufferedWriter writer = (GZIP.equals(algorithm) ? IO.newCompressedFileWriter(file, GZIP, append)
         : eCompressionAlgorithm.BZIP2.equals(algorithm) ? IO.newCompressedFileWriter(file, eCompressionAlgorithm.BZIP2,
             append) : IO.newFileWriter(file, append))) {
       map(fn).forEachRemaining(el -> {
