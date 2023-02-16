@@ -375,7 +375,7 @@ final public class IO {
     }
   }
 
-  enum eCompressionAlgorithm {
+  public enum eCompressionAlgorithm {
     NONE, GZIP, BZIP2
   }
 }
