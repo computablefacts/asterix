@@ -505,14 +505,11 @@ final public class StringCodec {
           BigInteger bigInteger = new BigInteger(text);
 
           // Here, text is an integer (otherwise a NumberFormatException has been thrown)
-          StringIterator iterator = new StringIterator(text);
-          iterator.movePast(new char[]{'0'});
-
           // The condition below ensures "0" is interpreted as a number but "00" as a string
-          if (iterator.position() > 1 || (iterator.position() > 0 && iterator.remaining() > 0)) {
-
-            // text matching [0]+[0-9]+ should be interpreted as string
-            return text;
+          if (text.length() > 1) {
+            if (text.charAt(0) == '0') {
+              return text; // text matching [0]+[0-9]+ should be interpreted as string
+            }
           }
           return bigInteger;
         } catch (NumberFormatException ex) {
