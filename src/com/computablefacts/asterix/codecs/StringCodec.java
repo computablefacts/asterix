@@ -538,8 +538,19 @@ final public class StringCodec {
         }
         return text;
       }
+      if (HEXADECIMAL.equals(type)) {
+        if (text.startsWith("0x") || text.startsWith("0X")) {
+          return new BigInteger(text.substring(2), 16);
+        }
+        return new BigInteger("-" + text.substring(3), 16);
+      }
       if (!interpretStringInScientificNotation && (text.contains("E") || text.contains("e"))) {
         return text;
+      }
+      if (text.charAt(text.length() - 1) == 'l' || text.charAt(text.length() - 1) == 'L'
+          || text.charAt(text.length() - 1) == 'f' || text.charAt(text.length() - 1) == 'F'
+          || text.charAt(text.length() - 1) == 'd' || text.charAt(text.length() - 1) == 'D') {
+        return text; // For backward compatibility, numbers such as [0-9]+L or [0-9]+F or [0-9]+D should be interpreted as string
       }
       if (INTEGER.equals(type)) {
 
@@ -557,12 +568,6 @@ final public class StringCodec {
           return text;
         }
         return new BigDecimal(text);
-      }
-      if (HEXADECIMAL.equals(type)) {
-        if (text.startsWith("0x") || text.startsWith("0X")) {
-          return new BigInteger(text.substring(2), 16);
-        }
-        return new BigInteger("-" + text.substring(3), 16);
       }
     }
     return value;

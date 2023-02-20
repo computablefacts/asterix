@@ -594,6 +594,24 @@ public class BoxedTypeTest {
   }
 
   @Test
+  public void testBoxLong() {
+    Assert.assertEquals("0016540034028L", BoxedType.create("0016540034028L").value());
+    Assert.assertEquals("16540034028L", BoxedType.create("16540034028L").value());
+  }
+
+  @Test
+  public void testBoxDoubleOrFloat() {
+
+    // double
+    Assert.assertEquals("0016540034028D", BoxedType.create("0016540034028D").value());
+    Assert.assertEquals("16540034028D", BoxedType.create("16540034028D").value());
+
+    // float
+    Assert.assertEquals("0016540034028F", BoxedType.create("0016540034028F").value());
+    Assert.assertEquals("16540034028F", BoxedType.create("16540034028F").value());
+  }
+
+  @Test
   public void testAsCollection() {
     Assert.assertEquals(Lists.newArrayList("string"), BoxedType.create("string").asCollection());
     Assert.assertEquals(Lists.newArrayList(BigInteger.valueOf(1)), BoxedType.create(1).asCollection());
