@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
@@ -613,12 +614,12 @@ public class StringCodecTest {
   }
 
   @Test
-  public void testDefaultCoercerSpeed() {
+  public void testDefaultCoercerSpeedForStrings() {
 
     RandomString randomString = new RandomString(50);
     Stopwatch stopwatchNoCoercer = Stopwatch.createStarted();
 
-    for (int i = 0; i < 2000000; i++) {
+    for (int i = 0; i < 2_000_000; i++) {
       String str = randomString.nextString();
     }
 
@@ -629,7 +630,7 @@ public class StringCodecTest {
 
     Stopwatch stopwatchCoercer = Stopwatch.createStarted();
 
-    for (int i = 0; i < 2000000; i++) {
+    for (int i = 0; i < 2_000_000; i++) {
       Object obj = StringCodec.defaultCoercer(randomString.nextString(), false);
     }
 
@@ -641,5 +642,36 @@ public class StringCodecTest {
     double speedup = (double) elapsedTimeNoCoercer / (double) elapsedTimeCoercer;
 
     Assert.assertEquals(1.0d, speedup, 0.5d);
+  }
+
+  @Test
+  public void testDefaultCoercerSpeedForIntegers() {
+
+    Random randomNumber = new Random(50);
+    Stopwatch stopwatchNoCoercer = Stopwatch.createStarted();
+
+    for (int i = 0; i < 2_000_000; i++) {
+      String str = Integer.toString(randomNumber.nextInt(), 10);
+    }
+
+    stopwatchNoCoercer.stop();
+    long elapsedTimeNoCoercer = stopwatchNoCoercer.elapsed(TimeUnit.MILLISECONDS);
+
+    System.out.println("[Integer] elapsed time : " + elapsedTimeNoCoercer);
+
+    Stopwatch stopwatchCoercer = Stopwatch.createStarted();
+
+    for (int i = 0; i < 2_000_000; i++) {
+      Object obj = StringCodec.defaultCoercer(Integer.toString(randomNumber.nextInt(), 10), false);
+    }
+
+    stopwatchCoercer.stop();
+    long elapsedTimeCoercer = stopwatchCoercer.elapsed(TimeUnit.MILLISECONDS);
+
+    System.out.println("[Object] elapsed time : " + elapsedTimeCoercer);
+
+    double speedup = (double) elapsedTimeNoCoercer / (double) elapsedTimeCoercer;
+
+    Assert.assertEquals(1.0d, speedup, 1.0d);
   }
 }
