@@ -39,13 +39,21 @@ final public class IO {
   }
 
   public static String readText(File file) {
-    return readText(file, NONE);
+    return readText(file.toPath());
   }
 
   public static String readText(File file, eCompressionAlgorithm algorithm) {
+    return readText(file.toPath(), algorithm);
+  }
+
+  public static String readText(Path file) {
+    return readText(file, NONE);
+  }
+
+  public static String readText(Path file, eCompressionAlgorithm algorithm) {
 
     Preconditions.checkNotNull(file, "file should not be null");
-    Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
+    Preconditions.checkArgument(Files.exists(file), "file does not exist : %s", file);
     Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
     try {
@@ -58,13 +66,21 @@ final public class IO {
   }
 
   public static boolean writeText(File file, String text, boolean append) {
-    return writeText(file, text, append, NONE);
+    return writeText(file.toPath(), text, append);
   }
 
   public static boolean writeText(File file, String text, boolean append, eCompressionAlgorithm algorithm) {
+    return writeText(file.toPath(), text, append, algorithm);
+  }
+
+  public static boolean writeText(Path file, String text, boolean append) {
+    return writeText(file, text, append, NONE);
+  }
+
+  public static boolean writeText(Path file, String text, boolean append, eCompressionAlgorithm algorithm) {
 
     Preconditions.checkNotNull(file, "file should not be null");
-    Preconditions.checkArgument(!append || file.exists(), "file does not exist : %s", file);
+    Preconditions.checkArgument(!append || Files.exists(file), "file does not exist : %s", file);
     Preconditions.checkNotNull(text, "text should not be null");
     Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
@@ -79,12 +95,16 @@ final public class IO {
   }
 
   public static List<String> readLines(File file) {
+    return readLines(file.toPath());
+  }
+
+  public static List<String> readLines(Path file) {
 
     Preconditions.checkNotNull(file, "file should not be null");
-    Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
+    Preconditions.checkArgument(Files.exists(file), "file does not exist : %s", file);
 
     try {
-      return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+      return Files.readAllLines(file, StandardCharsets.UTF_8);
     } catch (IOException e) {
       logger_.error(LogFormatter.create().add("file", file).message(e).formatError());
     }
@@ -92,9 +112,13 @@ final public class IO {
   }
 
   public static boolean writeLines(File file, Iterable<String> lines, boolean append) {
+    return writeLines(file.toPath(), lines, append);
+  }
+
+  public static boolean writeLines(Path file, Iterable<String> lines, boolean append) {
 
     Preconditions.checkNotNull(file, "file should not be null");
-    Preconditions.checkArgument(!append || file.exists(), "file does not exist : %s", file);
+    Preconditions.checkArgument(!append || Files.exists(file), "file does not exist : %s", file);
     Preconditions.checkNotNull(lines, "lines should not be null");
 
     try (BufferedWriter writer = newFileWriter(file, append)) {
@@ -110,80 +134,106 @@ final public class IO {
   }
 
   public static LineIterator newLineIterator(File file) throws IOException {
-    return newLineIterator(file, NONE);
+    return newLineIterator(file.toPath());
   }
 
   public static LineIterator newLineIterator(File file, eCompressionAlgorithm algorithm) throws IOException {
+    return newLineIterator(file.toPath(), algorithm);
+  }
+
+  public static LineIterator newLineIterator(Path file) throws IOException {
+    return newLineIterator(file, NONE);
+  }
+
+  public static LineIterator newLineIterator(Path file, eCompressionAlgorithm algorithm) throws IOException {
 
     Preconditions.checkNotNull(file, "file should not be null");
-    Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
+    Preconditions.checkArgument(Files.exists(file), "file does not exist : %s", file);
     Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
     return new LineIterator(newFileReader(file, algorithm));
   }
 
   public static BufferedReader newFileReader(File file) throws IOException {
-    return newFileReader(file, NONE);
+    return newFileReader(file.toPath());
   }
 
   public static BufferedReader newFileReader(File file, eCompressionAlgorithm algorithm) throws IOException {
+    return newFileReader(file.toPath(), algorithm);
+  }
+
+  public static BufferedReader newFileReader(Path file) throws IOException {
+    return newFileReader(file, NONE);
+  }
+
+  public static BufferedReader newFileReader(Path file, eCompressionAlgorithm algorithm) throws IOException {
 
     Preconditions.checkNotNull(file, "file should not be null");
-    Preconditions.checkArgument(file.exists(), "file does not exist : %s", file);
+    Preconditions.checkArgument(Files.exists(file), "file does not exist : %s", file);
     Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
     if (NONE.equals(algorithm)) {
-      return Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
+      return Files.newBufferedReader(file, StandardCharsets.UTF_8);
     }
     if (GZIP.equals(algorithm)) {
       return new BufferedReader(
-          new InputStreamReader(new GZIPInputStream(Files.newInputStream(file.toPath(), StandardOpenOption.READ)),
+          new InputStreamReader(new GZIPInputStream(Files.newInputStream(file, StandardOpenOption.READ)),
               StandardCharsets.UTF_8));
     }
-    return new BufferedReader(new InputStreamReader(
-        new BZip2CompressorInputStream(Files.newInputStream(file.toPath(), StandardOpenOption.READ)),
-        StandardCharsets.UTF_8));
+    return new BufferedReader(
+        new InputStreamReader(new BZip2CompressorInputStream(Files.newInputStream(file, StandardOpenOption.READ)),
+            StandardCharsets.UTF_8));
   }
 
   public static BufferedWriter newFileWriter(File file, boolean append) throws IOException {
-    return newFileWriter(file, append, NONE);
+    return newFileWriter(file.toPath(), append);
   }
 
   public static BufferedWriter newFileWriter(File file, boolean append, eCompressionAlgorithm algorithm)
       throws IOException {
+    return newFileWriter(file.toPath(), append, algorithm);
+  }
+
+  public static BufferedWriter newFileWriter(Path file, boolean append) throws IOException {
+    return newFileWriter(file, append, NONE);
+  }
+
+  public static BufferedWriter newFileWriter(Path file, boolean append, eCompressionAlgorithm algorithm)
+      throws IOException {
 
     Preconditions.checkNotNull(file, "file should not be null");
-    Preconditions.checkArgument(!append || file.exists(), "file does not exist : %s", file);
+    Preconditions.checkArgument(!append || Files.exists(file), "file does not exist : %s", file);
     Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
     if (NONE.equals(algorithm)) {
-      return append ? Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8, StandardOpenOption.WRITE,
+      return append ? Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.WRITE,
           StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-          : Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8, StandardOpenOption.WRITE,
+          : Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.WRITE,
               StandardOpenOption.CREATE_NEW);
     }
     if (GZIP.equals(algorithm)) {
       return append ? new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(
-          Files.newOutputStream(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE,
-              StandardOpenOption.APPEND)), StandardCharsets.UTF_8)) : new BufferedWriter(new OutputStreamWriter(
-          new GZIPOutputStream(
-              Files.newOutputStream(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)),
+          Files.newOutputStream(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND)),
+          StandardCharsets.UTF_8)) : new BufferedWriter(new OutputStreamWriter(
+          new GZIPOutputStream(Files.newOutputStream(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)),
           StandardCharsets.UTF_8));
     }
     return append ? new BufferedWriter(new OutputStreamWriter(new BZip2CompressorOutputStream(
-        Files.newOutputStream(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE,
-            StandardOpenOption.APPEND)), StandardCharsets.UTF_8)) : new BufferedWriter(new OutputStreamWriter(
-        new BZip2CompressorOutputStream(
-            Files.newOutputStream(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)),
-        StandardCharsets.UTF_8));
+        Files.newOutputStream(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND)),
+        StandardCharsets.UTF_8)) : new BufferedWriter(new OutputStreamWriter(new BZip2CompressorOutputStream(
+        Files.newOutputStream(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)), StandardCharsets.UTF_8));
   }
 
   public static boolean bzip2(File input, File output) {
+    return bzip2(input.toPath(), output.toPath());
+  }
+
+  public static boolean bzip2(Path input, Path output) {
 
     Preconditions.checkNotNull(input, "input must not be null");
-    Preconditions.checkArgument(input.exists(), "input does not exist : %s", input);
+    Preconditions.checkArgument(Files.exists(input), "input does not exist : %s", input);
     Preconditions.checkNotNull(output, "output must not be null");
-    Preconditions.checkArgument(!output.exists(), "output already exists : %s", output);
+    Preconditions.checkArgument(!Files.exists(output), "output already exists : %s", output);
 
     try (BufferedReader reader = newFileReader(input)) {
       try (BufferedWriter writer = newFileWriter(output, false, BZIP2)) {
@@ -203,11 +253,15 @@ final public class IO {
   }
 
   public static boolean bunzip2(File input, File output) {
+    return bunzip2(input.toPath(), output.toPath());
+  }
+
+  public static boolean bunzip2(Path input, Path output) {
 
     Preconditions.checkNotNull(input, "input must not be null");
-    Preconditions.checkArgument(input.exists(), "input does not exist : %s", input);
+    Preconditions.checkArgument(Files.exists(input), "input does not exist : %s", input);
     Preconditions.checkNotNull(output, "output must not be null");
-    Preconditions.checkArgument(!output.exists(), "output already exists : %s", output);
+    Preconditions.checkArgument(!Files.exists(output), "output already exists : %s", output);
 
     try (BufferedReader reader = newFileReader(input, BZIP2)) {
       try (BufferedWriter writer = newFileWriter(output, false)) {
@@ -227,11 +281,15 @@ final public class IO {
   }
 
   public static boolean gzip(File input, File output) {
+    return gzip(input.toPath(), output.toPath());
+  }
+
+  public static boolean gzip(Path input, Path output) {
 
     Preconditions.checkNotNull(input, "input must not be null");
-    Preconditions.checkArgument(input.exists(), "input does not exist : %s", input);
+    Preconditions.checkArgument(Files.exists(input), "input does not exist : %s", input);
     Preconditions.checkNotNull(output, "output must not be null");
-    Preconditions.checkArgument(!output.exists(), "output already exists : %s", output);
+    Preconditions.checkArgument(!Files.exists(output), "output already exists : %s", output);
 
     try (BufferedReader reader = newFileReader(input)) {
       try (BufferedWriter writer = newFileWriter(output, false, GZIP)) {
@@ -251,11 +309,15 @@ final public class IO {
   }
 
   public static boolean gunzip(File input, File output) {
+    return gunzip(input.toPath(), output.toPath());
+  }
+
+  public static boolean gunzip(Path input, Path output) {
 
     Preconditions.checkNotNull(input, "input must not be null");
-    Preconditions.checkArgument(input.exists(), "input does not exist : %s", input);
+    Preconditions.checkArgument(Files.exists(input), "input does not exist : %s", input);
     Preconditions.checkNotNull(output, "output must not be null");
-    Preconditions.checkArgument(!output.exists(), "output already exists : %s", output);
+    Preconditions.checkArgument(!Files.exists(output), "output already exists : %s", output);
 
     try (BufferedReader reader = newFileReader(input, GZIP)) {
       try (BufferedWriter writer = newFileWriter(output, false)) {
@@ -280,10 +342,10 @@ final public class IO {
     Preconditions.checkNotNull(source, "source should not be null");
     Preconditions.checkNotNull(destination, "destination should not be null");
 
-    if (!source.toFile().exists()) {
+    if (!Files.exists(source)) {
       return false;
     }
-    if (destination.toFile().exists()) {
+    if (Files.exists(destination)) {
       return false;
     }
     try {
