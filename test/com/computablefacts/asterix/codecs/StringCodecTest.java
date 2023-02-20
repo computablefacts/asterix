@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.computablefacts.asterix.RandomString;
+import com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber;
 import com.computablefacts.asterix.nlp.Span;
 import com.computablefacts.asterix.nlp.SpanSequence;
 import com.google.common.base.Stopwatch;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -216,8 +218,6 @@ public class StringCodecTest {
     assertFalse(StringCodec.isNumber(" 1111"));
     assertFalse(StringCodec.isNumber("1111 "));
     assertFalse(StringCodec.isNumber("1.1L"));
-
-    // Added
     assertFalse(StringCodec.isNumber("+00.12345"));
     assertFalse(StringCodec.isNumber("+0002.12345"));
     assertFalse(StringCodec.isNumber("0x"));
@@ -226,6 +226,71 @@ public class StringCodecTest {
     assertFalse(StringCodec.isNumber("1E-"));
     assertFalse(StringCodec.isNumber("123.4E."));
     assertFalse(StringCodec.isNumber("123.4E15E10"));
+    assertFalse(StringCodec.isNumber("+0xF"));
+    assertFalse(StringCodec.isNumber("+0xFFFFFFFF"));
+    assertFalse(StringCodec.isNumber("+0xFFFFFFFFFFFFFFFF"));
+    assertFalse(StringCodec.isNumber(".D"));
+    assertFalse(StringCodec.isNumber(".e10"));
+    assertFalse(StringCodec.isNumber(".e10D"));
+    assertFalse(StringCodec.isNumber("D"));
+    assertFalse(StringCodec.isNumber("L"));
+    assertFalse(StringCodec.isNumber("+2"));
+    assertFalse(StringCodec.isNumber("+2.0"));
+  }
+
+  /**
+   * Mostly extracted from
+   * https://github.com/apache/commons-lang/blob/master/src/test/java/org/apache/commons/lang3/math/NumberUtilsTest.java
+   */
+  @Test
+  public void testTypeOfNumberIsNan() {
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(null));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(""));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(" "));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("\r\n\t"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("--2.3"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(".12.3"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("-123E"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("-123E+-212"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("-123E2.12"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("0xGF"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("0xFAE-1"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("."));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("-0ABC123"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("123.4E-D"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("123.4ED"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+000E.12345"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("-000E.12345"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("1234E5l"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("11a"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("1a"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("a"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("11g"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("11z"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("11def"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("11d11"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("11 11"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(" 1111"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("1111 "));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("1.1L"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+00.12345"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+0002.12345"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("0x"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("EE"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("."));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("1E-"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("123.4E."));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("123.4E15E10"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+0xF"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+0xFFFFFFFF"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+0xFFFFFFFFFFFFFFFF"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(".D"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(".e10"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber(".e10D"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("D"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("L"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+2"));
+    assertEquals(eTypeOfNumber.NAN, StringCodec.typeOfNumber("+2.0"));
   }
 
   /**
@@ -248,6 +313,7 @@ public class StringCodecTest {
     assertTrue(StringCodec.isNumber("-000.12345"));
     assertTrue(StringCodec.isNumber("-1234E5"));
     assertTrue(StringCodec.isNumber("0"));
+    assertTrue(StringCodec.isNumber("0.1"));
     assertTrue(StringCodec.isNumber("-0"));
     assertTrue(StringCodec.isNumber("01234"));
     assertTrue(StringCodec.isNumber("-01234"));
@@ -257,6 +323,58 @@ public class StringCodecTest {
     assertTrue(StringCodec.isNumber("-221.23F"));
     assertTrue(StringCodec.isNumber("22338L"));
     assertTrue(StringCodec.isNumber("2."));
+    assertTrue(StringCodec.isNumber(".0"));
+    assertTrue(StringCodec.isNumber("0."));
+    assertTrue(StringCodec.isNumber("0.D"));
+    assertTrue(StringCodec.isNumber("0e1"));
+    assertTrue(StringCodec.isNumber("0e1D"));
+    assertTrue(StringCodec.isNumber("0xABCD"));
+    assertTrue(StringCodec.isNumber("0XABCD"));
+    assertTrue(StringCodec.isNumber("0.0"));
+    assertTrue(StringCodec.isNumber("-1l"));
+    assertTrue(StringCodec.isNumber("1l"));
+  }
+
+  /**
+   * Mostly extracted from
+   * https://github.com/apache/commons-lang/blob/master/src/test/java/org/apache/commons/lang3/math/NumberUtilsTest.java
+   */
+  @Test
+  public void testTypeOfNumberIsIntegerDecimalOrHexadecimal() {
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("12345"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234.5"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber(".12345"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234E5"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234E+5"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234E-5"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("123.4E5"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("-1234"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-1234.5"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-.12345"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-0001.12345"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-000.12345"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-1234E5"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("0"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0.1"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("-0"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("01234"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("-01234"));
+    assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("-0xABC123"));
+    assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("-0x0"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("123.4E21D"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-221.23F"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("22338L"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("2."));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber(".0"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0."));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0.D"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0e1"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0e1D"));
+    assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("0xABCD"));
+    assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("0XABCD"));
+    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0.0"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("-1l"));
+    assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("1l"));
   }
 
   @Test
@@ -375,8 +493,18 @@ public class StringCodecTest {
   }
 
   @Test
+  public void testTokenizeNullString2() {
+    assertEquals(Lists.newArrayList(), StringCodec.defaultTokenizer2(null));
+  }
+
+  @Test
   public void testTokenizeEmptyString() {
     assertEquals(new SpanSequence(), StringCodec.defaultTokenizer(""));
+  }
+
+  @Test
+  public void testTokenizeEmptyString2() {
+    assertEquals(Lists.newArrayList(), StringCodec.defaultTokenizer2(""));
   }
 
   @Test
@@ -387,6 +515,18 @@ public class StringCodecTest {
     String textNormalized = "~\"'!@#$%^&*()-+=[]{}\\|;:,.<>?/_";
     SpanSequence spansExpected = new SpanSequence();
     spansExpected.add(new Span(textNormalized, 6, 7)); // $
+
+    assertEquals(spansExpected, spansComputed);
+  }
+
+  @Test
+  public void testTokenizeGibberish2() {
+
+    List<String> spansComputed = StringCodec.defaultTokenizer2("~\"`!@#$%^&*()-+=[]{}\\|;:,.<>?/_");
+
+    String textNormalized = "~\"'!@#$%^&*()-+=[]{}\\|;:,.<>?/_";
+    List<String> spansExpected = new ArrayList<>();
+    spansExpected.add(textNormalized.substring(6, 7)); // $
 
     assertEquals(spansExpected, spansComputed);
   }
@@ -418,6 +558,32 @@ public class StringCodecTest {
   }
 
   @Test
+  public void testTokenizeSentence2() {
+
+    List<String> spansComputed = StringCodec.defaultTokenizer2(
+        "Nous sommes le 29 avril 2017 (29/04/2017) et il est 12:43.");
+
+    String textNormalized = "nous sommes le 29 avril 2017 (29/04/2017) et il est 12:43.";
+    List<String> spansExpected = new ArrayList<>();
+    spansExpected.add(textNormalized.substring(0, 4)); // nous
+    spansExpected.add(textNormalized.substring(5, 11)); // sommes
+    spansExpected.add(textNormalized.substring(12, 14)); // le
+    spansExpected.add(textNormalized.substring(15, 17)); // 29
+    spansExpected.add(textNormalized.substring(18, 23)); // avril
+    spansExpected.add(textNormalized.substring(24, 28)); // 2017
+    spansExpected.add(textNormalized.substring(30, 32)); // 29
+    spansExpected.add(textNormalized.substring(33, 35)); // 04
+    spansExpected.add(textNormalized.substring(36, 40)); // 2017
+    spansExpected.add(textNormalized.substring(42, 44)); // et
+    spansExpected.add(textNormalized.substring(45, 47)); // il
+    spansExpected.add(textNormalized.substring(48, 51)); // est
+    spansExpected.add(textNormalized.substring(52, 54)); // 12
+    spansExpected.add(textNormalized.substring(55, 57)); // 43
+
+    assertEquals(spansExpected, spansComputed);
+  }
+
+  @Test
   public void testTokenizeEmail() {
 
     SpanSequence spansComputed = StringCodec.defaultTokenizer("csavelief@mncc.fr.");
@@ -427,6 +593,20 @@ public class StringCodecTest {
     spansExpected.add(new Span(textNormalized, 0, 9)); // csavelief
     spansExpected.add(new Span(textNormalized, 10, 14)); // mncc
     spansExpected.add(new Span(textNormalized, 15, 17)); // fr
+
+    assertEquals(spansExpected, spansComputed);
+  }
+
+  @Test
+  public void testTokenizeEmail2() {
+
+    List<String> spansComputed = StringCodec.defaultTokenizer2("csavelief@mncc.fr.");
+
+    String textNormalized = "csavelief@mncc.fr.";
+    List<String> spansExpected = new ArrayList<>();
+    spansExpected.add(textNormalized.substring(0, 9)); // csavelief
+    spansExpected.add(textNormalized.substring(10, 14)); // mncc
+    spansExpected.add(textNormalized.substring(15, 17)); // fr
 
     assertEquals(spansExpected, spansComputed);
   }
@@ -442,6 +622,16 @@ public class StringCodecTest {
   }
 
   @Test
+  public void testSplitOnNewline2() {
+
+    List<String> sequence = StringCodec.defaultTokenizer2("Tom\n\nCruise");
+
+    assertEquals(2, sequence.size());
+    assertEquals("tom\n\ncruise".substring(0, 3), sequence.get(0));
+    assertEquals("tom\n\ncruise".substring(5, 11), sequence.get(1));
+  }
+
+  @Test
   public void testSplitOnTab() {
 
     SpanSequence sequence = StringCodec.defaultTokenizer("Tom\t\tCruise");
@@ -449,6 +639,16 @@ public class StringCodecTest {
     assertEquals(2, sequence.size());
     assertEquals(new Span("tom\t\tcruise", 0, 3), sequence.span(0));
     assertEquals(new Span("tom\t\tcruise", 5, 11), sequence.span(1));
+  }
+
+  @Test
+  public void testSplitOnTab2() {
+
+    List<String> sequence = StringCodec.defaultTokenizer2("Tom\t\tCruise");
+
+    assertEquals(2, sequence.size());
+    assertEquals("tom\t\tcruise".substring(0, 3), sequence.get(0));
+    assertEquals("tom\t\tcruise".substring(5, 11), sequence.get(1));
   }
 
   @Test
@@ -462,6 +662,16 @@ public class StringCodecTest {
   }
 
   @Test
+  public void testSplitOnCarriageReturn2() {
+
+    List<String> sequence = StringCodec.defaultTokenizer2("Tom\r\rCruise");
+
+    assertEquals(2, sequence.size());
+    assertEquals("tom\r\rcruise".substring(0, 3), sequence.get(0));
+    assertEquals("tom\r\rcruise".substring(5, 11), sequence.get(1));
+  }
+
+  @Test
   public void testSplitOnWhitespace() {
 
     SpanSequence sequence = StringCodec.defaultTokenizer("Tom  Cruise");
@@ -472,6 +682,16 @@ public class StringCodecTest {
   }
 
   @Test
+  public void testSplitOnWhitespace2() {
+
+    List<String> sequence = StringCodec.defaultTokenizer2("Tom  Cruise");
+
+    assertEquals(2, sequence.size());
+    assertEquals("tom  cruise".substring(0, 3), sequence.get(0));
+    assertEquals("tom  cruise".substring(5, 11), sequence.get(1));
+  }
+
+  @Test
   public void testSplitOnNoBreakSpace() {
 
     SpanSequence sequence = StringCodec.defaultTokenizer("Tom\u00a0\u00a0Cruise");
@@ -479,6 +699,16 @@ public class StringCodecTest {
     assertEquals(2, sequence.size());
     assertEquals(new Span("tom  cruise", 0, 3), sequence.span(0));
     assertEquals(new Span("tom  cruise", 5, 11), sequence.span(1));
+  }
+
+  @Test
+  public void testSplitOnNoBreakSpace2() {
+
+    List<String> sequence = StringCodec.defaultTokenizer2("Tom\u00a0\u00a0Cruise");
+
+    assertEquals(2, sequence.size());
+    assertEquals("tom  cruise".substring(0, 3), sequence.get(0));
+    assertEquals("tom  cruise".substring(5, 11), sequence.get(1));
   }
 
   @Test
@@ -557,6 +787,25 @@ public class StringCodecTest {
     Assert.assertEquals(bigDecimal, StringCodec.defaultCoercer("3.4028234663852886E+38"));
     Assert.assertEquals(bigDecimal, StringCodec.defaultCoercer(Float.MAX_VALUE));
     Assert.assertEquals(bigDecimal, StringCodec.defaultCoercer(bigDecimal));
+  }
+
+  @Test
+  public void testCoerceHexadecimal() {
+
+    Assert.assertEquals("0x", StringCodec.defaultCoercer("0x"));
+
+    Assert.assertEquals(BigInteger.valueOf(0x0), StringCodec.defaultCoercer("0x0"));
+    Assert.assertEquals(BigInteger.valueOf(0x00), StringCodec.defaultCoercer("0x00"));
+    Assert.assertEquals(BigInteger.valueOf(0xABCD), StringCodec.defaultCoercer("0xABCD"));
+    Assert.assertEquals(BigInteger.valueOf(0x01), StringCodec.defaultCoercer("0x01"));
+
+    Assert.assertEquals(BigInteger.valueOf(-0x0), StringCodec.defaultCoercer("-0x0"));
+    Assert.assertEquals(BigInteger.valueOf(-0x00), StringCodec.defaultCoercer("-0x00"));
+    Assert.assertEquals(BigInteger.valueOf(-0xABCD), StringCodec.defaultCoercer("-0xABCD"));
+    Assert.assertEquals(BigInteger.valueOf(-0x01), StringCodec.defaultCoercer("-0x01"));
+
+    Assert.assertEquals(BigInteger.ONE, StringCodec.defaultCoercer(0x01));
+    Assert.assertNotEquals(BigDecimal.ONE, StringCodec.defaultCoercer(0x01));
   }
 
   @Test
@@ -641,7 +890,7 @@ public class StringCodecTest {
 
     double speedup = (double) elapsedTimeNoCoercer / (double) elapsedTimeCoercer;
 
-    Assert.assertEquals(1.0d, speedup, 0.5d);
+    Assert.assertTrue(0.8d <= speedup && speedup <= 1.2d);
   }
 
   @Test
@@ -672,6 +921,37 @@ public class StringCodecTest {
 
     double speedup = (double) elapsedTimeNoCoercer / (double) elapsedTimeCoercer;
 
-    Assert.assertEquals(1.0d, speedup, 1.0d);
+    Assert.assertTrue(0.2d <= speedup && speedup <= 1.2d);
+  }
+
+  @Test
+  public void testDefaultCoercerSpeedForDecimals() {
+
+    Random randomNumber = new Random(50);
+    Stopwatch stopwatchNoCoercer = Stopwatch.createStarted();
+
+    for (int i = 0; i < 2_000_000; i++) {
+      String str = Double.toString(randomNumber.nextDouble());
+    }
+
+    stopwatchNoCoercer.stop();
+    long elapsedTimeNoCoercer = stopwatchNoCoercer.elapsed(TimeUnit.MILLISECONDS);
+
+    System.out.println("[Decimal] elapsed time : " + elapsedTimeNoCoercer);
+
+    Stopwatch stopwatchCoercer = Stopwatch.createStarted();
+
+    for (int i = 0; i < 2_000_000; i++) {
+      Object obj = StringCodec.defaultCoercer(Double.toString(randomNumber.nextDouble()), false);
+    }
+
+    stopwatchCoercer.stop();
+    long elapsedTimeCoercer = stopwatchCoercer.elapsed(TimeUnit.MILLISECONDS);
+
+    System.out.println("[Object] elapsed time : " + elapsedTimeCoercer);
+
+    double speedup = (double) elapsedTimeNoCoercer / (double) elapsedTimeCoercer;
+
+    Assert.assertTrue(0.5d <= speedup && speedup <= 1.2d);
   }
 }

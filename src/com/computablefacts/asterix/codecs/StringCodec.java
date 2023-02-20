@@ -1,10 +1,16 @@
 package com.computablefacts.asterix.codecs;
 
+import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.DECIMAL;
+import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.HEXADECIMAL;
+import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.INTEGER;
+import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.NAN;
+
 import com.computablefacts.asterix.nlp.Span;
 import com.computablefacts.asterix.nlp.SpanSequence;
 import com.computablefacts.asterix.nlp.StringIterator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
 import com.google.re2j.Matcher;
@@ -14,6 +20,7 @@ import java.math.BigInteger;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -250,9 +257,14 @@ final public class StringCodec {
    * @see <a href= "https://commons.apache.org/proper/commons-math">https://commons.apache.org/proper/commons-math</a>
    */
   public static boolean isNumber(String text) {
+    eTypeOfNumber type = typeOfNumber(text);
+    return INTEGER.equals(type) || DECIMAL.equals(type) || HEXADECIMAL.equals(type);
+  }
+
+  public static eTypeOfNumber typeOfNumber(String text) {
 
     if (Strings.isNullOrEmpty(text)) {
-      return false;
+      return NAN;
     }
 
     char[] chars = text.toCharArray();
@@ -264,20 +276,20 @@ final public class StringCodec {
 
     // deal with any possible sign up front
     int start = (chars[0] == '-') ? 1 : 0;
-    if (sz > start + 1 && chars[start] == '0' && chars[start + 1] == 'x') {
+    if (sz > start + 1 && chars[start] == '0' && (chars[start + 1] == 'x' || chars[start + 1] == 'X')) {
       @Var int i = start + 2;
       if (i == sz) {
-        return false; // text == "0x"
+        return NAN; // text == "0x"
       }
 
       // checking hex (it can't be anything else)
       for (; i < chars.length; i++) {
         if ((chars[i] < '0' || chars[i] > '9') && (chars[i] < 'a' || chars[i] > 'f') && (chars[i] < 'A'
             || chars[i] > 'F')) {
-          return false;
+          return NAN;
         }
       }
-      return true;
+      return HEXADECIMAL;
     }
 
     sz--; // don't want to loop to the last char, check it afterwords
@@ -296,7 +308,7 @@ final public class StringCodec {
         if (hasDecPoint || hasExp) {
 
           // two decimal points or dec in exponent
-          return false;
+          return NAN;
         }
         hasDecPoint = true;
       } else if (chars[i] == 'e' || chars[i] == 'E') {
@@ -305,21 +317,21 @@ final public class StringCodec {
         if (hasExp) {
 
           // two E's
-          return false;
+          return NAN;
         }
         if (!foundDigit) {
-          return false;
+          return NAN;
         }
         hasExp = true;
         allowSigns = true;
       } else if (chars[i] == '+' || chars[i] == '-') {
         if (!allowSigns) {
-          return false;
+          return NAN;
         }
         allowSigns = false;
         foundDigit = false; // we need a digit after the E
       } else {
-        return false;
+        return NAN;
       }
       i++;
     }
@@ -327,39 +339,39 @@ final public class StringCodec {
       if (chars[i] >= '0' && chars[i] <= '9') {
 
         // no type qualifier, OK
-        return true;
+        return hasDecPoint || hasExp ? DECIMAL : INTEGER;
       }
       if (chars[i] == 'e' || chars[i] == 'E') {
 
         // can't have an E at the last byte
-        return false;
+        return NAN;
       }
       if (chars[i] == '.') {
         if (hasDecPoint || hasExp) {
 
           // two decimal points or dec in exponent
-          return false;
+          return NAN;
         }
 
         // single trailing decimal point after non-exponent is ok
-        return foundDigit;
+        return foundDigit ? DECIMAL : NAN;
       }
       if (!allowSigns && (chars[i] == 'd' || chars[i] == 'D' || chars[i] == 'f' || chars[i] == 'F')) {
-        return foundDigit;
+        return foundDigit ? DECIMAL : NAN;
       }
       if (chars[i] == 'l' || chars[i] == 'L') {
 
         // not allowing L with an exponent or decimal point
-        return foundDigit && !hasExp && !hasDecPoint;
+        return foundDigit && !hasExp && !hasDecPoint ? INTEGER : NAN;
       }
 
       // last character is illegal
-      return false;
+      return NAN;
     }
 
     // allowSigns is true iff the val ends in 'E'
     // found digit it to make sure weird stuff like '.' and '1E-' doesn't pass
-    return !allowSigns && foundDigit;
+    return !allowSigns && foundDigit ? hasDecPoint ? DECIMAL : INTEGER : NAN;
   }
 
   /**
@@ -443,6 +455,28 @@ final public class StringCodec {
   }
 
   /**
+   * A naive tokenizer that removes diacritics and split on punctuation marks.
+   *
+   * @param text the text to tokenize.
+   * @return the extracted tokens as a {@link List}.
+   */
+  public static List<String> defaultTokenizer2(String text) {
+
+    if (text == null || text.isEmpty()) {
+      return Lists.newArrayList();
+    }
+
+    List<String> spanSequence = new ArrayList<>();
+    String newText = removeDiacriticalMarks(normalize(text)).toLowerCase();
+    Matcher matcher = SPLIT_ON_PUNCT.matcher(newText);
+
+    while (matcher.find()) {
+      spanSequence.add(matcher.group());
+    }
+    return spanSequence;
+  }
+
+  /**
    * Coerce a given value.
    *
    * @param value the value to box/coerce.
@@ -488,7 +522,10 @@ final public class StringCodec {
       if ("false".equalsIgnoreCase(text)) {
         return false;
       }
-      if (!isNumber(text)) {
+
+      eTypeOfNumber type = typeOfNumber(text);
+
+      if (NAN.equals(type)) {
 
         // Check if text is a date in ISO Instant format
         if (text.length() >= 20 && (text.charAt(10) == 'T' || text.charAt(10) == 't') && (
@@ -499,38 +536,39 @@ final public class StringCodec {
             // FALL THROUGH
           }
         }
-      } else if (interpretStringInScientificNotation || (!text.contains("E") && !text.contains("e"))) {
-        try {
-
-          BigInteger bigInteger = new BigInteger(text);
-
-          // Here, text is an integer (otherwise a NumberFormatException has been thrown)
-          // The condition below ensures "0" is interpreted as a number but "00" as a string
-          if (text.length() > 1) {
-            if (text.charAt(0) == '0') {
-              return text; // text matching [0]+[0-9]+ should be interpreted as string
-            }
-          }
-          return bigInteger;
-        } catch (NumberFormatException ex) {
-          // FALL THROUGH
-        }
-        try {
-
-          BigDecimal bigDecimal = new BigDecimal(text);
-          String textTrimmed = text.trim();
-
-          // text matching \d+[.] should be interpreted as string
-          // text matching [.]\d+ should be interpreted as string
-          if (!textTrimmed.endsWith(".") && !textTrimmed.startsWith(".")) {
-            return bigDecimal;
-          }
-        } catch (NumberFormatException ex) {
-          // FALL THROUGH
-        }
+        return text;
       }
-      return text;
+      if (!interpretStringInScientificNotation && (text.contains("E") || text.contains("e"))) {
+        return text;
+      }
+      if (INTEGER.equals(type)) {
+
+        // The condition below ensures "0" is interpreted as a number but "00" as a string
+        if (text.charAt(0) == '0' && text.length() > 1) {
+          return text; // text matching [0]+[0-9]+ should be interpreted as string
+        }
+        return new BigInteger(text);
+      }
+      if (DECIMAL.equals(type)) {
+
+        // text matching \d+[.] should be interpreted as string
+        // text matching [.]\d+ should be interpreted as string
+        if (text.endsWith(".") || text.startsWith(".")) {
+          return text;
+        }
+        return new BigDecimal(text);
+      }
+      if (HEXADECIMAL.equals(type)) {
+        if (text.startsWith("0x") || text.startsWith("0X")) {
+          return new BigInteger(text.substring(2), 16);
+        }
+        return new BigInteger("-" + text.substring(3), 16);
+      }
     }
     return value;
+  }
+
+  public enum eTypeOfNumber {
+    INTEGER, DECIMAL, HEXADECIMAL, NAN
   }
 }
