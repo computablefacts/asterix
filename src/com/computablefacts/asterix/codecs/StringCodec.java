@@ -1,6 +1,7 @@
 package com.computablefacts.asterix.codecs;
 
 import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.DECIMAL;
+import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.DECIMAL_WITH_EXPONENT;
 import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.HEXADECIMAL;
 import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.INTEGER;
 import static com.computablefacts.asterix.codecs.StringCodec.eTypeOfNumber.NAN;
@@ -258,7 +259,8 @@ final public class StringCodec {
    */
   public static boolean isNumber(String text) {
     eTypeOfNumber type = typeOfNumber(text);
-    return INTEGER.equals(type) || DECIMAL.equals(type) || HEXADECIMAL.equals(type);
+    return INTEGER.equals(type) || DECIMAL.equals(type) || DECIMAL_WITH_EXPONENT.equals(type) || HEXADECIMAL.equals(
+        type);
   }
 
   public static eTypeOfNumber typeOfNumber(String text) {
@@ -339,7 +341,7 @@ final public class StringCodec {
       if (chars[i] >= '0' && chars[i] <= '9') {
 
         // no type qualifier, OK
-        return hasDecPoint || hasExp ? DECIMAL : INTEGER;
+        return hasExp ? DECIMAL_WITH_EXPONENT : hasDecPoint ? DECIMAL : INTEGER;
       }
       if (chars[i] == 'e' || chars[i] == 'E') {
 
@@ -357,7 +359,7 @@ final public class StringCodec {
         return foundDigit ? DECIMAL : NAN;
       }
       if (!allowSigns && (chars[i] == 'd' || chars[i] == 'D' || chars[i] == 'f' || chars[i] == 'F')) {
-        return foundDigit ? DECIMAL : NAN;
+        return foundDigit ? hasExp ? DECIMAL_WITH_EXPONENT : DECIMAL : NAN;
       }
       if (chars[i] == 'l' || chars[i] == 'L') {
 
@@ -371,7 +373,7 @@ final public class StringCodec {
 
     // allowSigns is true iff the val ends in 'E'
     // found digit it to make sure weird stuff like '.' and '1E-' doesn't pass
-    return !allowSigns && foundDigit ? hasDecPoint ? DECIMAL : INTEGER : NAN;
+    return !allowSigns && foundDigit ? hasExp ? DECIMAL_WITH_EXPONENT : hasDecPoint ? DECIMAL : INTEGER : NAN;
   }
 
   /**
@@ -538,33 +540,47 @@ final public class StringCodec {
         }
         return text;
       }
+
+      boolean isNegative = text.charAt(0) == '-';
+      char firstChar = text.charAt(isNegative ? 1 : 0);
+      char secondChar = text.length() > ((isNegative ? 1 : 0) + 1) ? text.charAt((isNegative ? 1 : 0) + 1) : 0;
+      char lastChar = text.charAt(text.length() - 1);
+
       if (HEXADECIMAL.equals(type)) {
-        if (text.startsWith("0x") || text.startsWith("0X")) {
-          return new BigInteger(text.substring(2), 16);
+        if (isNegative) {
+          return new BigInteger("-" + text.substring(3), 16);
         }
-        return new BigInteger("-" + text.substring(3), 16);
+        return new BigInteger(text.substring(2), 16);
       }
-      if (!interpretStringInScientificNotation && (text.contains("E") || text.contains("e"))) {
+
+      // Numbers such as \d+[Ll] or \d+([.]\d+)?[Ff] or \d+([.]\d+)?[Dd] should be interpreted as string
+      if (lastChar == 'l' || lastChar == 'L' || lastChar == 'f' || lastChar == 'F' || lastChar == 'd'
+          || lastChar == 'D') {
         return text;
-      }
-      if (text.charAt(text.length() - 1) == 'l' || text.charAt(text.length() - 1) == 'L'
-          || text.charAt(text.length() - 1) == 'f' || text.charAt(text.length() - 1) == 'F'
-          || text.charAt(text.length() - 1) == 'd' || text.charAt(text.length() - 1) == 'D') {
-        return text; // For backward compatibility, numbers such as [0-9]+L or [0-9]+F or [0-9]+D should be interpreted as string
       }
       if (INTEGER.equals(type)) {
 
-        // The condition below ensures "0" is interpreted as a number but "00" as a string
-        if (text.charAt(0) == '0' && text.length() > 1) {
-          return text; // text matching [0]+[0-9]+ should be interpreted as string
+        // text matching [0]+\d+ should be interpreted as string
+        if (firstChar == '0' && secondChar != 0) {
+          return text;
         }
         return new BigInteger(text);
       }
-      if (DECIMAL.equals(type)) {
+      if (DECIMAL.equals(type) || DECIMAL_WITH_EXPONENT.equals(type)) {
+
+        // On-demand, disable coercion of numbers with exponents
+        if (DECIMAL_WITH_EXPONENT.equals(type) && !interpretStringInScientificNotation) {
+          return text;
+        }
+
+        // text matching [0][0]+\d*[.]\d+ should be interpreted as string
+        if (firstChar == '0' && secondChar == '0') {
+          return text;
+        }
 
         // text matching \d+[.] should be interpreted as string
         // text matching [.]\d+ should be interpreted as string
-        if (text.endsWith(".") || text.startsWith(".")) {
+        if (firstChar == '.' || lastChar == '.') {
           return text;
         }
         return new BigDecimal(text);
@@ -574,6 +590,6 @@ final public class StringCodec {
   }
 
   public enum eTypeOfNumber {
-    INTEGER, DECIMAL, HEXADECIMAL, NAN
+    INTEGER, DECIMAL, DECIMAL_WITH_EXPONENT, HEXADECIMAL, NAN
   }
 }

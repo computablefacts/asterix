@@ -344,16 +344,16 @@ public class StringCodecTest {
     assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("12345"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234.5"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber(".12345"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234E5"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234E+5"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("1234E-5"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("123.4E5"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("1234E5"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("1234E+5"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("1234E-5"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("123.4E5"));
     assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("-1234"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-1234.5"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-.12345"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-0001.12345"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-000.12345"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-1234E5"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("-1234E5"));
     assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("0"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0.1"));
     assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("-0"));
@@ -361,15 +361,15 @@ public class StringCodecTest {
     assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("-01234"));
     assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("-0xABC123"));
     assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("-0x0"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("123.4E21D"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("123.4E21D"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("-221.23F"));
     assertEquals(eTypeOfNumber.INTEGER, StringCodec.typeOfNumber("22338L"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("2."));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber(".0"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0."));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0.D"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0e1"));
-    assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0e1D"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("0e1"));
+    assertEquals(eTypeOfNumber.DECIMAL_WITH_EXPONENT, StringCodec.typeOfNumber("0e1D"));
     assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("0xABCD"));
     assertEquals(eTypeOfNumber.HEXADECIMAL, StringCodec.typeOfNumber("0XABCD"));
     assertEquals(eTypeOfNumber.DECIMAL, StringCodec.typeOfNumber("0.0"));
@@ -848,6 +848,16 @@ public class StringCodecTest {
   public void testCoerceNumberStringPrefixedWithZeroes() {
     Assert.assertEquals(BigInteger.valueOf(7), StringCodec.defaultCoercer("7"));
     Assert.assertEquals("007", StringCodec.defaultCoercer("007"));
+  }
+
+  @Test
+  public void testCoerceDecimalNumberStringPrefixedWithZeroes() {
+
+    Assert.assertEquals(BigDecimal.valueOf(0.7), StringCodec.defaultCoercer("0.7"));
+    Assert.assertEquals("00.7", StringCodec.defaultCoercer("00.7"));
+
+    Assert.assertEquals(BigDecimal.valueOf(-0.7), StringCodec.defaultCoercer("-0.7"));
+    Assert.assertEquals("-00.7", StringCodec.defaultCoercer("-00.7"));
   }
 
   @Test
