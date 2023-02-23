@@ -6,6 +6,7 @@ import static com.computablefacts.asterix.IO.eCompressionAlgorithm.NONE;
 
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -336,6 +337,97 @@ final public class IO {
     return false;
   }
 
+  public static Result<Path> newTmpFile(String extension) {
+    try {
+      return Result.of(Files.createTempFile("", Strings.nullToEmpty(extension)));
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+    }
+    return Result.failure("file cannot be created");
+  }
+
+  public static Result<Path> newTmpDirectory() {
+    try {
+      return Result.of(Files.createTempDirectory(""));
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+    }
+    return Result.failure("directory cannot be created");
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean ensureFileExists(File file) {
+    return ensureFileExists(file.toPath());
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean ensureFileExists(Path path) {
+
+    Preconditions.checkNotNull(path, "path should not be null");
+
+    if (Files.exists(path)) {
+      return true;
+    }
+    try {
+      Files.createFile(path);
+      return true;
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().add("path", path).message(e).formatError());
+    }
+    return false;
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean ensureDirectoryExists(File file) {
+    return ensureDirectoryExists(file.toPath());
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean ensureDirectoryExists(Path path) {
+
+    Preconditions.checkNotNull(path, "path should not be null");
+
+    if (Files.exists(path)) {
+      return true;
+    }
+    try {
+      Files.createDirectory(path);
+      return true;
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().add("path", path).message(e).formatError());
+    }
+    return false;
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean replace(File source, File destination) {
+    return replace(source.toPath(), destination.toPath());
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean replace(Path source, Path destination) {
+
+    Preconditions.checkNotNull(source, "source should not be null");
+    Preconditions.checkNotNull(destination, "destination should not be null");
+
+    if (!Files.exists(source)) {
+      return false;
+    }
+    try {
+      Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
+      return true;
+    } catch (IOException e) {
+      logger_.error(
+          LogFormatter.create().add("source", source).add("destination", destination).message(e).formatError());
+    }
+    return false;
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean move(File source, File destination) {
+    return move(source.toPath(), destination.toPath());
+  }
+
   @CanIgnoreReturnValue
   public static boolean move(Path source, Path destination) {
 
@@ -352,7 +444,35 @@ final public class IO {
       Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
       return true;
     } catch (IOException e) {
-      logger_.error(LogFormatter.create().message(e).formatError());
+      logger_.error(
+          LogFormatter.create().add("source", source).add("destination", destination).message(e).formatError());
+    }
+    return false;
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean copy(File source, File destination) {
+    return copy(source.toPath(), destination.toPath());
+  }
+
+  @CanIgnoreReturnValue
+  public static boolean copy(Path source, Path destination) {
+
+    Preconditions.checkNotNull(source, "source should not be null");
+    Preconditions.checkNotNull(destination, "destination should not be null");
+
+    if (!Files.exists(source)) {
+      return false;
+    }
+    if (Files.exists(destination)) {
+      return false;
+    }
+    try {
+      Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+      return true;
+    } catch (IOException e) {
+      logger_.error(
+          LogFormatter.create().add("source", source).add("destination", destination).message(e).formatError());
     }
     return false;
   }
