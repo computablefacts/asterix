@@ -111,7 +111,7 @@ public abstract class AbstractMapReduceJob implements Tool {
 
       Date beginTime = new Date();
 
-      logger_.info(LogFormatter.create(true)
+      logger_.info(LogFormatter.create()
           .message(String.format("Job \"%s\" for table \"%s\" started: %s", jobName_, inputTableName_, beginTime))
           .formatInfo());
 
@@ -119,7 +119,7 @@ public abstract class AbstractMapReduceJob implements Tool {
 
       if (exitCode != 0) {
 
-        logger_.error(LogFormatter.create(true)
+        logger_.error(LogFormatter.create()
             .message(String.format("Job \"%s\" for table \"%s\" failed.", jobName_, inputTableName_)).formatError());
 
         return 1;
@@ -127,17 +127,16 @@ public abstract class AbstractMapReduceJob implements Tool {
 
       Date endTime = new Date();
 
-      logger_.info(LogFormatter.create(true)
+      logger_.info(LogFormatter.create()
           .message(String.format("Job \"%s\" for table \"%s\" finished: %s", jobName_, inputTableName_, endTime))
           .formatInfo());
 
-      logger_.info(LogFormatter.create(true).message(
-          String.format("The job \"%s\" took %s seconds to complete.", jobName_,
-              (endTime.getTime() - beginTime.getTime()) / 1000)).formatInfo());
+      logger_.info(LogFormatter.create().message(String.format("The job \"%s\" took %s seconds to complete.", jobName_,
+          (endTime.getTime() - beginTime.getTime()) / 1000)).formatInfo());
 
       return 0;
     } catch (IOException | InterruptedException | ClassNotFoundException | AccumuloSecurityException e) {
-      logger_.error(LogFormatter.create(true).message(e).formatError());
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return 1;
   }

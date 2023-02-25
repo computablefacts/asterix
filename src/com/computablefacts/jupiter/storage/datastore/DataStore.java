@@ -123,7 +123,7 @@ final public class DataStore implements AutoCloseable {
       try {
         blobProcessor_.close();
       } catch (Exception e) {
-        logger_.error(LogFormatter.create(true).message(e).formatError());
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
     }
   }

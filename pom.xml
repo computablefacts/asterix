@@ -39,7 +39,7 @@
   </developers>
 
   <properties>
-    <logfmt.version>0.14</logfmt.version>
+    <logfmt.version>0.15</logfmt.version>
     <slf4j.version>2.0.3</slf4j.version>
     <guava.version>31.1-jre</guava.version>
     <accumulo.version>1.10.1</accumulo.version>

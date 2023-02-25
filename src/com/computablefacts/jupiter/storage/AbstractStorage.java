@@ -171,12 +171,12 @@ public abstract class AbstractStorage {
         ((Scanner) scanner).setRange((Range) ranges.toArray()[0]);
       } else {
         logger_.error(
-            LogFormatter.create(true).message("\"using a BatchScanner is mandatory : the number of ranges is > 1\"")
+            LogFormatter.create().message("\"using a BatchScanner is mandatory : the number of ranges is > 1\"")
                 .formatError());
         return false;
       }
     } else {
-      logger_.error(LogFormatter.create(true).message("\"invalid scanner type\"").formatError());
+      logger_.error(LogFormatter.create().message("\"invalid scanner type\"").formatError());
       return false;
     }
     return true;
@@ -193,7 +193,7 @@ public abstract class AbstractStorage {
 
     Preconditions.checkNotNull(exception, "exception should not be null");
 
-    logger_.error(LogFormatter.create(true).message(exception).formatError());
+    logger_.error(LogFormatter.create().message(exception).formatError());
 
     if (exception instanceof MutationsRejectedException) {
 
@@ -203,18 +203,18 @@ public abstract class AbstractStorage {
 
       for (Map.Entry<TabletId, Set<SecurityErrorCode>> entry : securityErrors.entrySet()) {
         for (SecurityErrorCode err : entry.getValue()) {
-          logger_.error(LogFormatter.create(true).message("Permanent error: " + err.toString()).formatError());
+          logger_.error(LogFormatter.create().message("Permanent error: " + err.toString()).formatError());
         }
       }
 
       List<ConstraintViolationSummary> constraintViolations = ex.getConstraintViolationSummaries();
 
       for (ConstraintViolationSummary cvs : constraintViolations) {
-        logger_.error(LogFormatter.create(true).message("Constraint violation: " + cvs.toString()).formatError());
+        logger_.error(LogFormatter.create().message("Constraint violation: " + cvs.toString()).formatError());
       }
 
       if (!securityErrors.isEmpty() || !constraintViolations.isEmpty()) {
-        logger_.error(LogFormatter.create(true).message("Have permanent errors. Exiting...").formatError());
+        logger_.error(LogFormatter.create().message("Have permanent errors. Exiting...").formatError());
         return false;
       }
 
@@ -222,13 +222,13 @@ public abstract class AbstractStorage {
       Collection<String> errorServers = ex.getErrorServers();
 
       for (String errorServer : errorServers) {
-        logger_.warn(LogFormatter.create(true).message("Problem with server: " + errorServer).formatWarn());
+        logger_.warn(LogFormatter.create().message("Problem with server: " + errorServer).formatWarn());
       }
 
       int numUnknownExceptions = ex.getUnknownExceptions();
 
       if (numUnknownExceptions > 0) {
-        logger_.warn(LogFormatter.create(true).message(numUnknownExceptions + " unknown exceptions.").formatWarn());
+        logger_.warn(LogFormatter.create().message(numUnknownExceptions + " unknown exceptions.").formatWarn());
       }
       return true;
     } else if (exception instanceof TimedOutException) {
@@ -238,8 +238,7 @@ public abstract class AbstractStorage {
       Collection<String> errorServers = ex.getTimedOutSevers();
 
       for (String errorServer : errorServers) {
-        logger_.warn(
-            LogFormatter.create(true).message("Problem with server: " + errorServer + " (timeout)").formatWarn());
+        logger_.warn(LogFormatter.create().message("Problem with server: " + errorServer + " (timeout)").formatWarn());
       }
       return true;
     }
@@ -278,7 +277,7 @@ public abstract class AbstractStorage {
     Preconditions.checkNotNull(cfs, "cfs should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).add("cfs", cfs).formatDebug());
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).add("cfs", cfs).formatDebug());
     }
 
     if (!cfs.isEmpty()) {
@@ -300,7 +299,7 @@ public abstract class AbstractStorage {
   public boolean isReady() {
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).formatDebug());
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).formatDebug());
     }
 
     return Tables.exists(configurations().tableOperations(), tableName());
@@ -314,7 +313,7 @@ public abstract class AbstractStorage {
   public boolean create() {
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).formatDebug());
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).formatDebug());
     }
 
     if (!isReady()) {
@@ -336,7 +335,7 @@ public abstract class AbstractStorage {
   public boolean destroy() {
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).formatDebug());
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).formatDebug());
     }
 
     if (isReady()) {
@@ -353,7 +352,7 @@ public abstract class AbstractStorage {
   public boolean truncate() {
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).formatDebug());
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).formatDebug());
     }
 
     SortedSet<Text> splits = Tables.splits(configurations().tableOperations(), tableName());
@@ -377,7 +376,7 @@ public abstract class AbstractStorage {
     Preconditions.checkNotNull(cfs, "cfs should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).add("cfs", cfs).formatDebug());
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).add("cfs", cfs).formatDebug());
     }
 
     deleter.clearColumns();
@@ -409,7 +408,7 @@ public abstract class AbstractStorage {
     Preconditions.checkNotNull(ranges, "ranges should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).add("ranges", ranges).formatDebug());
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).add("ranges", ranges).formatDebug());
     }
 
     deleter.clearColumns();
@@ -440,7 +439,7 @@ public abstract class AbstractStorage {
     Preconditions.checkNotNull(deleter, "deleter should not be null");
 
     if (logger_.isDebugEnabled()) {
-      logger_.debug(LogFormatter.create(true).add("table_name", tableName()).add("row", row).add("cf", cf).add("cq", cq)
+      logger_.debug(LogFormatter.create().add("table_name", tableName()).add("row", row).add("cf", cf).add("cq", cq)
           .formatDebug());
     }
 

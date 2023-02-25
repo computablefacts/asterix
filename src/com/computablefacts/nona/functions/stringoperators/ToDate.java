@@ -38,8 +38,8 @@ public class ToDate extends Function {
     try {
       sdf = new SimpleDateFormat(format);
     } catch (Exception e) {
-      logger_.error(LogFormatter.create(true).message("parsing format failed").add("date", date).add("format", format)
-          .formatError());
+      logger_.error(
+          LogFormatter.create().message("parsing format failed").add("date", date).add("format", format).formatError());
     }
 
     if (sdf == null) {
@@ -49,8 +49,8 @@ public class ToDate extends Function {
     try {
       return box(sdf.parse(date));
     } catch (ParseException e) {
-      logger_.error(LogFormatter.create(true).message("parsing date failed").add("date", date).add("format", format)
-          .formatError());
+      logger_.error(
+          LogFormatter.create().message("parsing date failed").add("date", date).add("format", format).formatError());
     }
     return BoxedType.empty();
   }

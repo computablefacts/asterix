@@ -77,7 +77,7 @@ final public class Configurations {
       try {
         connector_ = instance().getConnector(username_, new PasswordToken(password_));
       } catch (AccumuloException | AccumuloSecurityException e) {
-        logger_.error(LogFormatter.create(true).message(e).formatError());
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
     }
     return connector_;

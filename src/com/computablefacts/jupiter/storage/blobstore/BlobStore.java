@@ -167,7 +167,7 @@ final public class BlobStore extends AbstractStorage {
       return addLocalityGroups(groups);
 
     } catch (AccumuloException | AccumuloSecurityException | TableNotFoundException e) {
-      logger_.error(LogFormatter.create(true).message(e).formatError());
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return false;
   }

@@ -34,7 +34,7 @@ public class LessThanOrEqual extends Function {
       return box(cmp.get() <= 0);
     }
 
-    logger_.error(LogFormatter.create(true).message("objects are not comparable").add("first_object", param1.toString())
+    logger_.error(LogFormatter.create().message("objects are not comparable").add("first_object", param1.toString())
         .add("second_object", param2.toString()).formatError());
 
     return box(false);

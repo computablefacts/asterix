@@ -77,14 +77,14 @@ final public class SubgoalDiskBacked extends AbstractSubgoal {
       try {
         facts_.close();
       } catch (Exception e) {
-        logger_.error(LogFormatter.create(true).message(e).formatError());
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
     }
     if (proofs_ != null) {
       try {
         proofs_.close();
       } catch (Exception e) {
-        logger_.error(LogFormatter.create(true).message(e).formatError());
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
     }
   }

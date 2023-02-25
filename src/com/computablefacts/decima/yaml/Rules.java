@@ -78,9 +78,9 @@ final public class Rules {
       yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       return yamlMapper.readValue(file, Rules.class);
     } catch (JsonProcessingException e) {
-      logger_.error(LogFormatter.create(true).message(e).formatError());
+      logger_.error(LogFormatter.create().message(e).formatError());
     } catch (IOException e) {
-      logger_.error(LogFormatter.create(true).message(e).formatError());
+      logger_.error(LogFormatter.create().message(e).formatError());
     }
     return null;
   }

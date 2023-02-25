@@ -43,8 +43,8 @@ public class SocialNetwork1Test extends AbstractTest {
   protected Map<String, String> queries() {
 
     Map<String, String> queries = new HashMap<>();
-    queries.put("smokes(angelika)?", "0.342::smokes(angelika).");
-    // TODO : queries.put("smokes(joris)?", "0.42301::smokes(joris).");
+    // queries.put("smokes(angelika)?", "0.342::smokes(angelika).");
+    queries.put("smokes(joris)?", "0.42301::smokes(joris).");
 
     return queries;
   }

@@ -219,7 +219,7 @@ public class Shell {
       DataStore ds = new DataStore(configurations, datastore);
       ds.blobStore().configurations().tableOperations().compact(ds.blobStore().tableName(), new CompactionConfig());
     } catch (AccumuloSecurityException | TableNotFoundException | AccumuloException e) {
-      logger_.error(LogFormatter.create(true).message(e).formatError());
+      logger_.error(LogFormatter.create().message(e).formatError());
       return false;
     }
     return true;
@@ -263,7 +263,7 @@ public class Shell {
           ds.blobStore().configurations().tableOperations().addSplits(ds.blobStore().tableName(), splits);
 
         } catch (Exception e) {
-          logger_.error(LogFormatter.create(true).message(e).formatError());
+          logger_.error(LogFormatter.create().message(e).formatError());
         }
       }
 
@@ -289,16 +289,16 @@ public class Shell {
 
           if (!ds.persist(dataset, document.docId(), row)) {
             logger_.error(
-                LogFormatter.create(true).message("Persistence of " + document.docId() + " failed").formatError());
+                LogFormatter.create().message("Persistence of " + document.docId() + " failed").formatError());
             breaker.stop();
           }
 
           if ((count.incrementAndGet() % 100 == 0 || breaker.shouldBreak()) && logger_.isInfoEnabled()) {
-            logger_.info(LogFormatter.create(true).message("Number of JSON processed : " + count.get()).formatInfo());
+            logger_.info(LogFormatter.create().message("Number of JSON processed : " + count.get()).formatInfo());
           }
           // }
         } catch (Exception e) {
-          logger_.error(LogFormatter.create(true).message(e).formatError());
+          logger_.error(LogFormatter.create().message(e).formatError());
         }
       });
     }
@@ -306,9 +306,8 @@ public class Shell {
     stopwatch.stop();
 
     if (logger_.isInfoEnabled()) {
-      logger_.info(LogFormatter.create(true).message("Total number of JSON processed : " + count.get()).formatInfo());
-      logger_.info(
-          LogFormatter.create(true).message("Elapsed time : " + stopwatch.elapsed(TimeUnit.SECONDS)).formatInfo());
+      logger_.info(LogFormatter.create().message("Total number of JSON processed : " + count.get()).formatInfo());
+      logger_.info(LogFormatter.create().message("Elapsed time : " + stopwatch.elapsed(TimeUnit.SECONDS)).formatInfo());
     }
     return true;
   }
@@ -363,25 +362,24 @@ public class Shell {
             bw.write(blob.value().toString());
             bw.newLine();
           } catch (IOException ex) {
-            logger_.error(LogFormatter.create(true).message(ex).formatError());
+            logger_.error(LogFormatter.create().message(ex).formatError());
           }
 
           if (count % 100 == 0 && logger_.isInfoEnabled()) {
             if (logger_.isInfoEnabled()) {
-              logger_.info(LogFormatter.create(true).message("Number of JSON written : " + count).formatInfo());
+              logger_.info(LogFormatter.create().message("Number of JSON written : " + count).formatInfo());
             }
           }
         });
       } catch (IOException e) {
-        logger_.error(LogFormatter.create(true).message(e).formatError());
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
     }
 
     stopwatch.stop();
 
     if (logger_.isInfoEnabled()) {
-      logger_.info(
-          LogFormatter.create(true).message("Elapsed time : " + stopwatch.elapsed(TimeUnit.SECONDS)).formatInfo());
+      logger_.info(LogFormatter.create().message("Elapsed time : " + stopwatch.elapsed(TimeUnit.SECONDS)).formatInfo());
     }
     return true;
   }
@@ -405,7 +403,7 @@ public class Shell {
 
       if (logger_.isInfoEnabled()) {
         logger_.info(
-            LogFormatter.create(true).message(String.format("Starting compression of dataset %s backup...", dataset))
+            LogFormatter.create().message(String.format("Starting compression of dataset %s backup...", dataset))
                 .formatInfo());
       }
 
@@ -419,7 +417,7 @@ public class Shell {
       stopwatch.stop();
 
       if (logger_.isInfoEnabled()) {
-        logger_.info(LogFormatter.create(true).message(
+        logger_.info(LogFormatter.create().message(
             String.format("Compression of dataset %s backup completed in %d ms.", dataset,
                 stopwatch.elapsed(TimeUnit.MILLISECONDS))).formatInfo());
       }

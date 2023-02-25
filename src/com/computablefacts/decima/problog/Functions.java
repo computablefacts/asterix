@@ -253,7 +253,7 @@ final public class Functions extends AbstractFunctions {
                 result.append(inputLine);
               }
 
-              logger_.error(LogFormatter.create(true).message(result.toString()).formatError());
+              logger_.error(LogFormatter.create().message(result.toString()).formatError());
             }
             return BoxedType.empty();
           }
@@ -303,7 +303,7 @@ final public class Functions extends AbstractFunctions {
           }
           return BoxedType.create(facts);
         } catch (IOException e) {
-          logger_.error(LogFormatter.create(true).message(e).formatError());
+          logger_.error(LogFormatter.create().message(e).formatError());
           // fall through
         }
         return BoxedType.empty();

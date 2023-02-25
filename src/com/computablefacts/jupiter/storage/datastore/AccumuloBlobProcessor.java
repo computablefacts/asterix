@@ -38,7 +38,7 @@ final public class AccumuloBlobProcessor extends AbstractBlobProcessor {
       try {
         writer_.close();
       } catch (MutationsRejectedException e) {
-        logger_.error(LogFormatter.create(true).message(e).formatError());
+        logger_.error(LogFormatter.create().message(e).formatError());
       }
       writer_ = null;
     }
@@ -59,8 +59,9 @@ final public class AccumuloBlobProcessor extends AbstractBlobProcessor {
     boolean isOk = blobStore_.putJson(writer(), dataset, docId, Sets.newHashSet(vizAdm, vizUuid, vizRawData), blob);
 
     if (!isOk) {
-      logger_.error(LogFormatter.create(true).message("write failed").add("dataset", dataset).add("doc_id", docId)
-          .add("blob", blob).formatError());
+      logger_.error(
+          LogFormatter.create().message("write failed").add("dataset", dataset).add("doc_id", docId).add("blob", blob)
+              .formatError());
       return false;
     }
     return true;
