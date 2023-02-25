@@ -2,7 +2,8 @@ package com.computablefacts.asterix.queries;
 
 import com.computablefacts.asterix.View;
 import com.computablefacts.asterix.codecs.StringCodec;
-import com.computablefacts.asterix.nlp.Span;
+import com.computablefacts.asterix.nlp.WildcardMatcher;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Var;
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 /**
  * The execution layer.
@@ -186,7 +187,23 @@ public abstract class AbstractQueryEngine {
    * @return a list of tokens/terms.
    */
   protected List<String> tokenize(String value) {
-    return StringCodec.defaultTokenizer(value).stream().map(Span::text).collect(Collectors.toList());
+    return View.of(Splitter.on(' ').splitToList(value)).flatten(token -> {
+
+      List<String> tokens = WildcardMatcher.split(token);
+
+      if (tokens.size() == 1) {
+        return View.of(StringCodec.defaultTokenizer2(tokens.get(0)));
+      }
+
+      String newTokens = View.of(tokens).map(tkn -> {
+        if (WildcardMatcher.isOnlyMadeOfWildcards(tkn)) {
+          return tkn;
+        }
+        return View.of(StringCodec.defaultTokenizer2(tkn)).join(Function.identity(), "*");
+      }).join(Function.identity(), "*");
+
+      return View.of(WildcardMatcher.compact(newTokens));
+    }).toList();
   }
 
   /**
