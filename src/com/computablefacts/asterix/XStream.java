@@ -2,17 +2,25 @@ package com.computablefacts.asterix;
 
 import static com.computablefacts.asterix.IO.eCompressionAlgorithm.GZIP;
 
+import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.thoughtworks.xstream.security.ArrayTypePermission;
 import com.thoughtworks.xstream.security.NoTypePermission;
 import com.thoughtworks.xstream.security.NullPermission;
 import com.thoughtworks.xstream.security.PrimitiveTypePermission;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @CheckReturnValue
 final public class XStream {
+
+  private static final Logger logger_ = LoggerFactory.getLogger(XStream.class);
 
   public static <T> void save(File file, T obj) {
 
@@ -20,8 +28,11 @@ final public class XStream {
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
     Preconditions.checkNotNull(obj, "obj should not be null");
 
-    Preconditions.checkState(IO.writeText(file, xStream().toXML(obj), false, GZIP), "%s cannot be written",
-        file.getAbsolutePath());
+    try (BufferedWriter writer = IO.newFileWriter(file, false, GZIP)) {
+      xStream().toXML(obj, writer);
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -30,7 +41,12 @@ final public class XStream {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file does not exists : %s", file);
 
-    return (T) xStream().fromXML(View.of(file, true).join(x -> x, "\n"));
+    try (BufferedReader reader = IO.newFileReader(file, GZIP)) {
+      return (T) xStream().fromXML(reader);
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().message(e).formatError());
+    }
+    return null;
   }
 
   private static com.thoughtworks.xstream.XStream xStream() {
