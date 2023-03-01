@@ -29,6 +29,7 @@ import com.computablefacts.asterix.ml.stacking.AbstractStack;
 import com.computablefacts.asterix.ml.stacking.Stack;
 import com.computablefacts.asterix.ml.standardization.StandardScaler;
 import com.computablefacts.logfmt.LogFormatter;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
@@ -296,6 +297,21 @@ final public class Model extends AbstractStack {
         .filter(tkns -> tkns.stream().anyMatch(tkn -> keywords.contains(tkn.text())));
   }
 
+  @Beta
+  private static Function<String, View<View<List<Span>>>> tokenize(Vocabulary vocabulary, Set<String> stopwords,
+      Set<String> includeTags, Set<String> keywords, char separator) {
+
+    Preconditions.checkState(vocabulary != null, "vocabulary should not be null");
+    Preconditions.checkState(stopwords != null, "stopwords should not be null");
+    Preconditions.checkState(includeTags != null, "includeTags should not be null");
+    Preconditions.checkState(keywords != null, "keywords should not be null");
+
+    return txt -> Vocabulary.tokenizer(includeTags, 9, separator).apply(Strings.nullToEmpty(txt)).map(
+        pages -> pages.filter(tkn -> vocabulary.index(tkn.text()) != 0 /* UNK */ && !stopwords.contains(tkn.text()))
+            .overlappingWindowWithStrictLength(3)
+            .filter(tkns -> tkns.stream().anyMatch(tkn -> keywords.contains(tkn.text()))));
+  }
+
   private static Function<View<List<Span>>, FeatureVector> featurize(Vocabulary vocabulary, Set<String> whitelist) {
 
     Preconditions.checkState(vocabulary != null, "vocabulary should not be null");
@@ -332,6 +348,14 @@ final public class Model extends AbstractStack {
   @Override
   public String toString() {
     return classifier_.type();
+  }
+
+  @Beta
+  @Override
+  public List<FeatureVector> featurize(String text, char separator) {
+    Function<View<List<Span>>, FeatureVector> featurizer = featurize(vocabulary_, whitelist_);
+    return tokenize(vocabulary_, stopwords_, includeTags_, keywords_.keySet(), separator).andThen(
+        pages -> View.of(pages).map(featurizer)).apply(Strings.nullToEmpty(text)).toList();
   }
 
   @Override
