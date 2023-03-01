@@ -102,7 +102,7 @@ final public class Stack {
   }
 
   @Beta
-  public Result<String> focusOnNormalizedTest(String text) {
+  public Result<String> focusOnNormalizedText(String text) {
 
     Preconditions.checkNotNull(text, "text should not be null");
     Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
