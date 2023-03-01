@@ -75,6 +75,15 @@ final public class Stack {
     return stack_.successValue().predict(text);
   }
 
+  @Beta
+  public int predictOnNormalizedText(String text) {
+
+    Preconditions.checkNotNull(text, "text should not be null");
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
+
+    return stack_.successValue().predictOnNormalizedText(text);
+  }
+
   public int predict(FeatureVector vector) {
 
     Preconditions.checkNotNull(vector, "vector should not be null");
@@ -90,6 +99,15 @@ final public class Stack {
     Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
     return stack_.successValue().focus(text);
+  }
+
+  @Beta
+  public Result<String> focusOnNormalizedTest(String text) {
+
+    Preconditions.checkNotNull(text, "text should not be null");
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
+
+    return stack_.successValue().focusOnNormalizedText(text);
   }
 
   private AbstractStack merge(eStackType stackType, AbstractStack leftNode, List<? extends AbstractStack> rightNodes) {
