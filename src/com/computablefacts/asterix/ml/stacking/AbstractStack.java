@@ -79,4 +79,9 @@ public abstract class AbstractStack {
   public Result<String> focus(String text) {
     throw new NotImplementedException("focus(String) is not implemented");
   }
+  
+  @Beta
+  public Result<String> focusOnNormalizedText(String txt) {
+    throw new NotImplementedException("focusOnNormalizedText(String) is not implemented");
+  }
 }
