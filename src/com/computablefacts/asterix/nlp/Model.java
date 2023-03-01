@@ -1,6 +1,5 @@
 package com.computablefacts.asterix.nlp;
 
-import static com.computablefacts.asterix.ml.FeatureVector.findCorrelatedEntries;
 import static com.computablefacts.asterix.ml.FeatureVector.findZeroedEntries;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.KO;
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
@@ -13,7 +12,6 @@ import com.computablefacts.asterix.console.Observations;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
-import com.computablefacts.asterix.ml.FeatureVector.eCorrelation;
 import com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier;
 import com.computablefacts.asterix.ml.classification.AdaBoostClassifier;
 import com.computablefacts.asterix.ml.classification.DecisionTreeClassifier;
@@ -73,6 +71,7 @@ final public class Model extends AbstractStack {
   private final Set<String> whitelist_;
   private AbstractBinaryClassifier classifier_;
   private Function<String, View<List<Span>>> tokenizer_;
+  private Function<String, View<List<Span>>> tokenizerOnNormalizedText_;
   private Function<View<List<Span>>, FeatureVector> featurizer_;
 
   public Model(String name, Vocabulary vocabulary, Set<String> stopwords, Set<String> includeTags,
@@ -188,6 +187,9 @@ final public class Model extends AbstractStack {
 
             // Models without metrics should be discarded
             if (Double.isFinite(model.confusionMatrix().matthewsCorrelationCoefficient())) {
+              model.tokenizer_ = null;
+              model.tokenizerOnNormalizedText_ = null;
+              model.featurizer_ = null;
               models.add(model);
             }
 
@@ -257,7 +259,7 @@ final public class Model extends AbstractStack {
     Preconditions.checkNotNull(vectors, "vectors should not be null");
 
     Set<Integer> zeroed = findZeroedEntries(vectors);
-    Set<Map.Entry<Integer, Integer>> correlated = findCorrelatedEntries(vectors, eCorrelation.KENDALL, 0.85, 50);
+    Set<Map.Entry<Integer, Integer>> correlated = Sets.newHashSet(); // findCorrelatedEntries(vectors, eCorrelation.KENDALL, 0.85, 50);
 
     // A correlated with B and B correlated with C does not imply A correlated with C
     Set<Integer> dropped = Sets.union(zeroed, Sets.difference(View.of(correlated).map(Map.Entry::getValue).toSet(),
@@ -298,18 +300,18 @@ final public class Model extends AbstractStack {
   }
 
   @Beta
-  private static Function<String, View<View<List<Span>>>> tokenize(Vocabulary vocabulary, Set<String> stopwords,
-      Set<String> includeTags, Set<String> keywords, char separator) {
+  private static Function<String, View<List<Span>>> tokenizeOnNormalizedText(Vocabulary vocabulary,
+      Set<String> stopwords, Set<String> includeTags, Set<String> keywords) {
 
     Preconditions.checkState(vocabulary != null, "vocabulary should not be null");
     Preconditions.checkState(stopwords != null, "stopwords should not be null");
     Preconditions.checkState(includeTags != null, "includeTags should not be null");
     Preconditions.checkState(keywords != null, "keywords should not be null");
 
-    return txt -> Vocabulary.tokenizer(includeTags, 9, separator).apply(Strings.nullToEmpty(txt)).map(
-        pages -> pages.filter(tkn -> vocabulary.index(tkn.text()) != 0 /* UNK */ && !stopwords.contains(tkn.text()))
-            .overlappingWindowWithStrictLength(3)
-            .filter(tkns -> tkns.stream().anyMatch(tkn -> keywords.contains(tkn.text()))));
+    return txt -> Vocabulary.tokenizerOnNormalizedText(includeTags, 9).apply(Strings.nullToEmpty(txt))
+        .filter(tkn -> vocabulary.index(tkn.text()) != 0 /* UNK */ && !stopwords.contains(tkn.text()))
+        .overlappingWindowWithStrictLength(3)
+        .filter(tkns -> tkns.stream().anyMatch(tkn -> keywords.contains(tkn.text())));
   }
 
   private static Function<View<List<Span>>, FeatureVector> featurize(Vocabulary vocabulary, Set<String> whitelist) {
@@ -350,17 +352,15 @@ final public class Model extends AbstractStack {
     return classifier_.type();
   }
 
-  @Beta
-  @Override
-  public List<FeatureVector> featurize(String text, char separator) {
-    Function<View<List<Span>>, FeatureVector> featurizer = featurize(vocabulary_, whitelist_);
-    return tokenize(vocabulary_, stopwords_, includeTags_, keywords_.keySet(), separator).andThen(
-        pages -> View.of(pages).map(featurizer)).apply(Strings.nullToEmpty(text)).toList();
-  }
-
   @Override
   public int predict(String txt) {
     return predict(tokenizer().andThen(featurizer()).apply(Strings.nullToEmpty(txt)));
+  }
+
+  @Beta
+  @Override
+  public int predictOnNormalizedText(String txt) {
+    return predict(tokenizerOnNormalizedText().andThen(featurizer()).apply(Strings.nullToEmpty(txt)));
   }
 
   @Override
@@ -430,6 +430,20 @@ final public class Model extends AbstractStack {
       tokenizer_ = tokenize(vocabulary_, stopwords_, includeTags_, keywords_.keySet());
     }
     return tokenizer_;
+  }
+
+  @Beta
+  private Function<String, View<List<Span>>> tokenizerOnNormalizedText() {
+    if (tokenizerOnNormalizedText_ == null) {
+
+      Preconditions.checkState(vocabulary_ != null, "vocabulary should not be null");
+      Preconditions.checkState(stopwords_ != null, "stopwords should not be null");
+      Preconditions.checkState(includeTags_ != null, "includeTags should not be null");
+      Preconditions.checkState(keywords_ != null, "keywords should not be null");
+
+      tokenizerOnNormalizedText_ = tokenizeOnNormalizedText(vocabulary_, stopwords_, includeTags_, keywords_.keySet());
+    }
+    return tokenizerOnNormalizedText_;
   }
 
   private Function<View<List<Span>>, FeatureVector> featurizer() {

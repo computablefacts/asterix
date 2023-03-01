@@ -122,19 +122,15 @@ final public class Vocabulary {
   }
 
   @Beta
-  static Function<String, View<View<Span>>> tokenizer(Set<String> includeTags, int chopAt, char separator) {
+  static Function<String, View<Span>> tokenizerOnNormalizedText(Set<String> includeTags, int chopAt) {
 
     Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
 
     Predicate<Span> keepSpan = span -> span.tags().stream().anyMatch(includeTags::contains);
     Function<Span, Span> chopToken = tkn -> chopAt <= 0 ? tkn
         : new Span(tkn.rawText(), tkn.begin(), tkn.begin() + Math.min(chopAt, tkn.length()));
-    TextNormalizer normalizer = new TextNormalizer(true);
-    TextTokenizer tokenizer = new TextTokenizer();
 
-    // normalize text then split it into pages using 'separator' as the pages separator
-    return text -> View.of(Splitter.on(separator).splitToList(normalizer.apply(text)))
-        .map(page -> tokenizer.andThen(seq -> View.of(seq).filter(keepSpan).map(chopToken)).apply(page));
+    return new TextTokenizer().andThen(seq -> View.of(seq).filter(keepSpan).map(chopToken));
   }
 
   @Override

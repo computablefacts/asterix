@@ -64,14 +64,13 @@ public abstract class AbstractStack {
     }
   }
 
-  public List<FeatureVector> featurize(String text, char separator) {
-    // featurize a text whose pages are separated by the 'separator' character
-    // returns one feature vector for each page
-    throw new NotImplementedException("featurize(String, separator) is not implemented");
-  }
-
   public int predict(String text) {
     throw new NotImplementedException("predict(String) is not implemented");
+  }
+
+  @Beta
+  public int predictOnNormalizedText(String text) {
+    throw new NotImplementedException("predictOnNormalizedText(String) is not implemented");
   }
 
   public abstract int predict(FeatureVector vector);
