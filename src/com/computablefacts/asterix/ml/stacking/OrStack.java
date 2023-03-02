@@ -5,9 +5,11 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 
 import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.ml.FeatureVector;
+import com.computablefacts.asterix.nlp.Span;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
+import java.util.List;
 
 @CheckReturnValue
 final public class OrStack extends AbstractStack {
@@ -72,11 +74,11 @@ final public class OrStack extends AbstractStack {
 
   @Beta
   @Override
-  public int predictOnNormalizedText(String text) {
-    if (leftStack_.predictOnNormalizedText(text) == OK) {
+  public int predictOnSplitText(List<List<Span>> text) {
+    if (leftStack_.predictOnSplitText(text) == OK) {
       return OK;
     }
-    return rightStack_.predictOnNormalizedText(text);
+    return rightStack_.predictOnSplitText(text);
   }
 
   @Override
@@ -97,11 +99,11 @@ final public class OrStack extends AbstractStack {
 
   @Beta
   @Override
-  public Result<String> focusOnNormalizedText(String text) {
-    if (leftStack_.predictOnNormalizedText(text) == OK) {
-      return leftStack_.focusOnNormalizedText(text);
+  public Result<String> focusOnSplitText(List<List<Span>> text) {
+    if (leftStack_.predictOnSplitText(text) == OK) {
+      return leftStack_.focusOnSplitText(text);
     }
-    return rightStack_.focusOnNormalizedText(text);
+    return rightStack_.focusOnSplitText(text);
   }
 
   private int reduce(int prediction1, int prediction2) {

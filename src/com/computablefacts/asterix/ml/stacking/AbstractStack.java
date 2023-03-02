@@ -6,10 +6,12 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
+import com.computablefacts.asterix.nlp.Span;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
+import java.util.function.Function;
 import org.apache.commons.lang3.NotImplementedException;
 
 @CheckReturnValue
@@ -64,13 +66,18 @@ public abstract class AbstractStack {
     }
   }
 
+  @Beta
+  public Function<String, List<List<Span>>> splitter() {
+    throw new NotImplementedException("tokenizer() is not implemented");
+  }
+
   public int predict(String text) {
     throw new NotImplementedException("predict(String) is not implemented");
   }
 
   @Beta
-  public int predictOnNormalizedText(String text) {
-    throw new NotImplementedException("predictOnNormalizedText(String) is not implemented");
+  public int predictOnSplitText(List<List<Span>> text) {
+    throw new NotImplementedException("predictOnSplitText(List<List<Span>>) is not implemented");
   }
 
   public abstract int predict(FeatureVector vector);
@@ -79,9 +86,9 @@ public abstract class AbstractStack {
   public Result<String> focus(String text) {
     throw new NotImplementedException("focus(String) is not implemented");
   }
-  
+
   @Beta
-  public Result<String> focusOnNormalizedText(String txt) {
-    throw new NotImplementedException("focusOnNormalizedText(String) is not implemented");
+  public Result<String> focusOnSplitText(List<List<Span>> text) {
+    throw new NotImplementedException("focusOnSplitText(List<List<Span>>) is not implemented");
   }
 }

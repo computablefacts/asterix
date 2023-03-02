@@ -3,6 +3,7 @@ package com.computablefacts.asterix.ml.stacking;
 import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.FeatureVector;
+import com.computablefacts.asterix.nlp.Span;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -76,12 +77,12 @@ final public class Stack {
   }
 
   @Beta
-  public int predictOnNormalizedText(String text) {
+  public int predictOnSplitText(List<List<Span>> text) {
 
     Preconditions.checkNotNull(text, "text should not be null");
     Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.successValue().predictOnNormalizedText(text);
+    return stack_.successValue().predictOnSplitText(text);
   }
 
   public int predict(FeatureVector vector) {
@@ -102,12 +103,12 @@ final public class Stack {
   }
 
   @Beta
-  public Result<String> focusOnNormalizedText(String text) {
+  public Result<String> focusOnSplitText(List<List<Span>> text) {
 
     Preconditions.checkNotNull(text, "text should not be null");
     Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
-    return stack_.successValue().focusOnNormalizedText(text);
+    return stack_.successValue().focusOnSplitText(text);
   }
 
   private AbstractStack merge(eStackType stackType, AbstractStack leftNode, List<? extends AbstractStack> rightNodes) {

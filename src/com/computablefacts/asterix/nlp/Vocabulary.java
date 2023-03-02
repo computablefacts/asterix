@@ -3,7 +3,6 @@ package com.computablefacts.asterix.nlp;
 import com.computablefacts.asterix.BloomFilter;
 import com.computablefacts.asterix.Document;
 import com.computablefacts.asterix.View;
-import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -119,18 +118,6 @@ final public class Vocabulary {
 
     return new TextNormalizer(true).andThen(new TextTokenizer())
         .andThen(seq -> View.of(seq).filter(keepSpan).map(chopToken));
-  }
-
-  @Beta
-  static Function<String, View<Span>> tokenizerOnNormalizedText(Set<String> includeTags, int chopAt) {
-
-    Preconditions.checkArgument(!includeTags.isEmpty(), "includeTags should not be empty");
-
-    Predicate<Span> keepSpan = span -> span.tags().stream().anyMatch(includeTags::contains);
-    Function<Span, Span> chopToken = tkn -> chopAt <= 0 ? tkn
-        : new Span(tkn.rawText(), tkn.begin(), tkn.begin() + Math.min(chopAt, tkn.length()));
-
-    return new TextTokenizer().andThen(seq -> View.of(seq).filter(keepSpan).map(chopToken));
   }
 
   @Override
