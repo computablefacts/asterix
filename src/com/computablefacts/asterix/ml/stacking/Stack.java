@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 @CheckReturnValue
 final public class Stack {
@@ -66,6 +67,14 @@ final public class Stack {
     Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
 
     stack_.successValue().compactify();
+  }
+
+  @Beta
+  public Function<String, List<List<Span>>> splitter() {
+
+    Preconditions.checkState(stack_ != null && stack_.isSuccess(), "missing stack");
+
+    return stack_.successValue().splitter();
   }
 
   public int predict(String text) {
