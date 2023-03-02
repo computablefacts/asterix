@@ -10,6 +10,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.List;
+import java.util.function.Function;
 
 @CheckReturnValue
 final public class AndStack extends AbstractStack {
@@ -62,6 +63,12 @@ final public class AndStack extends AbstractStack {
 
     leftStack_.compactify();
     rightStack_.compactify();
+  }
+
+  @Beta
+  @Override
+  public Function<String, List<List<Span>>> splitter() {
+    return leftStack_.splitter();
   }
 
   @Override

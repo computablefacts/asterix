@@ -68,7 +68,7 @@ public abstract class AbstractStack {
 
   @Beta
   public Function<String, List<List<Span>>> splitter() {
-    throw new NotImplementedException("tokenizer() is not implemented");
+    throw new NotImplementedException("splitter() is not implemented");
   }
 
   public int predict(String text) {
