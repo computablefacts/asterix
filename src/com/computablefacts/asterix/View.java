@@ -7,7 +7,9 @@ import com.computablefacts.Generated;
 import com.computablefacts.asterix.IO.eCompressionAlgorithm;
 import com.computablefacts.asterix.console.AsciiProgressBar;
 import com.computablefacts.logfmt.LogFormatter;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.AbstractSequentialIterator;
 import com.google.common.collect.ImmutableList;
@@ -17,9 +19,11 @@ import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Var;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.AbstractMap;
@@ -88,7 +92,20 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
     Preconditions.checkNotNull(stream, "stream should not be null");
 
-    return new View<>(stream.iterator());
+    return new View<>(new StreamIterator<>(stream));
+  }
+
+  public static View<String> of(BufferedReader reader) {
+
+    Preconditions.checkNotNull(reader, "reader should not be null");
+
+    return of(reader.lines().onClose(() -> {
+      try {
+        reader.close();
+      } catch (Exception e) {
+        logger_.error(LogFormatter.create().message(e).formatError());
+      }
+    }));
   }
 
   public static <T> View<T> of(Iterator<T> iterator) {
@@ -159,6 +176,26 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
     return of();
+  }
+
+  @Beta
+  public static View<String> executeBashCommand(String command) {
+
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(command), "command should neither be null nor empty");
+
+    try {
+
+      ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command);
+      processBuilder.redirectErrorStream(true);
+
+      Process process = processBuilder.start();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+      return of(reader);
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().add("command", command).message(e).formatError());
+      return View.of();
+    }
   }
 
   /**
@@ -1597,6 +1634,43 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
     public boolean shouldBreak() {
       return shouldBreak_;
+    }
+  }
+
+  private static class StreamIterator<T> extends AbstractIterator<T> implements AutoCloseable {
+
+    private final Iterator<T> iterator_;
+    private final Stream<T> stream_;
+    private boolean isClosed_ = false;
+
+    public StreamIterator(Stream<T> stream) {
+
+      Preconditions.checkNotNull(stream, "stream should not be null");
+
+      iterator_ = stream.iterator();
+      stream_ = stream;
+    }
+
+    @Override
+    public void close() {
+      if (stream_ != null && !isClosed_) {
+        stream_.close();
+        isClosed_ = true;
+      }
+    }
+
+    @Override
+    protected void finalize() {
+      close();
+    }
+
+    @Override
+    protected T computeNext() {
+      if (iterator_.hasNext()) {
+        return iterator_.next();
+      }
+      close();
+      return endOfData();
     }
   }
 

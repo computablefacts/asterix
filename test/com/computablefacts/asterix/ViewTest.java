@@ -84,6 +84,16 @@ public class ViewTest {
   }
 
   @Test
+  public void testExecuteBashCommand() {
+
+    String command = "for i in `seq 0 2 10`; do echo $i; done";
+    List<String> rows = View.executeBashCommand(command).toList();
+
+    Assert.assertEquals(6, rows.size());
+    Assert.assertEquals(Lists.newArrayList("0", "2", "4", "6", "8", "10"), rows);
+  }
+
+  @Test
   public void testViewOfCompressedFile() throws IOException {
 
     File file = java.nio.file.Files.createTempFile("test-", ".gz").toFile();
