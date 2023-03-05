@@ -7,8 +7,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Var;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,6 +84,21 @@ public class ViewTest {
     List<String> rows = View.of(file).toList();
 
     Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), rows);
+  }
+
+  @Test
+  public void testOfBufferedReader() throws Exception {
+
+    String command = "for i in `seq 0 2 10`; do echo $i; done";
+    ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command);
+    processBuilder.redirectErrorStream(true);
+
+    Process process = processBuilder.start();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+    List<String> rows = View.of(reader).toList();
+
+    Assert.assertEquals(6, rows.size());
+    Assert.assertEquals(Lists.newArrayList("0", "2", "4", "6", "8", "10"), rows);
   }
 
   @Test

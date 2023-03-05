@@ -24,6 +24,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.AbstractMap;
@@ -102,6 +103,22 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return of(reader.lines().onClose(() -> {
       try {
         reader.close();
+      } catch (Exception e) {
+        logger_.error(LogFormatter.create().message(e).formatError());
+      }
+    }));
+  }
+
+  public static View<String> of(Process process) {
+
+    Preconditions.checkNotNull(process, "process should not be null");
+
+    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+
+    return of(reader.lines().onClose(() -> {
+      try {
+        reader.close();
+        process.destroyForcibly();
       } catch (Exception e) {
         logger_.error(LogFormatter.create().message(e).formatError());
       }
@@ -188,10 +205,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command);
       processBuilder.redirectErrorStream(true);
 
-      Process process = processBuilder.start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-      return of(reader);
+      return of(processBuilder.start());
     } catch (IOException e) {
       logger_.error(LogFormatter.create().add("command", command).message(e).formatError());
       return View.of();
