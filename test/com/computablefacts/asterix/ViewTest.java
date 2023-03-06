@@ -102,6 +102,26 @@ public class ViewTest {
   }
 
   @Test
+  public void testSplitOnChar() {
+
+    String str = "0, 2, 4, 6, 8, 10";
+    List<String> rows = View.split(str, ',').toList();
+
+    Assert.assertEquals(6, rows.size());
+    Assert.assertEquals(Lists.newArrayList("0", "2", "4", "6", "8", "10"), rows);
+  }
+
+  @Test
+  public void testSplitOnString() {
+
+    String str = "0, 2, 4, 6, 8, 10";
+    List<String> rows = View.split(str, ",").toList();
+
+    Assert.assertEquals(6, rows.size());
+    Assert.assertEquals(Lists.newArrayList("0", "2", "4", "6", "8", "10"), rows);
+  }
+
+  @Test
   public void testExecuteBashCommand() {
 
     String command = "for i in `seq 0 2 10`; do echo $i; done";

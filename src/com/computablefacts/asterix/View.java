@@ -9,6 +9,7 @@ import com.computablefacts.asterix.console.AsciiProgressBar;
 import com.computablefacts.logfmt.LogFormatter;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.AbstractSequentialIterator;
@@ -193,6 +194,14 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       logger_.error(LogFormatter.create().message(e).formatError());
     }
     return of();
+  }
+
+  public static View<String> split(String string, char separator) {
+    return of(Splitter.on(separator).trimResults().split(string));
+  }
+
+  public static View<String> split(String string, String separator) {
+    return of(Splitter.on(separator).trimResults().split(string));
   }
 
   @Beta
@@ -1654,8 +1663,7 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   private static class StreamIterator<T> extends AbstractIterator<T> implements AutoCloseable {
 
     private final Iterator<T> iterator_;
-    private final Stream<T> stream_;
-    private boolean isClosed_ = false;
+    private Stream<T> stream_;
 
     public StreamIterator(Stream<T> stream) {
 
@@ -1667,9 +1675,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
     @Override
     public void close() {
-      if (stream_ != null && !isClosed_) {
+      if (stream_ != null) {
         stream_.close();
-        isClosed_ = true;
+        stream_ = null;
       }
     }
 
