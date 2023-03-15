@@ -391,7 +391,7 @@ final public class IO {
       return true;
     }
     try {
-      Files.createDirectory(path);
+      Files.createDirectories(path);
       return true;
     } catch (IOException e) {
       logger_.error(LogFormatter.create().add("path", path).message(e).formatError());
