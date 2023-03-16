@@ -5,29 +5,35 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
- * Log messages to both the console and a file. Simultaneously, keep track of the elapsed time. This class is not
- * thread-safe.
+ * Log messages to both the console and a file. Simultaneously, keep track of the elapsed time.
  */
 @NotThreadSafe
 @CheckReturnValue
 final public class Observations implements AutoCloseable {
 
   private final Stopwatch stopwatch_ = Stopwatch.createStarted();
-  private final List<String> observations_ = new ArrayList<>();
+  private final Queue<String> observations_ = new ConcurrentLinkedQueue<>();
   private final File file_;
+  private final int threshold_;
 
   public Observations(File file) {
+    this(file, 50);
+  }
+
+  public Observations(File file, int threshold) {
 
     Preconditions.checkNotNull(file, "file should not be null");
+    Preconditions.checkState(threshold > 0, "threshold must be > 0");
 
     file_ = file;
+    threshold_ = threshold;
   }
 
   @Override
@@ -43,11 +49,13 @@ final public class Observations implements AutoCloseable {
   public void flush() {
 
     stopwatch_.stop();
-    observations_.add(String.format("Elapsed time : %ds", stopwatch_.elapsed(TimeUnit.SECONDS)));
+    observations_.offer(String.format("Elapsed time : %ds", stopwatch_.elapsed(TimeUnit.SECONDS)));
 
     if (file_ != null) {
-      View.of(observations_).toFile(Function.identity(), file_, file_.exists());
-      observations_.clear();
+      synchronized (this) {
+        View.of(observations_).toFile(Function.identity(), file_, file_.exists());
+        observations_.clear();
+      }
     }
 
     stopwatch_.start();
@@ -59,7 +67,7 @@ final public class Observations implements AutoCloseable {
       String msg = message.trim();
 
       if (file_ != null) {
-        observations_.add(msg);
+        observations_.offer(msg);
       }
       System.out.println(msg);
     }
@@ -68,9 +76,11 @@ final public class Observations implements AutoCloseable {
 
   private void flushPrivate() {
     if (file_ != null) {
-      if (observations_.size() >= 50) {
-        View.of(observations_).toFile(Function.identity(), file_, file_.exists());
-        observations_.clear();
+      if (observations_.size() >= threshold_) {
+        synchronized (this) {
+          View.of(observations_).toFile(Function.identity(), file_, file_.exists());
+          observations_.clear();
+        }
       }
     }
   }
