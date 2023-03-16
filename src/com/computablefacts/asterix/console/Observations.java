@@ -22,18 +22,20 @@ final public class Observations implements AutoCloseable {
   private final Queue<String> observations_ = new ConcurrentLinkedQueue<>();
   private final File file_;
   private final int threshold_;
+  private final boolean hideConsoleOutput_;
 
   public Observations(File file) {
-    this(file, 50);
+    this(file, 50, false);
   }
 
-  public Observations(File file, int threshold) {
+  public Observations(File file, int threshold, boolean hideConsoleOutput) {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkState(threshold > 0, "threshold must be > 0");
 
     file_ = file;
     threshold_ = threshold;
+    hideConsoleOutput_ = hideConsoleOutput;
   }
 
   @Override
@@ -69,7 +71,9 @@ final public class Observations implements AutoCloseable {
       if (file_ != null) {
         observations_.offer(msg);
       }
-      System.out.println(msg);
+      if (!hideConsoleOutput_) {
+        System.out.println(msg);
+      }
     }
     flushPrivate();
   }
