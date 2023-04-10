@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.junit.Assert;
@@ -540,6 +542,112 @@ public class ViewTest {
     List<Integer> list = view.map(w -> w.length()).toList();
 
     Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), list);
+  }
+
+  @Test
+  public void testMapUsingASingleBashCommand() {
+
+    Function<Integer, String> toString = x -> Integer.toString(x, 10);
+    Function<String, Integer> toInt = x -> Integer.parseInt(x, 10);
+
+    View<String> view1 = View.iterate(0, x -> x + 1).take(10_000_000).map(toString);
+    List<Integer> list1 = view1.mapUsingBashCommand("sort | awk '/^[0-9][0]*$/{ print }'").map(toInt).toList();
+
+    Assert.assertEquals(64, list1.size());
+    Assert.assertEquals(0, (int) list1.get(0));
+    Assert.assertEquals(1, (int) list1.get(1));
+    Assert.assertEquals(2, (int) list1.get(8));
+    Assert.assertEquals(3, (int) list1.get(15));
+    Assert.assertEquals(4, (int) list1.get(22));
+    Assert.assertEquals(5, (int) list1.get(29));
+    Assert.assertEquals(6, (int) list1.get(36));
+    Assert.assertEquals(7, (int) list1.get(43));
+    Assert.assertEquals(8, (int) list1.get(50));
+    Assert.assertEquals(9, (int) list1.get(57));
+
+    View<String> view2 = View.iterate(0, x -> x + 1).take(10_000_000).map(toString);
+    List<Integer> list2 = view2.mapUsingBashCommand("awk '/^[0-9][0]*$/{ print }' | sort").map(toInt).toList();
+
+    Assert.assertEquals(64, list2.size());
+    Assert.assertEquals(0, (int) list2.get(0));
+    Assert.assertEquals(1, (int) list2.get(1));
+    Assert.assertEquals(2, (int) list2.get(8));
+    Assert.assertEquals(3, (int) list2.get(15));
+    Assert.assertEquals(4, (int) list2.get(22));
+    Assert.assertEquals(5, (int) list2.get(29));
+    Assert.assertEquals(6, (int) list2.get(36));
+    Assert.assertEquals(7, (int) list2.get(43));
+    Assert.assertEquals(8, (int) list2.get(50));
+    Assert.assertEquals(9, (int) list2.get(57));
+  }
+
+  @Test
+  public void testMapUsingMultipleBashCommands() {
+
+    Function<Integer, String> toString = x -> Integer.toString(x, 10);
+    Function<String, Integer> toInt = x -> Integer.parseInt(x, 10);
+
+    View<String> view1 = View.iterate(0, x -> x + 1).take(10_000_000).map(toString);
+    List<Integer> list1 = view1.mapUsingBashCommand("sort").mapUsingBashCommand("awk '/^[0-9][0]*$/{ print }'")
+        .map(toInt).toList();
+
+    Assert.assertEquals(64, list1.size());
+    Assert.assertEquals(0, (int) list1.get(0));
+    Assert.assertEquals(1, (int) list1.get(1));
+    Assert.assertEquals(2, (int) list1.get(8));
+    Assert.assertEquals(3, (int) list1.get(15));
+    Assert.assertEquals(4, (int) list1.get(22));
+    Assert.assertEquals(5, (int) list1.get(29));
+    Assert.assertEquals(6, (int) list1.get(36));
+    Assert.assertEquals(7, (int) list1.get(43));
+    Assert.assertEquals(8, (int) list1.get(50));
+    Assert.assertEquals(9, (int) list1.get(57));
+
+    View<String> view2 = View.iterate(0, x -> x + 1).take(10_000_000).map(toString);
+    List<Integer> list2 = view2.mapUsingBashCommand("awk '/^[0-9][0]*$/{ print }'").mapUsingBashCommand("sort")
+        .map(toInt).toList();
+
+    Assert.assertEquals(64, list2.size());
+    Assert.assertEquals(0, (int) list2.get(0));
+    Assert.assertEquals(1, (int) list2.get(1));
+    Assert.assertEquals(2, (int) list2.get(8));
+    Assert.assertEquals(3, (int) list2.get(15));
+    Assert.assertEquals(4, (int) list2.get(22));
+    Assert.assertEquals(5, (int) list2.get(29));
+    Assert.assertEquals(6, (int) list2.get(36));
+    Assert.assertEquals(7, (int) list2.get(43));
+    Assert.assertEquals(8, (int) list2.get(50));
+    Assert.assertEquals(9, (int) list2.get(57));
+  }
+
+  @Test
+  public void testEncryptThenDecrypt() {
+
+    Function<Integer, String> toString = x -> Integer.toString(x, 10);
+    Function<String, Integer> toInt = x -> Integer.parseInt(x, 10);
+
+    // Write the expected output to file
+    Path expected = IO.newTmpFile(".tsv.gz").getOrThrow();
+
+    View.iterate(0, x -> x + 1).take(10_000_000).map(toString)
+        .mapUsingBashCommand("awk '/^[0-9][0]*$/{ print }' | sort").toFile(expected.toFile(), true, GZIP);
+
+    // Encrypt stream and write the actual output to file
+    Path actual = IO.newTmpFile(".tsv.gz").getOrThrow();
+
+    View.iterate(0, x -> x + 1).take(10_000_000).map(toString)
+        .mapUsingBashCommand("awk '/^[0-9][0]*$/{ print }' | sort").encrypt("p@ssw0rd!")
+        .toFile(actual.toFile(), true, GZIP);
+
+    // Read file then decrypt stream and compare the result to the expected output
+    List<Map.Entry<String, String>> list = View.of(expected.toFile(), GZIP)
+        .zip(View.of(actual.toFile(), GZIP).decrypt("p@ssw0rd!")).toList();
+
+    Assert.assertEquals(64, list.size());
+
+    for (Map.Entry<String, String> entry : list) {
+      Assert.assertEquals(entry.getKey(), entry.getValue());
+    }
   }
 
   @Test

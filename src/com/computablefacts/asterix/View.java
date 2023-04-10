@@ -25,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -1061,6 +1062,79 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
         return self.hasNext() ? self.next() : endOfData();
       }
     });
+  }
+
+  @Beta
+  public View<String> encrypt(String password) {
+
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(password), "password should neither be null nor empty");
+
+    return mapUsingBashCommand(String.format("bzip2 | openssl enc -aes-256-cbc -a -pbkdf2 -pass pass:%s", password));
+  }
+
+  @Beta
+  public View<String> decrypt(String password) {
+
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(password), "password should neither be null nor empty");
+
+    return mapUsingBashCommand(
+        String.format("openssl enc -aes-256-cbc -a -d -pbkdf2 -pass pass:%s | bunzip2", password));
+  }
+
+  @Beta
+  public View<String> mapUsingBashCommand(String command) {
+
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(command), "command should neither be null nor empty");
+
+    PeekingIterator<T> iterator = Iterators.peekingIterator(this);
+    T t = iterator.hasNext() ? iterator.peek() : null;
+    View<String> view;
+
+    if (t instanceof String) {
+      view = new View<>((PeekingIterator<String>) iterator);
+    } else if (t instanceof Integer) {
+      view = new View<>((PeekingIterator<Integer>) iterator).map(i -> Integer.toString(i, 10));
+    } else if (t instanceof Long) {
+      view = new View<>((PeekingIterator<Long>) iterator).map(i -> Long.toString(i, 10));
+    } else if (t instanceof Double) {
+      view = new View<>((PeekingIterator<Double>) iterator).map(i -> Double.toString(i));
+    } else if (t instanceof Float) {
+      view = new View<>((PeekingIterator<Float>) iterator).map(i -> Float.toString(i));
+    } else {
+      view = null;
+    }
+
+    Preconditions.checkState(view != null, "view elements cannot be automatically mapped to strings");
+
+    try {
+
+      ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command);
+      processBuilder.redirectErrorStream(true);
+
+      Process process = processBuilder.start();
+
+      new Thread(() -> {
+        try (BufferedWriter writer = new BufferedWriter(
+            new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8))) {
+
+          view.forEachRemaining(str -> {
+            try {
+              writer.write(str);
+              writer.newLine();
+            } catch (IOException e) {
+              logger_.error(LogFormatter.create().add("command", command).add("str", str).message(e).formatError());
+            }
+          });
+        } catch (IOException e) {
+          logger_.error(LogFormatter.create().add("command", command).message(e).formatError());
+        }
+      }).start();
+
+      return of(process);
+    } catch (IOException e) {
+      logger_.error(LogFormatter.create().add("command", command).message(e).formatError());
+      return View.of();
+    }
   }
 
   /**
