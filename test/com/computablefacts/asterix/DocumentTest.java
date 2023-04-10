@@ -85,7 +85,7 @@ public class DocumentTest {
         }
       }
       return View.of(factz);
-    }).toFile(JsonCodec::asString, facts, false, true);
+    }).map(JsonCodec::asString).toFile(facts, false, true);
 
     return facts;
   }
@@ -101,7 +101,7 @@ public class DocumentTest {
       Map<String, Object> json = doc.json();
       json.put(ID_MAGIC_KEY, doc.docId());
       return json;
-    }).toFile(JsonCodec::asString, documents, false, true);
+    }).map(JsonCodec::asString).toFile(documents, false, true);
 
     return documents;
   }

@@ -264,7 +264,11 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   @Override
   public T computeNext() {
-    return iterator_.hasNext() ? iterator_.next() : endOfData();
+    if (iterator_.hasNext()) {
+      return iterator_.next();
+    }
+    close();
+    return endOfData();
   }
 
   @Override
@@ -331,49 +335,66 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   @Deprecated
-  public String toString(Function<T, String> fn, String separator) {
-    return join(fn, separator, null, null);
+  public String toString(String separator) {
+    return join(separator, null, null);
   }
 
   @Deprecated
-  public String toString(Function<T, String> fn, String separator, String prefix, String suffix) {
-    return join(fn, separator, prefix, suffix);
+  public String toString(String separator, String prefix, String suffix) {
+    return join(separator, prefix, suffix);
   }
 
   /**
    * Accumulates the view elements into a new {@link String}.
    *
-   * @param fn        map each view element to a {@link String}.
    * @param separator join mapped elements together using the specified separator.
    * @return a {@link String} whose format is {@code <el1><separator><el2><separator><el3>...}.
    */
-  public String join(Function<T, String> fn, String separator) {
-    return join(fn, separator, null, null);
+  public String join(String separator) {
+    return join(separator, null, null);
   }
 
   /**
    * Accumulates the view elements into a new {@link String}.
    *
-   * @param fn        map each view element to a {@link String}.
    * @param separator join mapped elements together using the specified separator.
    * @param prefix    string to add at the beginning of the buffer (optional).
    * @param suffix    string to add at the end of the buffer (optional).
    * @return a {@link String} whose format is {@code <prefix><el1><separator><el2><separator><el3>...<suffix>}.
    */
-  public String join(Function<T, String> fn, String separator, String prefix, String suffix) {
+  public String join(String separator, String prefix, String suffix) {
 
-    Preconditions.checkNotNull(fn, "fn should not be null");
     Preconditions.checkNotNull(separator, "separator should not be null");
+
+    PeekingIterator<T> iterator = Iterators.peekingIterator(this);
+    T t = iterator.hasNext() ? iterator.peek() : null;
+    View<String> view;
+
+    if (t instanceof String) {
+      view = new View<>((PeekingIterator<String>) iterator);
+    } else if (t instanceof Integer) {
+      view = new View<>((PeekingIterator<Integer>) iterator).map(i -> Integer.toString(i, 10));
+    } else if (t instanceof Long) {
+      view = new View<>((PeekingIterator<Long>) iterator).map(i -> Long.toString(i, 10));
+    } else if (t instanceof Double) {
+      view = new View<>((PeekingIterator<Double>) iterator).map(i -> Double.toString(i));
+    } else if (t instanceof Float) {
+      view = new View<>((PeekingIterator<Float>) iterator).map(i -> Float.toString(i));
+    } else {
+      view = null;
+    }
+
+    Preconditions.checkState(view != null, "view elements cannot be automatically mapped to strings");
 
     StringBuilder builder = new StringBuilder();
 
-    while (hasNext()) {
+    while (view.hasNext()) {
       if (builder.length() == 0 && prefix != null) {
         builder.append(prefix);
       } else if (builder.length() > 0) {
         builder.append(separator);
       }
-      builder.append(fn.apply(next()));
+      builder.append(view.next());
     }
     if (builder.length() > 0 && suffix != null) {
       builder.append(suffix);
@@ -384,46 +405,62 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   /**
    * Write view elements to a file.
    *
-   * @param fn     transform each view element to a string.
    * @param file   where the view elements must be written.
    * @param append false iif a new file must be created. Otherwise, view elements are appended at the end of an existing
    *               file.
    */
-  public void toFile(Function<T, String> fn, File file, boolean append) {
-    toFile(fn, file, append, NONE);
+  public void toFile(File file, boolean append) {
+    toFile(file, append, NONE);
   }
 
   /**
    * Write view elements to a file.
    *
-   * @param fn       transform each view element to a string.
    * @param file     where the view elements must be written.
    * @param append   false iif a new file must be created. Otherwise, view elements are appended at the end of an
    *                 existing file.
    * @param compress true iif the output must be compressed (gzip), false otherwise.
    */
   @Deprecated
-  public void toFile(Function<T, String> fn, File file, boolean append, boolean compress) {
-    toFile(fn, file, append, compress ? GZIP : NONE);
+  public void toFile(File file, boolean append, boolean compress) {
+    toFile(file, append, compress ? GZIP : NONE);
   }
 
   /**
    * Write view elements to a file.
    *
-   * @param fn        transform each view element to a string.
    * @param file      where the view elements must be written.
    * @param append    false iif a new file must be created. Otherwise, view elements are appended at the end of an
    *                  existing file.
    * @param algorithm the compression algorithm to use.
    */
-  public void toFile(Function<T, String> fn, File file, boolean append, eCompressionAlgorithm algorithm) {
+  public void toFile(File file, boolean append, eCompressionAlgorithm algorithm) {
 
-    Preconditions.checkNotNull(fn, "fn should not be null");
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
+    PeekingIterator<T> iterator = Iterators.peekingIterator(this);
+    T t = iterator.hasNext() ? iterator.peek() : null;
+    View<String> view;
+
+    if (t instanceof String) {
+      view = new View<>((PeekingIterator<String>) iterator);
+    } else if (t instanceof Integer) {
+      view = new View<>((PeekingIterator<Integer>) iterator).map(i -> Integer.toString(i, 10));
+    } else if (t instanceof Long) {
+      view = new View<>((PeekingIterator<Long>) iterator).map(i -> Long.toString(i, 10));
+    } else if (t instanceof Double) {
+      view = new View<>((PeekingIterator<Double>) iterator).map(i -> Double.toString(i));
+    } else if (t instanceof Float) {
+      view = new View<>((PeekingIterator<Float>) iterator).map(i -> Float.toString(i));
+    } else {
+      view = null;
+    }
+
+    Preconditions.checkState(view != null, "view elements cannot be automatically mapped to strings");
+
     try (BufferedWriter writer = IO.newFileWriter(file, append, algorithm)) {
-      map(fn).forEachRemaining(el -> {
+      view.forEachRemaining(el -> {
         try {
           writer.write(el);
           writer.newLine();

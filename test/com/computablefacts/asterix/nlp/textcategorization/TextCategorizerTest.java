@@ -45,7 +45,7 @@ public class TextCategorizerTest {
     View.of(ok).zip(View.repeat(OK)).concat(View.of(ko).zip(View.repeat(KO)).sample(2 * ok.size()))
         .filter(entry -> !Strings.isNullOrEmpty(entry.getKey())).map(
             entry -> new GoldLabel("xxx", "crowdsourcing", entry.getKey(), entry.getValue() == OK, entry.getValue() == KO,
-                false, false)).toFile(JsonCodec::asString, file, false, true);
+                false, false)).map(JsonCodec::asString).toFile(file, false, true);
 
     TextCategorizer.main(new String[]{file.getAbsolutePath(), "crowdsourcing"});
 

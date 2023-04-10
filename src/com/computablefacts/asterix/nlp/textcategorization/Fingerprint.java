@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.TreeSet;
-import java.util.function.Function;
 
 /**
  * A {@link  Fingerprint} maps so called NGrams to their number of occurrences in the corresponding text.
@@ -77,8 +76,7 @@ final public class Fingerprint {
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
 
-    View.of(entries_).map(ngram -> ngram.getElement() + "\t" + ngram.getCount())
-        .toFile(Function.identity(), file, false, true);
+    View.of(entries_).map(ngram -> ngram.getElement() + "\t" + ngram.getCount()).toFile(file, false, true);
   }
 
   public void load(File file) {

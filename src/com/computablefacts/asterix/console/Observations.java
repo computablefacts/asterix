@@ -8,7 +8,6 @@ import java.io.File;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -55,7 +54,7 @@ final public class Observations implements AutoCloseable {
 
     if (file_ != null) {
       synchronized (this) {
-        View.of(observations_).toFile(Function.identity(), file_, file_.exists());
+        View.of(observations_).toFile(file_, file_.exists());
         observations_.clear();
       }
     }
@@ -82,7 +81,7 @@ final public class Observations implements AutoCloseable {
     if (file_ != null) {
       if (observations_.size() >= threshold_) {
         synchronized (this) {
-          View.of(observations_).toFile(Function.identity(), file_, file_.exists());
+          View.of(observations_).toFile(file_, file_.exists());
           observations_.clear();
         }
       }

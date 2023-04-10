@@ -228,7 +228,7 @@ public final class GoldLabel {
     Preconditions.checkArgument(!file.exists(), "file already exists : %s", file);
     Preconditions.checkNotNull(goldLabels, "goldLabels should not be null");
 
-    goldLabels.toFile(JsonCodec::asString, file, false, true);
+    goldLabels.map(JsonCodec::asString).toFile(file, false, true);
   }
 
   public static GoldLabel fromFact(Fact fact) {

@@ -58,7 +58,7 @@ final public class IO {
     Preconditions.checkNotNull(algorithm, "algorithm should not be null");
 
     try {
-      return View.of(newLineIterator(file, algorithm)).join(x -> x, "\n");
+      return View.of(newLineIterator(file, algorithm)).join("\n");
     } catch (IOException e) {
       logger_.error(
           LogFormatter.create().add("file", file).add("compression_algorithm", algorithm).message(e).formatError());

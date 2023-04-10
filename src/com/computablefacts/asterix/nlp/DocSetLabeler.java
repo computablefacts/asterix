@@ -180,7 +180,7 @@ final public class DocSetLabeler extends AbstractDocSetLabeler {
 
     keywords.map(
             keyword -> keyword.getKey() + "\t" + keyword.getValue().getKey() + "\t" + keyword.getValue().getValue())
-        .prepend("label\tkeyword\tweight").toFile(Function.identity(), file, false, true);
+        .prepend("label\tkeyword\tweight").toFile(file, false, true);
   }
 
   /**

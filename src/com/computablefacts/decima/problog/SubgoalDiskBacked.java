@@ -150,6 +150,6 @@ final public class SubgoalDiskBacked extends AbstractSubgoal {
   }
 
   private String cacheKey(Rule proof) {
-    return View.of(proof.head()).concat(proof.body()).join(Literal::id, "");
+    return View.of(proof.head()).concat(proof.body()).map(Literal::id).join("");
   }
 }

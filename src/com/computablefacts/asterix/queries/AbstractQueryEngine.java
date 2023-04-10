@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * The execution layer.
@@ -199,8 +198,8 @@ public abstract class AbstractQueryEngine {
         if (WildcardMatcher.isOnlyMadeOfWildcards(tkn)) {
           return tkn;
         }
-        return View.of(StringCodec.defaultTokenizer2(tkn)).join(Function.identity(), "*");
-      }).join(Function.identity(), "*");
+        return View.of(StringCodec.defaultTokenizer2(tkn)).join("*");
+      }).join("*");
 
       return View.of(WildcardMatcher.compact(newTokens));
     }).toList();

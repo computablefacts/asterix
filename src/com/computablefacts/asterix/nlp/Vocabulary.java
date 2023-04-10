@@ -151,8 +151,7 @@ final public class Vocabulary {
 
     View.of(idx_.keySet())
         .map(term -> idx_.get(term) + "\t" + term + "\t" + tf_.getOrDefault(term, 0) + "\t" + df_.getOrDefault(term, 0))
-        .prepend(String.format("# %d %d\nidx\tterm\ttf\tdf", nbTermsSeen_, nbDocsSeen_))
-        .toFile(Function.identity(), file, false, true);
+        .prepend(String.format("# %d %d\nidx\tterm\ttf\tdf", nbTermsSeen_, nbDocsSeen_)).toFile(file, false, true);
   }
 
   /**

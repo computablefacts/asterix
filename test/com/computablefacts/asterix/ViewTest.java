@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.junit.Assert;
@@ -176,7 +175,7 @@ public class ViewTest {
     List<String> list = Lists.newArrayList("a", "b", "b", "c", "c", "c");
     File file = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
 
-    View.of(list).toFile(Function.identity(), file, true);
+    View.of(list).toFile(file, true);
 
     Assert.assertEquals(list, View.of(file).toList());
   }
@@ -187,7 +186,7 @@ public class ViewTest {
     List<String> list = Lists.newArrayList("a", "b", "b", "c", "c", "c");
     File file = java.nio.file.Files.createTempFile("test-", ".gz").toFile();
 
-    View.of(list).toFile(Function.identity(), file, true, true);
+    View.of(list).toFile(file, true, true);
 
     Assert.assertEquals(list, View.of(file, true).toList());
   }
@@ -1104,7 +1103,7 @@ public class ViewTest {
   public void testToStringWithoutPrefixOrSuffix() {
 
     View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
-    String str = view.toString(x -> Integer.toString(x, 10), ", ");
+    String str = view.toString(", ");
 
     Assert.assertEquals("1, 2, 3, 4, 5, 6, 7", str);
   }
@@ -1113,7 +1112,7 @@ public class ViewTest {
   public void testToStringWithPrefixAndSuffix() {
 
     View<Integer> view = View.of(1, 2, 3, 4, 5, 6, 7);
-    String str = view.toString(x -> Integer.toString(x, 10), ", ", "{", "}");
+    String str = view.toString(", ", "{", "}");
 
     Assert.assertEquals("{1, 2, 3, 4, 5, 6, 7}", str);
   }
