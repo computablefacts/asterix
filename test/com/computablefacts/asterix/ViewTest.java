@@ -535,28 +535,10 @@ public class ViewTest {
   }
 
   @Test
-  public void testFilterInParallel() {
-
-    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.filterInParallel(2, w -> w.length() % 2 == 0).toList();
-
-    Assert.assertEquals(Lists.newArrayList("ab", "abcd"), list);
-  }
-
-  @Test
   public void testMapView() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<Integer> list = view.map(w -> w.length()).toList();
-
-    Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), list);
-  }
-
-  @Test
-  public void testMapInParallel() {
-
-    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<Integer> list = view.mapInParallel(2, w -> w.length()).toList();
 
     Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), list);
   }

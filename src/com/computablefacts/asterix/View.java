@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.AbstractMap;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,11 +39,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1042,73 +1038,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a view consisting of the results of applying the given function to the elements of this view.
-   * <p>
-   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
-   * shenanigans, the output of {@link #mapInParallel(int, Function)} is identical to the output of
-   * {@link #map(Function)}.
-   *
-   * @param batchSize the size of each batch.
-   * @param fn        the function to apply.
-   * @param <U>
-   * @return a new {@link View}.
-   */
-  public <U> View<U> mapInParallel(int batchSize, Function<? super T, ? extends U> fn) {
-    return mapInParallel(batchSize, fn, Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-  }
-
-  /**
-   * Returns a view consisting of the results of applying the given function to the elements of this view.
-   * <p>
-   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
-   * shenanigans, the output of {@link #mapInParallel(int, Function)} is identical to the output of
-   * {@link #map(Function)}.
-   *
-   * @param batchSize the size of each batch.
-   * @param fn        the function to apply.
-   * @param timeout   the maximum time to wait.
-   * @param unit      the time unit of the timeout argument.
-   * @param <U>
-   * @return a new {@link View}.
-   */
-  public <U> View<U> mapInParallel(int batchSize, Function<? super T, ? extends U> fn, long timeout, TimeUnit unit) {
-
-    Preconditions.checkArgument(batchSize > 0, "batchSize must be > 0");
-    Preconditions.checkNotNull(fn, "fn should not be null");
-
-    int cores = Runtime.getRuntime().availableProcessors();
-    int threads = cores * 8;
-    return nonOverlappingWindow(batchSize).flatten(list -> {
-
-      ExecutorService executorService = Executors.newFixedThreadPool(threads);
-      List<Callable<U>> callables = new ArrayList<>(list.size());
-
-      for (T t : list) {
-        callables.add(() -> fn.apply(t));
-      }
-      try {
-        List<Future<U>> futures = executorService.invokeAll(callables);
-        executorService.shutdown();
-        if (!executorService.awaitTermination(timeout, unit)) {
-          logger_.error(LogFormatter.create().message("mapInParallel(...) - The timeout elapsed before termination.")
-              .formatError());
-        }
-        return View.of(futures).map(future -> {
-          try {
-            return Result.of(future.get());
-          } catch (InterruptedException | ExecutionException e) {
-            logger_.error(LogFormatter.create().message(e).formatError());
-          }
-          return Result.empty();
-        });
-      } catch (InterruptedException e) {
-        logger_.error(LogFormatter.create().message(e).formatError());
-      }
-      return View.<Result<U>>of();
-    }).filter(Result::isSuccess).map(Result::successValue);
-  }
-
-  /**
    * Returns a view consisting of the elements of this view matching the given predicate.
    *
    * @param predicate the predicate to satisfy.
@@ -1116,43 +1045,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    */
   public View<T> filter(Predicate<? super T> predicate) {
     return new View<>(Iterators.filter(this, predicate::test));
-  }
-
-  /**
-   * Returns a view consisting of the elements of this view matching the given predicate.
-   * <p>
-   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
-   * shenanigans, the output of {@link #filterInParallel(int, Predicate)} is identical to the output of
-   * {@link #filter(Predicate)}.
-   *
-   * @param batchSize the size of each batch.
-   * @param predicate the predicate to satisfy.
-   * @return a new {@link View}.
-   */
-  public View<T> filterInParallel(int batchSize, Predicate<? super T> predicate) {
-    return filterInParallel(batchSize, predicate, Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-  }
-
-  /**
-   * Returns a view consisting of the elements of this view matching the given predicate.
-   * <p>
-   * Split the original view into sub-lists, then process the elements of each sub-list in parallel. Despite these
-   * shenanigans, the output of {@link #filterInParallel(int, Predicate)} is identical to the output of
-   * {@link #filter(Predicate)}.
-   *
-   * @param batchSize the size of each batch.
-   * @param predicate the predicate to satisfy.
-   * @param timeout   the maximum time to wait.
-   * @param unit      the time unit of the timeout argument.
-   * @return a new {@link View}.
-   */
-  public View<T> filterInParallel(int batchSize, Predicate<? super T> predicate, long timeout, TimeUnit unit) {
-
-    Preconditions.checkArgument(batchSize > 0, "batchSize must be > 0");
-    Preconditions.checkNotNull(predicate, "predicate should not be null");
-
-    return mapInParallel(batchSize, t -> new AbstractMap.SimpleImmutableEntry<>(t, predicate.test(t)), timeout,
-        unit).filter(SimpleImmutableEntry::getValue).map(SimpleImmutableEntry::getKey);
   }
 
   /**
