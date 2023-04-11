@@ -1226,6 +1226,16 @@ public class ViewTest {
   }
 
   @Test
+  public void testJoinViewOfViews() {
+
+    String actual = View.of(Lists.newArrayList(View.of("a", "ab"), View.of("abc", "abcd", "abcde"))).flatten(l -> l)
+        .join(", ", "{", "}");
+    String expected = "{a, ab, abc, abcd, abcde}";
+
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
   public void testDivideEmptyView() {
 
     View<Integer> view = View.of();
