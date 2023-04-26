@@ -183,6 +183,17 @@ public class ViewTest {
   }
 
   @Test
+  public void testToFileOfEmptyView() throws IOException {
+
+    List<String> list = Lists.newArrayList();
+    File file = java.nio.file.Files.createTempFile("test-", ".txt").toFile();
+
+    View.of(list).toFile(file, true);
+
+    Assert.assertEquals(list, View.of(file).toList());
+  }
+
+  @Test
   public void testToCompressedFile() throws IOException {
 
     List<String> list = Lists.newArrayList("a", "b", "b", "c", "c", "c");
@@ -1231,6 +1242,15 @@ public class ViewTest {
     String actual = View.of(Lists.newArrayList(View.of("a", "ab"), View.of("abc", "abcd", "abcde"))).flatten(l -> l)
         .join(", ", "{", "}");
     String expected = "{a, ab, abc, abcd, abcde}";
+
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testJoinEmptyView() {
+
+    String actual = View.of().join(", ", "{", "}");
+    String expected = "";
 
     Assert.assertEquals(expected, actual);
   }

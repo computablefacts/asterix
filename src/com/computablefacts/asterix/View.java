@@ -357,6 +357,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Accumulates the view elements into a new {@link String}.
+   * <p>
+   * Note that an empty string is returned if the view is empty. Even if the {@code <prefix>} and/or {@code <suffix>}
+   * are either null or empty.
    *
    * @param separator join mapped elements together using the specified separator.
    * @param prefix    string to add at the beginning of the buffer (optional).
@@ -382,10 +385,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     } else if (t instanceof Float) {
       view = new View<>((PeekingIterator<Float>) iterator).map(i -> Float.toString(i));
     } else {
-      view = null;
+      view = View.of();
     }
-
-    Preconditions.checkState(view != null, "view elements cannot be automatically mapped to strings");
 
     StringBuilder builder = new StringBuilder();
 
@@ -455,11 +456,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     } else if (t instanceof Float) {
       view = new View<>((PeekingIterator<Float>) iterator).map(i -> Float.toString(i));
     } else {
-      view = null;
+      view = View.of();
     }
-
-    Preconditions.checkState(view != null, "view elements cannot be automatically mapped to strings");
-
     try (BufferedWriter writer = IO.newFileWriter(file, append, algorithm)) {
       view.forEachRemaining(el -> {
         try {
