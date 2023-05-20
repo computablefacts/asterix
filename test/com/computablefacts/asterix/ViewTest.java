@@ -484,15 +484,6 @@ public class ViewTest {
   }
 
   @Test
-  public void testTakeUntil() {
-
-    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.takeUntil(w -> w.length() > 3).toList();
-
-    Assert.assertEquals(Lists.newArrayList("a", "ab", "abc"), list);
-  }
-
-  @Test
   public void testDropAll() {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
@@ -551,15 +542,6 @@ public class ViewTest {
 
     View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
     List<String> list = view.skipWhile(w -> w.length() < 3).toList();
-
-    Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
-  }
-
-  @Test
-  public void testDropUntil() {
-
-    View<String> view = View.of("a", "ab", "abc", "abcd", "abcde");
-    List<String> list = view.skipUntil(w -> w.length() >= 3).toList();
 
     Assert.assertEquals(Lists.newArrayList("abc", "abcd", "abcde"), list);
   }

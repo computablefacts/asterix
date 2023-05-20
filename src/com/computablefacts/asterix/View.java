@@ -924,32 +924,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
-   * Returns a view containing all starting elements as long as a condition is not matched.
-   *
-   * @param predicate the condition to match.
-   * @return a {@link View} of the matching elements.
-   */
-  public View<T> takeUntil(Predicate<? super T> predicate) {
-
-    Preconditions.checkNotNull(predicate, "predicate should not be null");
-
-    View<T> self = this;
-    return new View<>(new AbstractIterator<T>() {
-
-      @Override
-      protected T computeNext() {
-        if (self.hasNext()) {
-          T e = self.next();
-          if (!predicate.test(e)) {
-            return e;
-          }
-        }
-        return endOfData();
-      }
-    });
-  }
-
-  /**
    * Returns a view with the first {@code n} elements removed.
    *
    * @param n the number of elements to remove.
@@ -1016,48 +990,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
           while (self.hasNext()) {
             T e = self.next();
             if (!predicate.test(e)) {
-              dropped_ = true;
-              return e;
-            }
-          }
-          dropped_ = true;
-        }
-        return self.hasNext() ? self.next() : endOfData();
-      }
-    });
-  }
-
-  /**
-   * Returns a view with the front elements removed as long as they do not satisfy a condition.
-   *
-   * @param predicate the condition to satisfy.
-   * @return a {@link View} with the front elements removed.
-   */
-  public View<T> skipUntil(Predicate<? super T> predicate) {
-    return dropUntil(predicate);
-  }
-
-  /**
-   * Returns a view with the front elements removed as long as they do not satisfy a condition.
-   *
-   * @param predicate the condition to satisfy.
-   * @return a {@link View} with the front elements removed.
-   */
-  public View<T> dropUntil(Predicate<? super T> predicate) {
-
-    Preconditions.checkNotNull(predicate, "predicate should not be null");
-
-    View<T> self = this;
-    return new View<>(new AbstractIterator<T>() {
-
-      private boolean dropped_ = false;
-
-      @Override
-      protected T computeNext() {
-        if (!dropped_) {
-          while (self.hasNext()) {
-            T e = self.next();
-            if (predicate.test(e)) {
               dropped_ = true;
               return e;
             }
