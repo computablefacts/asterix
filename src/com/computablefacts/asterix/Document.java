@@ -182,20 +182,21 @@ final public class Document {
           // Associate the current document with the relevant facts
           doc.facts_.addAll(View.of(factsIndexedByDocId.get(doc.docId())).map(fact -> {
 
-            int page = fact.provenance().page();
+            Provenance provenance = fact.provenance();
+            int page = provenance.page();
             List<String> pages = Splitter.on('\f').splitToList((String) doc.text());
 
             if (page <= 0 || pages.size() < page) {
               return null; // TODO : log error?
             }
-            // if (!pages.get(page - 1).contains(fact.provenance().span())) {
+            // if (!pages.get(page - 1).contains(provenance.span())) {
             // return null;
             // }
 
-            Provenance newProvenance = new Provenance(fact.provenance().sourceStore(), fact.provenance().sourceType(),
-                fact.provenance().sourceReliability(), pages.get(page - 1), fact.provenance().span(),
-                fact.provenance().startIndex(), fact.provenance().endIndex(), fact.provenance().extractionDate(),
-                fact.provenance().modificationDate(), fact.provenance().spanHash(), page);
+            Provenance newProvenance = new Provenance(provenance.sourceStore(), provenance.sourceType(),
+                provenance.sourceReliability(), pages.get(page - 1), provenance.span(), provenance.startIndex(),
+                provenance.endIndex(), provenance.extractionDate(), provenance.modificationDate(),
+                provenance.spanHash(), page);
 
             return new Fact(fact.externalId_, fact.metadata(), Lists.newArrayList(newProvenance), fact.values(),
                 fact.type(), fact.isValid(), fact.authorizations(), fact.confidenceScore(), fact.startDate(),
