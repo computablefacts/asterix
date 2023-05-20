@@ -31,11 +31,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +51,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
@@ -484,6 +485,67 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
   }
 
   /**
+   * Returns a {@link Map} where keys and values are the result of functions applied to each element of the view. If
+   * more than one view element maps to a given key, only the last element is kept.
+   *
+   * @param fnKey   the function to apply to extract the key.
+   * @param fnValue the function to apply to extract the value.
+   * @param <K>
+   * @param <V>
+   * @return a {@link Map}.
+   */
+  public <K, V> Map<K, V> toMap(Function<T, K> fnKey, Function<T, V> fnValue) {
+
+    Preconditions.checkNotNull(fnKey, "fnKey should not be null");
+    Preconditions.checkNotNull(fnValue, "fnValue should not be null");
+
+    Map<K, V> groups = new HashMap<>();
+
+    while (hasNext()) {
+
+      T value = next();
+      K key = fnKey.apply(value);
+      V val = fnValue.apply(value);
+
+      groups.put(key, val);
+    }
+    return groups;
+  }
+
+  /**
+   * Returns a {@link Map} where keys and values are the result of functions applied to each element of the view.
+   *
+   * @param fnKey           the function to apply to extract the key.
+   * @param fnValue         the function to apply to extract the value.
+   * @param fnNewCollection the function to create an empty {@link Collection}.
+   * @param <K>
+   * @param <V>
+   * @return a {@link Map}.
+   */
+  public <K, V> Map<K, Collection<V>> toMap(Function<T, K> fnKey, Function<T, V> fnValue,
+      Supplier<Collection<V>> fnNewCollection) {
+
+    Preconditions.checkNotNull(fnKey, "fnKey should not be null");
+    Preconditions.checkNotNull(fnValue, "fnValue should not be null");
+    Preconditions.checkNotNull(fnNewCollection, "fnNewCollection should not be null");
+
+    Map<K, Collection<V>> groups = new HashMap<>();
+
+    while (hasNext()) {
+
+      T value = next();
+      K key = fnKey.apply(value);
+      V val = fnValue.apply(value);
+
+      if (!groups.containsKey(key)) {
+        groups.put(key, fnNewCollection.get());
+      }
+      groups.get(key).add(val);
+    }
+    return groups;
+  }
+
+  /**
    * Returns a sample of values using Algorithm L.
    *
    * @param size the sample size.
@@ -546,85 +608,6 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
       }
     }
     return entry;
-  }
-
-  /**
-   * Returns a {@link Map} where keys are the result of a function applied to each element of the view and values are
-   * the elements corresponding to each key. If more than one view element maps to a given key, only the last element is
-   * kept.
-   *
-   * @param fn  the function to apply.
-   * @param <U>
-   * @return a {@link Map}.
-   */
-  public <U> Map<U, T> group(Function<T, U> fn) {
-
-    Preconditions.checkNotNull(fn, "fn should not be null");
-
-    Map<U, T> groups = new HashMap<>();
-
-    while (hasNext()) {
-
-      T value = next();
-      U key = fn.apply(value);
-
-      groups.put(key, value);
-    }
-    return groups;
-  }
-
-  /**
-   * Returns a {@link Map} where keys are the result of a function applied to each element of the view and values are
-   * lists of elements corresponding to each key.
-   *
-   * @param fn  the function to apply.
-   * @param <U>
-   * @return a {@link Map}.
-   */
-  public <U> Map<U, List<T>> groupAll(Function<T, U> fn) {
-
-    Preconditions.checkNotNull(fn, "fn should not be null");
-
-    Map<U, List<T>> groups = new HashMap<>();
-
-    while (hasNext()) {
-
-      T value = next();
-      U key = fn.apply(value);
-
-      if (!groups.containsKey(key)) {
-        groups.put(key, new ArrayList<>());
-      }
-      groups.get(key).add(value);
-    }
-    return groups;
-  }
-
-  /**
-   * Returns a {@link Map} where keys are the result of a function applied to each element of the view and values are
-   * sets of elements corresponding to each key.
-   *
-   * @param fn  the function to apply.
-   * @param <U>
-   * @return a {@link Map}.
-   */
-  public <U> Map<U, Set<T>> groupDistinct(Function<T, U> fn) {
-
-    Preconditions.checkNotNull(fn, "fn should not be null");
-
-    Map<U, Set<T>> groups = new HashMap<>();
-
-    while (hasNext()) {
-
-      T value = next();
-      U key = fn.apply(value);
-
-      if (!groups.containsKey(key)) {
-        groups.put(key, new HashSet<>());
-      }
-      groups.get(key).add(value);
-    }
-    return groups;
   }
 
   /**

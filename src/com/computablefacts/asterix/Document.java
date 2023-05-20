@@ -18,9 +18,11 @@ import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,10 +163,10 @@ final public class Document {
     Preconditions.checkArgument(facts.exists(), "facts file does not exist : %s", facts);
 
     // Load facts
-    Map<String, List<Fact>> factsIndexedByDocId = View.of(facts, true)
+    Map<String, Collection<Fact>> factsIndexedByDocId = View.of(facts, true)
         .filter(row -> !Strings.isNullOrEmpty(row) /* remove empty rows */).map(JsonCodec::asObject)
         .map(Fact::fromLegacy).filter(fact -> fact != null && fact.isVerified())
-        .groupAll(fact -> fact.provenance().docId());
+        .toMap(fact -> fact.provenance().docId(), Function.identity(), Lists::newArrayList);
 
     // Load documents and associate them with the loaded facts
     return of(documents, true).takeWhile(

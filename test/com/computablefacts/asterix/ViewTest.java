@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -393,11 +394,12 @@ public class ViewTest {
   }
 
   @Test
-  public void testGroup() {
+  public void testToMap() {
 
     View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
-    Map<Integer, String> actual = view.group(String::length);
+    Map<Integer, String> actual = view.toMap(String::length, Function.identity());
     Map<Integer, String> expected = new HashMap<>();
+
     expected.put(1, "a");
     expected.put(2, "ab");
     expected.put(3, "abc");
@@ -407,11 +409,12 @@ public class ViewTest {
   }
 
   @Test
-  public void testGroupDistinctByLength() {
+  public void testToMapOfSets() {
 
     View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
-    Map<Integer, Set<String>> actual = view.groupDistinct(String::length);
-    Map<Integer, Set<String>> expected = new HashMap<>();
+    Map<Integer, Collection<String>> actual = view.toMap(String::length, Function.identity(), Sets::newHashSet);
+    Map<Integer, Collection<String>> expected = new HashMap<>();
+
     expected.put(1, Sets.newHashSet("a"));
     expected.put(2, Sets.newHashSet("ab"));
     expected.put(3, Sets.newHashSet("abc", "abc"));
@@ -421,11 +424,12 @@ public class ViewTest {
   }
 
   @Test
-  public void testGroupAllByLength() {
+  public void testToMapOfLists() {
 
     View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
-    Map<Integer, List<String>> actual = view.groupAll(String::length);
-    Map<Integer, List<String>> expected = new HashMap<>();
+    Map<Integer, Collection<String>> actual = view.toMap(String::length, Function.identity(), Lists::newArrayList);
+    Map<Integer, Collection<String>> expected = new HashMap<>();
+
     expected.put(1, Lists.newArrayList("a", "a"));
     expected.put(2, Lists.newArrayList("ab"));
     expected.put(3, Lists.newArrayList("abc", "abc"));
