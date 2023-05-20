@@ -550,6 +550,31 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   /**
    * Returns a {@link Map} where keys are the result of a function applied to each element of the view and values are
+   * the elements corresponding to each key. If more than one view element maps to a given key, only the last element is
+   * kept.
+   *
+   * @param fn  the function to apply.
+   * @param <U>
+   * @return a {@link Map}.
+   */
+  public <U> Map<U, T> group(Function<T, U> fn) {
+
+    Preconditions.checkNotNull(fn, "fn should not be null");
+
+    Map<U, T> groups = new HashMap<>();
+
+    while (hasNext()) {
+
+      T value = next();
+      U key = fn.apply(value);
+
+      groups.put(key, value);
+    }
+    return groups;
+  }
+
+  /**
+   * Returns a {@link Map} where keys are the result of a function applied to each element of the view and values are
    * lists of elements corresponding to each key.
    *
    * @param fn  the function to apply.

@@ -393,10 +393,24 @@ public class ViewTest {
   }
 
   @Test
+  public void testGroup() {
+
+    View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
+    Map<Integer, String> actual = view.group(String::length);
+    Map<Integer, String> expected = new HashMap<>();
+    expected.put(1, "a");
+    expected.put(2, "ab");
+    expected.put(3, "abc");
+    expected.put(4, "abcd");
+
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
   public void testGroupDistinctByLength() {
 
     View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
-    Map<Integer, Set<String>> actual = view.groupDistinct(x -> x.length());
+    Map<Integer, Set<String>> actual = view.groupDistinct(String::length);
     Map<Integer, Set<String>> expected = new HashMap<>();
     expected.put(1, Sets.newHashSet("a"));
     expected.put(2, Sets.newHashSet("ab"));
@@ -410,7 +424,7 @@ public class ViewTest {
   public void testGroupAllByLength() {
 
     View<String> view = View.of("a", "a", "ab", "abc", "abc", "abcd");
-    Map<Integer, List<String>> actual = view.groupAll(x -> x.length());
+    Map<Integer, List<String>> actual = view.groupAll(String::length);
     Map<Integer, List<String>> expected = new HashMap<>();
     expected.put(1, Lists.newArrayList("a", "a"));
     expected.put(2, Lists.newArrayList("ab"));
