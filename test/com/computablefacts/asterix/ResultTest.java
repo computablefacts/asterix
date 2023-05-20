@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Assert;
 import org.junit.Test;
@@ -372,5 +373,24 @@ public class ResultTest {
 
     View<HashSet<String>> result2 = Result.success(Sets.newHashSet("a", "b", "c", "d")).view();
     Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), result2.flatten(View::of).toList());
+  }
+
+  @Test
+  public void testConsume() {
+
+    AtomicBoolean isConsumed = new AtomicBoolean(false);
+    Result.success("Hello world!").consume(str -> isConsumed.set(true));
+
+    Assert.assertTrue(isConsumed.get());
+
+    isConsumed.set(false);
+    Result.<String>failure("null value").consume(str -> isConsumed.set(true));
+
+    Assert.assertFalse(isConsumed.get());
+
+    isConsumed.set(false);
+    Result.<String>empty().consume(str -> isConsumed.set(true));
+
+    Assert.assertFalse(isConsumed.get());
   }
 }

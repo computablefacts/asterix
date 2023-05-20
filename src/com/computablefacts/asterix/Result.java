@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -86,6 +87,8 @@ public interface Result<T> {
 
   <U> Result<U> flatMap(Function<T, Result<U>> fn);
 
+  void consume(Consumer<T> fn);
+
   @CheckReturnValue
   final class Empty<T> implements Result<T> {
 
@@ -145,6 +148,10 @@ public interface Result<T> {
     @Override
     public <U> Result<U> flatMap(Function<T, Result<U>> fn) {
       return empty();
+    }
+
+    @Override
+    public void consume(Consumer<T> fn) {
     }
   }
 
@@ -222,6 +229,11 @@ public interface Result<T> {
     public <U> Result<U> flatMap(Function<T, Result<U>> fn) {
       return fn.apply(value_);
     }
+
+    @Override
+    public void consume(Consumer<T> fn) {
+      fn.accept(value_);
+    }
   }
 
   @CheckReturnValue
@@ -298,6 +310,10 @@ public interface Result<T> {
     @Override
     public <U> Result<U> flatMap(Function<T, Result<U>> fn) {
       return failure(message_);
+    }
+
+    @Override
+    public void consume(Consumer<T> fn) {
     }
   }
 }
