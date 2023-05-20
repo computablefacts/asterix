@@ -4,6 +4,9 @@ import com.computablefacts.asterix.Result.Empty;
 import com.computablefacts.asterix.Result.Failure;
 import com.computablefacts.asterix.Result.Success;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.HashSet;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Assert;
 import org.junit.Test;
@@ -185,9 +188,9 @@ public class ResultTest {
   }
 
   @Test
-  public void testMapIfSuccess() {
+  public void testMap() {
 
-    Result<String> result1 = Result.success("Hello world!").mapIfSuccess(String::toUpperCase);
+    Result<String> result1 = Result.success("Hello world!").map(String::toUpperCase);
 
     Assert.assertTrue(result1 instanceof Success);
     Assert.assertFalse(result1.isEmpty());
@@ -197,7 +200,7 @@ public class ResultTest {
     Assert.assertEquals("HELLO WORLD!", result1.get(""));
     Assert.assertEquals("HELLO WORLD!", result1.get(() -> ""));
 
-    Result<String> result2 = Result.<String>failure("null value").mapIfSuccess(String::toUpperCase);
+    Result<String> result2 = Result.<String>failure("null value").map(String::toUpperCase);
 
     Assert.assertTrue(result2 instanceof Failure);
     Assert.assertFalse(result2.isEmpty());
@@ -207,7 +210,51 @@ public class ResultTest {
     Assert.assertEquals("", result2.get(() -> ""));
     Assert.assertEquals("null value", result2.errorValue());
 
-    Result<String> result3 = Result.<String>empty().mapIfSuccess(String::toUpperCase);
+    Result<String> result3 = Result.<String>empty().map(String::toUpperCase);
+
+    Assert.assertTrue(result3 instanceof Empty);
+    Assert.assertTrue(result3.isEmpty());
+    Assert.assertFalse(result3.isSuccess());
+    Assert.assertFalse(result3.isFailure());
+    Assert.assertEquals("", result3.get(""));
+    Assert.assertEquals("", result3.get(() -> ""));
+  }
+
+  @Test
+  public void testMapWrapsExceptions() {
+
+    Result<String> result = Result.success("Hello world!").map(x -> x.substring(0, 100));
+
+    Assert.assertTrue(result instanceof Failure);
+    Assert.assertFalse(result.isEmpty());
+    Assert.assertFalse(result.isSuccess());
+    Assert.assertTrue(result.isFailure());
+  }
+
+  @Test
+  public void testFlatMap() {
+
+    Result<String> result1 = Result.success("Hello world!").flatMap(str -> Result.of(str.toUpperCase()));
+
+    Assert.assertTrue(result1 instanceof Success);
+    Assert.assertFalse(result1.isEmpty());
+    Assert.assertTrue(result1.isSuccess());
+    Assert.assertFalse(result1.isFailure());
+    Assert.assertEquals("HELLO WORLD!", result1.successValue());
+    Assert.assertEquals("HELLO WORLD!", result1.get(""));
+    Assert.assertEquals("HELLO WORLD!", result1.get(() -> ""));
+
+    Result<String> result2 = Result.<String>failure("null value").flatMap(str -> Result.of(str.toUpperCase()));
+
+    Assert.assertTrue(result2 instanceof Failure);
+    Assert.assertFalse(result2.isEmpty());
+    Assert.assertFalse(result2.isSuccess());
+    Assert.assertTrue(result2.isFailure());
+    Assert.assertEquals("", result2.get(""));
+    Assert.assertEquals("", result2.get(() -> ""));
+    Assert.assertEquals("null value", result2.errorValue());
+
+    Result<String> result3 = Result.<String>empty().flatMap(str -> Result.of(str.toUpperCase()));
 
     Assert.assertTrue(result3 instanceof Empty);
     Assert.assertTrue(result3.isEmpty());
@@ -315,5 +362,15 @@ public class ResultTest {
 
     View<String> result3 = Result.<String>empty().view();
     Assert.assertEquals(Lists.newArrayList(), result3.toList());
+  }
+
+  @Test
+  public void testViewOfCollection() {
+
+    View<ArrayList<String>> result1 = Result.success(Lists.newArrayList("a", "b", "c", "d")).view();
+    Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), result1.flatten(View::of).toList());
+
+    View<HashSet<String>> result2 = Result.success(Sets.newHashSet("a", "b", "c", "d")).view();
+    Assert.assertEquals(Lists.newArrayList("a", "b", "c", "d"), result2.flatten(View::of).toList());
   }
 }

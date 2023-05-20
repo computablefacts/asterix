@@ -86,7 +86,7 @@ final public class Proofer extends Solver {
     Literal head = rule.head();
     List<Object> body = View.of(rule.body()).map(literal -> {
       Result<Node> fold = View.of(trees_).findFirst(f -> f.head_.isRelevant(literal));
-      return fold.mapIfSuccess(f -> (Object) f).mapIfEmpty(() -> literal).getOrThrow();
+      return fold.map(f -> (Object) f).mapIfEmpty(() -> literal).getOrThrow();
     }).toList();
 
     List<Node> nodes = View.of(trees_).filter(node -> node.head_.isRelevant(head)).toList();
@@ -134,8 +134,8 @@ final public class Proofer extends Solver {
         .map(fact -> (List<Literal>) Lists.newArrayList(fact.head())).toList();
 
     List<List<Literal>> proofs = View.of(trees_).findFirst(tree -> tree.head_.isRelevant(root_.literal()))
-        .mapIfSuccess(proof -> View.of(unfold(proof)).concat(facts).toList()).mapIfFailure(t -> facts)
-        .mapIfEmpty(() -> facts).getOrThrow();
+        .map(proof -> View.of(unfold(proof)).concat(facts).toList()).mapIfFailure(t -> facts).mapIfEmpty(() -> facts)
+        .getOrThrow();
 
     BigDecimal upperBound = probability(query, proofs);
 
