@@ -103,6 +103,34 @@ public class ViewTest {
   }
 
   @Test
+  public void testStitchIterablesHaveSameLength() {
+
+    List<String> list1 = Lists.newArrayList("0", "2", "4", "6", "8", "10");
+    List<String> list2 = Lists.newArrayList("a", "c", "e", "g", "i", "k");
+    List<List<String>> views = Lists.newArrayList(list1, list2);
+    List<List<String>> stitched = View.stitch(views).toList();
+
+    Assert.assertEquals(6, stitched.size());
+    Assert.assertEquals(
+        Lists.newArrayList(Lists.newArrayList("0", "a"), Lists.newArrayList("2", "c"), Lists.newArrayList("4", "e"),
+            Lists.newArrayList("6", "g"), Lists.newArrayList("8", "i"), Lists.newArrayList("10", "k")), stitched);
+  }
+
+  @Test
+  public void testStitchOneIterablesIsShorter() {
+
+    List<String> list1 = Lists.newArrayList("0", "2", "4");
+    List<String> list2 = Lists.newArrayList("a", "c", "e", "g", "i", "k");
+    List<List<String>> views = Lists.newArrayList(list1, list2);
+    List<List<String>> stitched = View.stitch(views).toList();
+
+    Assert.assertEquals(3, stitched.size());
+    Assert.assertEquals(
+        Lists.newArrayList(Lists.newArrayList("0", "a"), Lists.newArrayList("2", "c"), Lists.newArrayList("4", "e")),
+        stitched);
+  }
+
+  @Test
   public void testSplitOnChar() {
 
     String str = "0, 2, 4, 6, 8, 10";

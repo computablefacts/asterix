@@ -193,6 +193,10 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return of();
   }
 
+  public static <T> View<List<T>> stitch(List<? extends Iterable<T>> views) {
+    return of(new StitchingIterator<>(View.of(views).map(Iterable::iterator).toList()));
+  }
+
   public static View<String> split(String string, char separator) {
     return of(Splitter.on(separator).trimResults().split(string));
   }
@@ -1691,16 +1695,16 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
   private static class StitchingIterator<T> extends AbstractIterator<List<T>> {
 
-    private final List<View<T>> views_;
+    private final List<? extends Iterator<T>> views_;
 
-    public StitchingIterator(List<View<T>> views) {
-      views_ = Preconditions.checkNotNull(views);
+    public StitchingIterator(List<? extends Iterator<T>> views) {
+      views_ = Preconditions.checkNotNull(views, "views should not be null");
     }
 
     @Override
     protected List<T> computeNext() {
 
-      List<T> row = new ArrayList<T>();
+      List<T> row = new ArrayList<>();
 
       for (int i = 0; i < views_.size(); i++) {
         if (!views_.get(i).hasNext()) {
