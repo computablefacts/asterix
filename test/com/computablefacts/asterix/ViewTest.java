@@ -317,6 +317,14 @@ public class ViewTest {
   }
 
   @Test
+  public void testNoneMatch() {
+
+    View<Integer> view = View.range(100, 105).filter(x -> x % 2 == 0);
+
+    Assert.assertTrue(view.noneMatch(x -> x % 2 == 1));
+  }
+
+  @Test
   public void testFindAll() {
 
     List<Integer> list = View.iterate(1, x -> x + 1).take(5).findAll(x -> x % 2 == 0).toList();
@@ -556,6 +564,14 @@ public class ViewTest {
   }
 
   @Test
+  public void testSort() {
+
+    View<String> view = View.of("a", "b", "b", "c", "c", "c").sort(Ordering.natural().reverse());
+
+    Assert.assertEquals(Lists.newArrayList("c", "c", "c", "b", "b", "a"), view.toList());
+  }
+
+  @Test
   public void testMapUsingASingleBashCommand() {
 
     Function<Integer, String> toString = x -> Integer.toString(x, 10);
@@ -590,6 +606,88 @@ public class ViewTest {
     Assert.assertEquals(7, (int) list2.get(43));
     Assert.assertEquals(8, (int) list2.get(50));
     Assert.assertEquals(9, (int) list2.get(57));
+  }
+
+  @Test
+  public void testMapIntegersToStringsUsingASingleBashCommand() {
+
+    Function<String, Integer> toInt = x -> Integer.parseInt(x, 10);
+
+    View<Integer> view = View.iterate(0, x -> x + 1).take(10_000_000);
+    List<Integer> list = view.mapUsingBashCommand("sort | awk '/^[0-9][0]*$/{ print }'").map(toInt).toList();
+
+    Assert.assertEquals(64, list.size());
+    Assert.assertEquals(0, (int) list.get(0));
+    Assert.assertEquals(1, (int) list.get(1));
+    Assert.assertEquals(2, (int) list.get(8));
+    Assert.assertEquals(3, (int) list.get(15));
+    Assert.assertEquals(4, (int) list.get(22));
+    Assert.assertEquals(5, (int) list.get(29));
+    Assert.assertEquals(6, (int) list.get(36));
+    Assert.assertEquals(7, (int) list.get(43));
+    Assert.assertEquals(8, (int) list.get(50));
+    Assert.assertEquals(9, (int) list.get(57));
+  }
+
+  @Test
+  public void testMapLongsToStringsUsingASingleBashCommand() {
+
+    Function<String, Integer> toInt = x -> Integer.parseInt(x, 10);
+
+    View<Long> view = View.iterate(0L, x -> x + 1L).take(10_000_000);
+    List<Integer> list = view.mapUsingBashCommand("sort | awk '/^[0-9][0]*$/{ print }'").map(toInt).toList();
+
+    Assert.assertEquals(64, list.size());
+    Assert.assertEquals(0, (int) list.get(0));
+    Assert.assertEquals(1, (int) list.get(1));
+    Assert.assertEquals(2, (int) list.get(8));
+    Assert.assertEquals(3, (int) list.get(15));
+    Assert.assertEquals(4, (int) list.get(22));
+    Assert.assertEquals(5, (int) list.get(29));
+    Assert.assertEquals(6, (int) list.get(36));
+    Assert.assertEquals(7, (int) list.get(43));
+    Assert.assertEquals(8, (int) list.get(50));
+    Assert.assertEquals(9, (int) list.get(57));
+  }
+
+  @Test
+  public void testMapDoublesToStringsUsingASingleBashCommand() {
+
+    View<Double> view = View.iterate(0.0d, x -> x + 1.0d).take(10_000_000);
+    List<Integer> list = view.mapUsingBashCommand("sort | awk '/^[0-9][0]*\\.[0-9]+$/{ print }'")
+        .map(Double::parseDouble).map(Double::intValue).toList();
+
+    Assert.assertEquals(64, list.size());
+    Assert.assertEquals(0, (int) list.get(0));
+    Assert.assertEquals(1, (int) list.get(1));
+    Assert.assertEquals(2, (int) list.get(8));
+    Assert.assertEquals(3, (int) list.get(15));
+    Assert.assertEquals(4, (int) list.get(22));
+    Assert.assertEquals(5, (int) list.get(29));
+    Assert.assertEquals(6, (int) list.get(36));
+    Assert.assertEquals(7, (int) list.get(43));
+    Assert.assertEquals(8, (int) list.get(50));
+    Assert.assertEquals(9, (int) list.get(57));
+  }
+
+  @Test
+  public void testMapFloatsToStringsUsingASingleBashCommand() {
+
+    View<Float> view = View.iterate(0.0f, x -> x + 1.0f).take(10_000_000);
+    List<Integer> list = view.mapUsingBashCommand("sort | awk '/^[0-9][0]*\\.[0-9]+$/{ print }'").map(Float::parseFloat)
+        .map(Float::intValue).toList();
+
+    Assert.assertEquals(64, list.size());
+    Assert.assertEquals(0, (int) list.get(0));
+    Assert.assertEquals(1, (int) list.get(1));
+    Assert.assertEquals(2, (int) list.get(8));
+    Assert.assertEquals(3, (int) list.get(15));
+    Assert.assertEquals(4, (int) list.get(22));
+    Assert.assertEquals(5, (int) list.get(29));
+    Assert.assertEquals(6, (int) list.get(36));
+    Assert.assertEquals(7, (int) list.get(43));
+    Assert.assertEquals(8, (int) list.get(50));
+    Assert.assertEquals(9, (int) list.get(57));
   }
 
   @Test

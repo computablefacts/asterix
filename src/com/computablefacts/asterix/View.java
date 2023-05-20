@@ -321,6 +321,9 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
    * @return a {@link List}.
    */
   public List<T> toSortedList(Comparator<T> comparator) {
+
+    Preconditions.checkNotNull(comparator, "comparator should not be null");
+
     List<T> list = toList();
     list.sort(comparator);
     return list;
@@ -1062,6 +1065,23 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     });
   }
 
+  /**
+   * Load all the view elements in memory then sort them.
+   *
+   * @return a sorted {@link View}.
+   */
+  public View<T> sort(Comparator<T> comparator) {
+    return of(toSortedList(comparator));
+  }
+
+  /**
+   * Compress (using the BZIP2 algorithm) then encrypt (using the Open SSL library) the view elements.
+   * <p>
+   * Note that unless properly configured, the password will be visible through `ps`.
+   *
+   * @param password the password to use.
+   * @return a stream of encrypted rows.
+   */
   @Beta
   public View<String> encrypt(String password) {
 
@@ -1070,6 +1090,14 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return mapUsingBashCommand(String.format("bzip2 | openssl enc -aes-256-cbc -a -pbkdf2 -pass pass:%s", password));
   }
 
+  /**
+   * Decrypt (using the Open SSL library) then decompress (using the BZIP2 algorithm) the view elements.
+   * <p>
+   * Note that unless properly configured, the password will be visible through `ps`.
+   *
+   * @param password the password to use.
+   * @return a stream of encrypted rows.
+   */
   @Beta
   public View<String> decrypt(String password) {
 
@@ -1658,6 +1686,29 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
 
     public boolean shouldBreak() {
       return shouldBreak_;
+    }
+  }
+
+  private static class StitchingIterator<T> extends AbstractIterator<List<T>> {
+
+    private final List<View<T>> views_;
+
+    public StitchingIterator(List<View<T>> views) {
+      views_ = Preconditions.checkNotNull(views);
+    }
+
+    @Override
+    protected List<T> computeNext() {
+
+      List<T> row = new ArrayList<T>();
+
+      for (int i = 0; i < views_.size(); i++) {
+        if (!views_.get(i).hasNext()) {
+          return endOfData();
+        }
+        row.add(views_.get(i).next());
+      }
+      return row.isEmpty() ? endOfData() : row;
     }
   }
 
