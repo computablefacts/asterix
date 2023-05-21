@@ -1,5 +1,6 @@
 package com.computablefacts.asterix.nlp;
 
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.View;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multiset;
@@ -191,24 +192,18 @@ public abstract class AbstractDocSetLabeler {
 
       nbTextsProcessed.incrementAndGet();
 
-      List<Map.Entry<String, Double>> weights = new ArrayList<>();
-      Multiset<String> candidates = candidates(text);
+      Set<String> selection = Result.of(candidates(text))
+          .map(candidates -> View.of(candidates.entrySet()).map(candidate -> {
 
-      for (Multiset.Entry<String> candidate : candidates.entrySet()) {
+            double x = computeX(text, candidate.getElement(), candidate.getCount());
+            double y = computeY(text, candidate.getElement(), candidate.getCount());
+            double weight = (2.0 * x * y) / (x + y);
 
-        double x = computeX(text, candidate.getElement(), candidate.getCount());
-        double y = computeY(text, candidate.getElement(), candidate.getCount());
-        double weight = (2.0 * x * y) / (x + y);
+            Preconditions.checkState(0.0 <= x && x <= 1.0, "x should be such as 0.0 <= x <= 1.0 : %s", x);
+            Preconditions.checkState(0.0 <= y && y <= 1.0, "y should be such as 0.0 <= y <= 1.0 : %s", y);
 
-        Preconditions.checkState(0.0 <= x && x <= 1.0, "x should be such as 0.0 <= x <= 1.0 : %s", x);
-        Preconditions.checkState(0.0 <= y && y <= 1.0, "y should be such as 0.0 <= y <= 1.0 : %s", y);
-
-        weights.add(new AbstractMap.SimpleEntry<>(candidate.getElement(), weight));
-      }
-
-      Set<String> selection = weights.isEmpty() ? Sets.newHashSet()
-          : weights.stream().sorted(byScoreDesc).limit(nbCandidatesToConsider).map(Map.Entry::getKey)
-              .collect(Collectors.toSet());
+            return (Map.Entry<String, Double>) new AbstractMap.SimpleEntry<>(candidate.getElement(), weight);
+          }).sort(byScoreDesc).take(nbCandidatesToConsider).map(Map.Entry::getKey).toSet()).get(Sets::newHashSet);
 
       if (ok.contains(text)) {
         pos.put(text, selection);
