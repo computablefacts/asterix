@@ -4,6 +4,7 @@ import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassi
 import static com.computablefacts.asterix.ml.classification.AbstractBinaryClassifier.OK;
 
 import com.computablefacts.asterix.DocumentTest;
+import com.computablefacts.asterix.Result;
 import com.computablefacts.asterix.XStream;
 import com.computablefacts.asterix.ml.ConfusionMatrix;
 import com.computablefacts.asterix.ml.stacking.Stack;
@@ -41,9 +42,9 @@ public class ModelTest {
 
     Assert.assertTrue(stackCompressed.exists());
 
-    Stack stack = XStream.load(stackCompressed);
+    Result<Stack> stack = XStream.load(stackCompressed);
 
-    Assert.assertNotNull(stack);
+    Assert.assertTrue(stack.isSuccess());
 
     Map.Entry<List<String>, List<Integer>> dataset = GoldLabel.load(goldLabelsCompressed, "contains_crowdsourcing")
         .unzip(gl -> new AbstractMap.SimpleImmutableEntry<>(gl.data(),
@@ -54,7 +55,7 @@ public class ModelTest {
 
     for (int i = 0; i < vectors.size(); i++) {
       int actual = categories.get(i);
-      int predicted = stack.predict(vectors.get(i));
+      int predicted = stack.getOrThrow().predict(vectors.get(i));
       matrix.add(actual, predicted);
     }
 
