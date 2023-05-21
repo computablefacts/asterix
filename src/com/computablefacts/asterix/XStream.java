@@ -36,17 +36,17 @@ final public class XStream {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> T load(File file) {
+  public static <T> Result<T> load(File file) {
 
     Preconditions.checkNotNull(file, "file should not be null");
     Preconditions.checkArgument(file.exists(), "file does not exists : %s", file);
 
     try (BufferedReader reader = IO.newFileReader(file, GZIP)) {
-      return (T) xStream().fromXML(reader);
+      return Result.of((T) xStream().fromXML(reader));
     } catch (IOException e) {
       logger_.error(LogFormatter.create().message(e).formatError());
+      return Result.failure(e);
     }
-    return null;
   }
 
   private static com.thoughtworks.xstream.XStream xStream() {
