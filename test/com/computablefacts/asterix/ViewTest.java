@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -108,7 +109,7 @@ public class ViewTest {
 
     List<String> list1 = Lists.newArrayList("0", "2", "4", "6", "8", "10");
     List<String> list2 = Lists.newArrayList("a", "c", "e", "g", "i", "k");
-    List<List<String>> views = Lists.newArrayList(list1, list2);
+    List<Iterator<String>> views = Lists.newArrayList(list1.iterator(), list2.iterator());
     List<List<String>> stitched = View.stitch(views).toList();
 
     Assert.assertEquals(6, stitched.size());
@@ -122,7 +123,7 @@ public class ViewTest {
 
     List<String> list1 = Lists.newArrayList("0", "2", "4");
     List<String> list2 = Lists.newArrayList("a", "c", "e", "g", "i", "k");
-    List<List<String>> views = Lists.newArrayList(list1, list2);
+    List<Iterator<String>> views = Lists.newArrayList(list1.iterator(), list2.iterator());
     List<List<String>> stitched = View.stitch(views).toList();
 
     Assert.assertEquals(3, stitched.size());

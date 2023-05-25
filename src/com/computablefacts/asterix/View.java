@@ -194,8 +194,8 @@ public class View<T> extends AbstractIterator<T> implements AutoCloseable {
     return of();
   }
 
-  public static <T> View<List<T>> stitch(List<? extends Iterable<T>> views) {
-    return of(new StitchingIterator<>(View.of(views).map(Iterable::iterator).toList()));
+  public static <T> View<List<T>> stitch(List<? extends Iterator<T>> views) {
+    return of(new StitchingIterator<>(views));
   }
 
   public static View<String> split(String string, char separator) {
