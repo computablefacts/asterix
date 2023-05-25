@@ -375,16 +375,9 @@ final public class Model extends AbstractStack {
     Set<Map.Entry<Span, Integer>> spans = mergeSpans(tokenizer().apply(Strings.nullToEmpty(txt))
         .map(tkns -> new Span(tkns.get(0).rawText(), tkns.get(0).begin(), tkns.get(tkns.size() - 1).end())).toSet());
 
-    if (spans.isEmpty()) {
-      return Result.empty();
-    }
-
-    List<Map.Entry<Span, Integer>> spansSorted = View.of(spans).toSortedList(
-        Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getValue()).reversed()
-            .thenComparing(Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getKey().length()).reversed()));
-
-    Map.Entry<Span, Integer> best = spansSorted.get(0);
-    return Result.of(best.getKey().text());
+    return View.of(spans).sort(Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getValue()).reversed()
+            .thenComparing(Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getKey().length()).reversed())).first()
+        .map(best -> best.getKey().text());
   }
 
   @Beta
@@ -397,16 +390,9 @@ final public class Model extends AbstractStack {
             .map(tkns -> new Span(tkns.get(0).rawText(), tkns.get(0).begin(), tkns.get(tkns.size() - 1).end()))
             .toSet());
 
-    if (spans.isEmpty()) {
-      return Result.empty();
-    }
-
-    List<Map.Entry<Span, Integer>> spansSorted = View.of(spans).toSortedList(
-        Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getValue()).reversed()
-            .thenComparing(Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getKey().length()).reversed()));
-
-    Map.Entry<Span, Integer> best = spansSorted.get(0);
-    return Result.of(best.getKey().text());
+    return View.of(spans).sort(Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getValue()).reversed()
+            .thenComparing(Comparator.comparingInt((Map.Entry<Span, Integer> e) -> e.getKey().length()).reversed())).first()
+        .map(best -> best.getKey().text());
   }
 
   public String name() {
