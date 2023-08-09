@@ -103,7 +103,9 @@ final public class Users {
     if (authorizations == null || authorizations.isEmpty()) {
       return Authorizations.EMPTY;
     }
-    return new Authorizations(Iterables.toArray(authorizations, String.class));
+    return new Authorizations(Iterables.toArray(
+        authorizations.stream().filter(auth -> !Strings.isNullOrEmpty(auth)).collect(Collectors.toList()),
+        String.class));
   }
 
   public static Authorizations authorizations(String authorizations) {
