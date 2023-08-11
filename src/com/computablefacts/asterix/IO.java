@@ -478,6 +478,14 @@ final public class IO {
   }
 
   @CanIgnoreReturnValue
+  public static boolean delete(Path path) {
+
+    Preconditions.checkNotNull(path, "path should not be null");
+
+    return IO.delete(path.toFile());
+  }
+
+  @CanIgnoreReturnValue
   public static boolean delete(File file) {
 
     Preconditions.checkNotNull(file, "file should not be null");

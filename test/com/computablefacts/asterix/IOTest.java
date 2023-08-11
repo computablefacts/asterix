@@ -6,6 +6,7 @@ import static com.computablefacts.asterix.IO.eCompressionAlgorithm.GZIP;
 import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
@@ -334,6 +335,22 @@ public class IOTest {
   }
 
   @Test
+  public void testDeleteAllPaths() {
+
+    String path = IO.newTmpDirectory().getOrThrow().toString();
+
+    for (int i = 0; i < 10; i++) {
+      File file = new File(path + File.separator + i + ".txt");
+      Assert.assertTrue(IO.writeText(file, "Dummy text!", false));
+    }
+
+    Assert.assertEquals(10, new File(path).listFiles().length);
+    Assert.assertTrue(IO.delete(Paths.get(path)));
+    Assert.assertFalse(new File(path).exists());
+    Assert.assertNull(new File(path).listFiles());
+  }
+
+  @Test
   public void testDeleteAllFiles() {
 
     String path = IO.newTmpDirectory().getOrThrow().toString();
@@ -346,6 +363,18 @@ public class IOTest {
     Assert.assertEquals(10, new File(path).listFiles().length);
     Assert.assertTrue(IO.delete(new File(path)));
     Assert.assertFalse(new File(path).exists());
+    Assert.assertNull(new File(path).listFiles());
+  }
+
+  @Test
+  public void testDeletePathFailsOnMissingFile() {
+
+    String path = IO.newTmpDirectory().getOrThrow().toString();
+    File file = new File(path + File.separator + "missing.txt");
+
+    Assert.assertFalse(file.exists());
+    Assert.assertFalse(IO.delete(file.toPath()));
+    Assert.assertFalse(file.exists());
   }
 
   @Test
