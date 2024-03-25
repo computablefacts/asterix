@@ -39,6 +39,7 @@
   </developers>
 
   <properties>
+    <skipTests>false</skipTests>
     <logfmt.version>0.15</logfmt.version>
     <slf4j.version>2.0.3</slf4j.version>
     <guava.version>31.1-jre</guava.version>
@@ -364,7 +365,7 @@
           <parallel>classes</parallel>
           <threadCount>5</threadCount>
           <reuseForks>false</reuseForks>
-          <skipTests>false</skipTests>
+          <skipTests>${skipTests}</skipTests>
           <argLine>-Xmx4g --add-opens java.base/java.util=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
